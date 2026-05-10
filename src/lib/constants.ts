@@ -1,0 +1,182 @@
+export const CONTACT = {
+  phone: "+213 XXX XXX XXX",
+  whatsapp: "+213XXXXXXXXX",
+  facebook: "https://www.facebook.com/gateauxpatience",
+  instagram: "https://www.instagram.com/gateauxpatience",
+  city: "Sidi Bel Abbès, Algérie",
+  founded: "2018",
+};
+
+export const CATEGORIES = [
+  {
+    id: "birthday-adults-women",
+    slug: "anniversaire-femmes",
+    parentId: "birthday-adults",
+    labelKey: "birthday_adults_women",
+    icon: "👩",
+    color: "#F2A8AD",
+  },
+  {
+    id: "birthday-adults-men",
+    slug: "anniversaire-hommes",
+    parentId: "birthday-adults",
+    labelKey: "birthday_adults_men",
+    icon: "👨",
+    color: "#8FB8D4",
+  },
+  {
+    id: "birthday-kids-girls",
+    slug: "anniversaire-filles",
+    parentId: "birthday-kids",
+    labelKey: "birthday_kids_girls",
+    icon: "👧",
+    color: "#FFB6C1",
+  },
+  {
+    id: "birthday-kids-boys",
+    slug: "anniversaire-garcons",
+    parentId: "birthday-kids",
+    labelKey: "birthday_kids_boys",
+    icon: "👦",
+    color: "#87CEEB",
+  },
+  {
+    id: "wedding",
+    slug: "mariage-fiancailles",
+    labelKey: "wedding",
+    icon: "💍",
+    color: "#D4AF37",
+  },
+  {
+    id: "graduation",
+    slug: "diplome",
+    labelKey: "graduation",
+    icon: "🎓",
+    color: "#9B59B6",
+  },
+  {
+    id: "daily",
+    slug: "quotidien",
+    labelKey: "daily",
+    icon: "🎂",
+    color: "#E8A87C",
+  },
+  {
+    id: "customs",
+    slug: "personnalises",
+    labelKey: "customs",
+    icon: "🧁",
+    color: "#A8D8A8",
+  },
+  {
+    id: "desserts",
+    slug: "desserts",
+    labelKey: "desserts",
+    icon: "🍮",
+    color: "#C9727A",
+  },
+] as const;
+
+export type CategoryId = (typeof CATEGORIES)[number]["id"];
+
+export const MAIN_CATEGORIES = [
+  {
+    id: "birthday-adults",
+    slug: "anniversaire-adultes",
+    labelKey: "birthday_adults",
+    descKey: "birthday_adults_desc",
+    icon: "🎂",
+    gradient: "from-rose-300 to-pink-400",
+    image: "/categories/birthday-adults.jpg",
+  },
+  {
+    id: "birthday-kids",
+    slug: "anniversaire-enfants",
+    labelKey: "birthday_kids",
+    descKey: "birthday_kids_desc",
+    icon: "🎠",
+    gradient: "from-sky-300 to-violet-400",
+    image: "/categories/birthday-kids.jpg",
+  },
+  {
+    id: "wedding",
+    slug: "mariage",
+    labelKey: "wedding",
+    descKey: "wedding_desc",
+    icon: "💍",
+    gradient: "from-amber-300 to-yellow-500",
+    image: "/categories/wedding.jpg",
+  },
+  {
+    id: "graduation",
+    slug: "diplome",
+    labelKey: "graduation",
+    descKey: "graduation_desc",
+    icon: "🎓",
+    gradient: "from-purple-300 to-indigo-400",
+    image: "/categories/graduation.jpg",
+  },
+  {
+    id: "daily",
+    slug: "quotidien",
+    labelKey: "daily",
+    descKey: "daily_desc",
+    icon: "🍰",
+    gradient: "from-orange-300 to-rose-300",
+    image: "/categories/daily.jpg",
+  },
+  {
+    id: "customs",
+    slug: "personnalises",
+    labelKey: "customs",
+    descKey: "customs_desc",
+    icon: "🧁",
+    gradient: "from-emerald-300 to-teal-400",
+    image: "/categories/customs.jpg",
+  },
+  {
+    id: "desserts",
+    slug: "desserts",
+    labelKey: "desserts",
+    descKey: "desserts_desc",
+    icon: "🍮",
+    gradient: "from-red-300 to-rose-500",
+    image: "/categories/desserts.jpg",
+  },
+];
+
+export const TESTIMONIALS = [
+  {
+    id: 1,
+    name: "Amira B.",
+    rating: 5,
+    text_fr:
+      "Un gâteau absolument magnifique pour l'anniversaire de ma fille ! Patience a tout mis en œuvre pour réaliser nos souhaits. Je recommande vivement !",
+    text_ar: "كعكة رائعة لعيد ميلاد ابنتي! الصبر بذلت كل جهدها لتحقيق رغباتنا. أوصي بشدة!",
+    text_en: "An absolutely stunning cake for my daughter's birthday! Patience did everything to fulfill our wishes. Highly recommend!",
+    occasion: "Anniversaire enfant",
+    city: "Sidi Bel Abbès",
+  },
+  {
+    id: 2,
+    name: "Karim M.",
+    rating: 5,
+    text_fr:
+      "Le gâteau de mariage de nos rêves ! Superbe présentation, goût exceptionnel. Tous nos invités étaient ébahis.",
+    text_ar: "كعكة زفافنا من أحلامنا! عرض رائع، طعم استثنائي. أُذهل جميع ضيوفنا.",
+    text_en: "The wedding cake of our dreams! Superb presentation, exceptional taste. All our guests were amazed.",
+    occasion: "Mariage",
+    city: "Sidi Bel Abbès",
+  },
+  {
+    id: 3,
+    name: "Fatima Z.",
+    rating: 5,
+    text_fr:
+      "Professionnalisme et créativité au rendez-vous ! Mon gâteau de remise de diplôme était parfait, exactement comme je l'avais imaginé.",
+    text_ar: "الاحترافية والإبداع في الموعد! كعكة تخرجي كانت مثالية، تماماً كما تصورتها.",
+    text_en: "Professionalism and creativity delivered! My graduation cake was perfect, exactly as I imagined it.",
+    occasion: "Diplôme",
+    city: "Sidi Bel Abbès",
+  },
+];
