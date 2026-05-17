@@ -1,28 +1,30 @@
 import { MongoClient, Db, Collection } from "mongodb";
 import type { Cake, Category, Order } from "./db-types";
 
-const uri = process.env.MONGODB_URI;
 const dbName = process.env.MONGODB_DB || "gateaux-patience";
-
-if (!uri) {
-  throw new Error("MONGODB_URI is not set. Add it to .env.local and to Netlify env vars.");
-}
 
 declare global {
   // eslint-disable-next-line no-var
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
-let clientPromise: Promise<MongoClient>;
+function getClientPromise(): Promise<MongoClient> {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    return Promise.reject(
+      new Error("MONGODB_URI is not set. Add it to .env.local and to Netlify env vars.")
+    );
+  }
 
-if (process.env.NODE_ENV === "production") {
-  clientPromise = new MongoClient(uri, {
-    maxPoolSize: 10,
-    minPoolSize: 0,
-    serverSelectionTimeoutMS: 8000,
-    retryWrites: true,
-  }).connect();
-} else {
+  if (process.env.NODE_ENV === "production") {
+    return new MongoClient(uri, {
+      maxPoolSize: 10,
+      minPoolSize: 0,
+      serverSelectionTimeoutMS: 8000,
+      retryWrites: true,
+    }).connect();
+  }
+
   if (!global._mongoClientPromise) {
     global._mongoClientPromise = new MongoClient(uri, {
       maxPoolSize: 10,
@@ -30,9 +32,10 @@ if (process.env.NODE_ENV === "production") {
       serverSelectionTimeoutMS: 8000,
     }).connect();
   }
-  clientPromise = global._mongoClientPromise;
+  return global._mongoClientPromise;
 }
 
+let cachedPromise: Promise<MongoClient> | null = null;
 let initialized = false;
 
 const DEFAULT_CATEGORIES: Array<Pick<Category, "slug" | "labels">> = [
@@ -68,7 +71,6 @@ async function initialize(db: Db) {
     categories.createIndex({ order: 1 }),
   ]);
 
-  // Seed defaults if empty (idempotent — only inserts on a virgin DB).
   const existing = await categories.countDocuments({}, { limit: 1 });
   if (existing === 0) {
     const now = new Date().toISOString();
@@ -83,14 +85,14 @@ async function initialize(db: Db) {
     try {
       await categories.insertMany(docs, { ordered: false });
     } catch (err) {
-      // Race-safe: ignore duplicate-key errors if another instance seeded first.
       console.warn("[mongodb] category seed: insertMany partial result:", err instanceof Error ? err.message : err);
     }
   }
 }
 
 export async function getDb(): Promise<Db> {
-  const client = await clientPromise;
+  if (!cachedPromise) cachedPromise = getClientPromise();
+  const client = await cachedPromise;
   const db = client.db(dbName);
   if (!initialized) {
     try {

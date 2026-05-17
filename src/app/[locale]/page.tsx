@@ -11,6 +11,7 @@ import HowToOrderSection from "@/components/home/HowToOrderSection";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
 import SocialCTASection from "@/components/home/SocialCTASection";
 import { getFeaturedCakes } from "@/lib/cakes-data";
+import { unstable_noStore as noStore } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,7 @@ export async function generateMetadata({
 }
 
 export default async function HomePage() {
+  noStore();
   const featured = await getFeaturedCakes(6);
   return (
     <main>

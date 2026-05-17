@@ -8,12 +8,17 @@ const PROJECT_NO_ID = { _id: 0 } as const;
 export type { Category } from "./db-types";
 
 export async function getCategories(): Promise<Category[]> {
-  const col = await getCategoriesCollection();
-  const docs = await col
-    .find({}, { projection: PROJECT_NO_ID })
-    .sort({ order: 1, createdAt: 1 })
-    .toArray();
-  return docs as unknown as Category[];
+  try {
+    const col = await getCategoriesCollection();
+    const docs = await col
+      .find({}, { projection: PROJECT_NO_ID })
+      .sort({ order: 1, createdAt: 1 })
+      .toArray();
+    return docs as unknown as Category[];
+  } catch (err) {
+    console.error("[categories-data:getCategories]", err instanceof Error ? err.message : err);
+    return [];
+  }
 }
 
 export async function getCategoryById(id: string): Promise<Category | null> {

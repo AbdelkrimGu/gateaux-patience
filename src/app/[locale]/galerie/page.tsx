@@ -5,6 +5,7 @@ import Footer from "@/components/layout/Footer";
 import GalleryClient from "@/components/gallery/GalleryClient";
 import { getAllPublishedCakes } from "@/lib/cakes-data";
 import { getCategories } from "@/lib/categories-data";
+import { unstable_noStore as noStore } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ export async function generateMetadata({
 }
 
 export default async function GalleriePage() {
+  noStore();
   const [cakes, categories] = await Promise.all([getAllPublishedCakes(), getCategories()]);
   return (
     <main>
