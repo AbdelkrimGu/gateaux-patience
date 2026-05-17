@@ -30,6 +30,7 @@ export interface Category {
   id: string;
   slug: string;
   labels: { fr: string; ar: string; en: string };
+  image?: string;
   order: number;
   createdAt: string;
   updatedAt: string;

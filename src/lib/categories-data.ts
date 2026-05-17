@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { getCakesCollection, getCategoriesCollection } from "./mongodb";
 import { slugify } from "./admin-data";
+import { deleteS3Object } from "./s3";
 import type { Category } from "./db-types";
 
 const PROJECT_NO_ID = { _id: 0 } as const;
@@ -43,6 +44,7 @@ async function ensureUniqueCategorySlug(base: string, excludeId?: string): Promi
 
 export interface CategoryInput {
   labels: { fr: string; ar: string; en: string };
+  image?: string;
   order?: number;
 }
 
@@ -72,6 +74,7 @@ export async function createCategory(input: CategoryInput): Promise<Category> {
       ar: input.labels.ar.trim() || input.labels.fr.trim(),
       en: input.labels.en.trim() || input.labels.fr.trim(),
     },
+    image: input.image || undefined,
     order: nextOrder,
     createdAt: now,
     updatedAt: now,
@@ -82,6 +85,7 @@ export async function createCategory(input: CategoryInput): Promise<Category> {
 
 export interface CategoryPatch {
   labels?: { fr: string; ar: string; en: string };
+  image?: string | null;
   order?: number;
 }
 
@@ -104,7 +108,34 @@ export async function updateCategory(
   }
   if (typeof patch.order === "number") updates.order = patch.order;
 
-  await col.updateOne({ id }, { $set: updates });
+  // image: null or "" means "remove", undefined means "unchanged", string means "set"
+  let oldImageToDelete: string | null = null;
+  if (patch.image === null || patch.image === "") {
+    updates.image = undefined;
+    oldImageToDelete = existing.image || null;
+  } else if (typeof patch.image === "string" && patch.image !== existing.image) {
+    updates.image = patch.image;
+    oldImageToDelete = existing.image || null;
+  }
+
+  // MongoDB driver: $unset for removed image, $set otherwise
+  if (updates.image === undefined && (patch.image === null || patch.image === "")) {
+    await col.updateOne(
+      { id },
+      {
+        $set: Object.fromEntries(
+          Object.entries(updates).filter(([k]) => k !== "image")
+        ),
+        $unset: { image: "" },
+      }
+    );
+  } else {
+    await col.updateOne({ id }, { $set: updates });
+  }
+
+  if (oldImageToDelete) {
+    void deleteS3Object(oldImageToDelete);
+  }
 
   // Cascade label changes into denormalized cake.categoryLabel.
   let cakesAffected = 0;
@@ -133,7 +164,10 @@ export async function deleteCategory(id: string): Promise<{
   const cakesAffected = await cakes.countDocuments({ category: existing.slug });
 
   await col.deleteOne({ id });
-  // Cakes keep their denormalized categoryLabel — they remain renderable,
-  // they just lose the dropdown option in the admin form.
+
+  if (existing.image) {
+    void deleteS3Object(existing.image);
+  }
+
   return { ok: true, cakesAffected };
 }

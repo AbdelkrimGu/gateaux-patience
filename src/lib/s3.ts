@@ -82,11 +82,12 @@ export interface PresignedUpload {
 }
 
 export async function getPresignedUploadUrl(opts: {
-  cakeId: string;
+  id: string;
+  scope?: string;
   contentType: string;
   contentLength?: number;
 }): Promise<PresignedUpload> {
-  const { cakeId, contentType, contentLength } = opts;
+  const { id, scope = "cakes", contentType, contentLength } = opts;
   const ct = contentType.toLowerCase();
 
   if (!isAllowedContentType(ct)) {
@@ -108,8 +109,9 @@ export async function getPresignedUploadUrl(opts: {
 
   const { client, bucket } = getConfig();
   const ext = EXTENSION_BY_TYPE[ct] || "bin";
-  const safeCakeId = cakeId.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 64) || "misc";
-  const key = `cakes/${safeCakeId}/${randomUUID()}.${ext}`;
+  const safeId = id.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 64) || "misc";
+  const safeScope = scope.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 32) || "cakes";
+  const key = `${safeScope}/${safeId}/${randomUUID()}.${ext}`;
   const expiresInSeconds = 300;
 
   const command = new PutObjectCommand({

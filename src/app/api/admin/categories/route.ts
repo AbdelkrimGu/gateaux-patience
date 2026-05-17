@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
         ar: body.labels.ar || "",
         en: body.labels.en || "",
       },
+      image: typeof body.image === "string" && body.image.length > 0 ? body.image : undefined,
       order: typeof body.order === "number" ? body.order : undefined,
     });
     return NextResponse.json(cat, { status: 201 });

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useInView } from "react-intersection-observer";
 import { Eye, ShoppingBag, SlidersHorizontal } from "lucide-react";
@@ -98,8 +99,14 @@ export default function GalleryClient({
   categories: Category[];
 }) {
   const locale = useLocale();
+  const searchParams = useSearchParams();
   const isRTL = locale === "ar";
-  const [activeCategory, setActiveCategory] = useState("all");
+  const initialCategory = (() => {
+    const q = searchParams.get("category");
+    if (q && categories.some((c) => c.slug === q)) return q;
+    return "all";
+  })();
+  const [activeCategory, setActiveCategory] = useState(initialCategory);
 
   const visible = cakes.filter((c) => c.images.length > 0);
   const filtered = activeCategory === "all" ? visible : visible.filter((c) => c.category === activeCategory);

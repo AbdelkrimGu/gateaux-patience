@@ -4,43 +4,34 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { useInView } from "react-intersection-observer";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { Category, Locale } from "@/lib/db-types";
 
-const CATEGORY_IMAGES: Record<string, string> = {
-  "birthday-adults": "/images/Cake19/FB_IMG_1778413672901.jpg",
-  "birthday-kids": "/images/Cake1/FB_IMG_1778412877519.jpg",
-  wedding: "/images/Cake13/FB_IMG_1778413404351.jpg",
-  graduation: "/images/Cake11/FB_IMG_1778413311320.jpg",
-  daily: "/images/Cake18/FB_IMG_1778413600688.jpg",
-  customs: "/images/Cake16/FB_IMG_1778413554339.jpg",
-  desserts: "/images/Cake8/FB_IMG_1778413176810.jpg",
-};
-
-interface CategoryItem {
-  id: string;
-  labelKey: string;
-  descKey: string;
-  icon: string;
-  gradient: string;
-}
-
-const MAIN_CATEGORIES: CategoryItem[] = [
-  { id: "birthday-adults", labelKey: "birthday_adults", descKey: "birthday_adults_desc", icon: "🎂", gradient: "from-rose-400 to-pink-500" },
-  { id: "birthday-kids", labelKey: "birthday_kids", descKey: "birthday_kids_desc", icon: "🎠", gradient: "from-sky-400 to-violet-500" },
-  { id: "wedding", labelKey: "wedding", descKey: "wedding_desc", icon: "💍", gradient: "from-amber-400 to-yellow-500" },
-  { id: "graduation", labelKey: "graduation", descKey: "graduation_desc", icon: "🎓", gradient: "from-purple-400 to-indigo-500" },
-  { id: "daily", labelKey: "daily", descKey: "daily_desc", icon: "🍰", gradient: "from-orange-400 to-rose-400" },
-  { id: "customs", labelKey: "customs", descKey: "customs_desc", icon: "🧁", gradient: "from-emerald-400 to-teal-500" },
-  { id: "desserts", labelKey: "desserts", descKey: "desserts_desc", icon: "🍮", gradient: "from-red-400 to-rose-500" },
+const FALLBACK_GRADIENTS = [
+  "from-rose-400 to-pink-500",
+  "from-sky-400 to-violet-500",
+  "from-amber-400 to-yellow-500",
+  "from-purple-400 to-indigo-500",
+  "from-orange-400 to-rose-400",
+  "from-emerald-400 to-teal-500",
+  "from-red-400 to-rose-500",
 ];
 
-function CategoryCard({ category, index, locale }: { category: CategoryItem; index: number; locale: string }) {
-  const t = useTranslations("categories");
+function CategoryCard({
+  category,
+  index,
+  locale,
+}: {
+  category: Category;
+  index: number;
+  locale: string;
+}) {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
   const isRTL = locale === "ar";
   const prefix = locale === "fr" ? "" : `/${locale}`;
-  const img = CATEGORY_IMAGES[category.id];
+  const label = category.labels[locale as Locale] ?? category.labels.fr;
+  const gradient = FALLBACK_GRADIENTS[index % FALLBACK_GRADIENTS.length];
 
   return (
     <div
@@ -51,19 +42,21 @@ function CategoryCard({ category, index, locale }: { category: CategoryItem; ind
       )}
       style={{ transitionDelay: `${index * 80}ms` }}
     >
-      <Link href={`${prefix}/galerie?category=${category.id}`}>
-        <div className="relative h-48 md:h-56">
-          {img ? (
+      <Link href={`${prefix}/galerie?category=${category.slug}`}>
+        <div className="relative h-48 md:h-56 group">
+          {category.image ? (
             <Image
-              src={img}
-              alt={t(category.labelKey as never)}
+              src={category.image}
+              alt={label}
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-110"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
             />
           ) : (
-            <div className={`w-full h-full bg-gradient-to-br ${category.gradient} flex items-center justify-center text-5xl`}>
-              {category.icon}
+            <div
+              className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}
+            >
+              <Tag size={42} className="text-white/70" />
             </div>
           )}
 
@@ -77,16 +70,10 @@ function CategoryCard({ category, index, locale }: { category: CategoryItem; ind
               isRTL && "text-right"
             )}
           >
-            <div className={cn("flex items-end justify-between", isRTL && "flex-row-reverse")}>
-              <div>
-                <div className="text-2xl mb-1">{category.icon}</div>
-                <h3 className="font-playfair font-bold text-white text-lg leading-tight">
-                  {t(category.labelKey as never)}
-                </h3>
-                <p className="text-white/80 text-xs mt-0.5">
-                  {t(category.descKey as never)}
-                </p>
-              </div>
+            <div className={cn("flex items-end justify-between gap-3", isRTL && "flex-row-reverse")}>
+              <h3 className="font-playfair font-bold text-white text-lg leading-tight">
+                {label}
+              </h3>
               <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 border border-white/30 hover:bg-rose transition-colors">
                 <ArrowRight size={14} className={cn("text-white", isRTL && "rotate-180")} />
               </div>
@@ -98,16 +85,17 @@ function CategoryCard({ category, index, locale }: { category: CategoryItem; ind
   );
 }
 
-export default function CategoriesSection() {
+export default function CategoriesSection({ categories }: { categories: Category[] }) {
   const t = useTranslations("categories");
   const locale = useLocale();
   const isRTL = locale === "ar";
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
+  if (categories.length === 0) return null;
+
   return (
     <section className="section-padding bg-surface-alt">
       <div className="container-custom">
-        {/* Header */}
         <div
           ref={ref}
           className={cn(
@@ -121,9 +109,8 @@ export default function CategoriesSection() {
           <p className="section-subtitle">{t("subtitle")}</p>
         </div>
 
-        {/* Categories grid — responsive masonry-like */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {MAIN_CATEGORIES.map((cat, i) => (
+          {categories.map((cat, i) => (
             <CategoryCard key={cat.id} category={cat} index={i} locale={locale} />
           ))}
         </div>

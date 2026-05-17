@@ -24,13 +24,15 @@ export async function POST(req: NextRequest) {
   if (!(await isAuthed())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  let body: { cakeId?: string; files?: FileSpec[] };
+  let body: { id?: string; cakeId?: string; scope?: string; files?: FileSpec[] };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
-  const cakeId = (body.cakeId || "misc").toString();
+  // `cakeId` is kept as an alias for backward compatibility with the cake form.
+  const id = (body.id || body.cakeId || "misc").toString();
+  const scope = (body.scope || "cakes").toString();
   const files = Array.isArray(body.files) ? body.files : [];
   if (files.length === 0) {
     return NextResponse.json({ error: "No files specified" }, { status: 400 });
@@ -46,7 +48,8 @@ export async function POST(req: NextRequest) {
       }
       try {
         return await getPresignedUploadUrl({
-          cakeId,
+          id,
+          scope,
           contentType: f.contentType,
           contentLength: f.contentLength,
         });

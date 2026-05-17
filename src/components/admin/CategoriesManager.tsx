@@ -1,17 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Pencil, Trash2, Check, X, Loader2, Tag, AlertTriangle } from "lucide-react";
+import { useRef, useState } from "react";
+import {
+  Plus, Pencil, Trash2, Check, X, Loader2, Tag, AlertTriangle,
+  Upload, ImagePlus,
+} from "lucide-react";
 import type { Category } from "@/lib/db-types";
 
 interface Props {
   initial: Category[];
 }
 
+interface EditorPayload {
+  labels: { fr: string; ar: string; en: string };
+  image: string;
+}
+
 type EditingState =
   | { mode: "none" }
-  | { mode: "new"; labels: { fr: string; ar: string; en: string } }
-  | { mode: "edit"; id: string; labels: { fr: string; ar: string; en: string } };
+  | {
+      mode: "new";
+      tempId: string;
+      data: EditorPayload;
+    }
+  | {
+      mode: "edit";
+      id: string;
+      originalImage: string;
+      data: EditorPayload;
+    };
 
 interface DeleteState {
   id: string;
@@ -29,15 +46,37 @@ export default function CategoriesManager({ initial }: Props) {
 
   function startNew() {
     setError("");
-    setEditing({ mode: "new", labels: { fr: "", ar: "", en: "" } });
+    setEditing({
+      mode: "new",
+      tempId: `new-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+      data: { labels: { fr: "", ar: "", en: "" }, image: "" },
+    });
   }
 
   function startEdit(cat: Category) {
     setError("");
-    setEditing({ mode: "edit", id: cat.id, labels: { ...cat.labels } });
+    setEditing({
+      mode: "edit",
+      id: cat.id,
+      originalImage: cat.image || "",
+      data: { labels: { ...cat.labels }, image: cat.image || "" },
+    });
   }
 
-  function cancelEdit() {
+  async function cancelEdit() {
+    // If user uploaded a fresh image during this editing session but didn't save,
+    // clean it up from S3 so we don't leave orphans.
+    if (editing.mode !== "none") {
+      const current = editing.data.image;
+      const original = editing.mode === "edit" ? editing.originalImage : "";
+      if (current && current !== original) {
+        void fetch("/api/admin/upload", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: current }),
+        }).catch(() => {});
+      }
+    }
     setEditing({ mode: "none" });
     setError("");
   }
@@ -45,13 +84,46 @@ export default function CategoriesManager({ initial }: Props) {
   function updateField(field: "fr" | "ar" | "en", value: string) {
     setEditing((e) => {
       if (e.mode === "none") return e;
-      return { ...e, labels: { ...e.labels, [field]: value } };
+      return { ...e, data: { ...e.data, labels: { ...e.data.labels, [field]: value } } };
     });
+  }
+
+  async function setImage(url: string) {
+    setEditing((e) => {
+      if (e.mode === "none") return e;
+      return { ...e, data: { ...e.data, image: url } };
+    });
+  }
+
+  async function removeImageInEditor() {
+    if (editing.mode === "none") return;
+    const current = editing.data.image;
+    const original = editing.mode === "edit" ? editing.originalImage : "";
+
+    setEditing((e) => {
+      if (e.mode === "none") return e;
+      return { ...e, data: { ...e.data, image: "" } };
+    });
+
+    // If this image was uploaded in this editing session (not the persisted one),
+    // delete it from S3 immediately so we don't orphan. The persisted original
+    // (if any) is cleaned up server-side on save when image differs.
+    if (current && current !== original) {
+      try {
+        await fetch("/api/admin/upload", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: current }),
+        });
+      } catch {
+        /* best-effort */
+      }
+    }
   }
 
   async function saveEdit() {
     if (editing.mode === "none") return;
-    if (!editing.labels.fr.trim()) {
+    if (!editing.data.labels.fr.trim()) {
       setError("Le libellé FR est requis.");
       return;
     }
@@ -63,7 +135,10 @@ export default function CategoriesManager({ initial }: Props) {
         const res = await fetch("/api/admin/categories", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ labels: editing.labels }),
+          body: JSON.stringify({
+            labels: editing.data.labels,
+            image: editing.data.image || undefined,
+          }),
         });
         if (!res.ok) {
           const err = (await res.json().catch(() => ({}))) as { error?: string };
@@ -72,10 +147,22 @@ export default function CategoriesManager({ initial }: Props) {
         const newCat = (await res.json()) as Category;
         setCategories((prev) => [...prev, newCat]);
       } else {
+        const original = editing.originalImage;
+        const next = editing.data.image;
+        const imageField =
+          next === original
+            ? undefined // unchanged — don't touch
+            : next === ""
+            ? null // explicit removal
+            : next; // new value
+
         const res = await fetch(`/api/admin/categories/${editing.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ labels: editing.labels }),
+          body: JSON.stringify({
+            labels: editing.data.labels,
+            ...(imageField !== undefined && { image: imageField }),
+          }),
         });
         if (!res.ok) {
           const err = (await res.json().catch(() => ({}))) as { error?: string };
@@ -104,10 +191,6 @@ export default function CategoriesManager({ initial }: Props) {
       cakesAffected: null,
       loading: true,
     });
-    // Fetch the affected count by attempting deletion preview — we don't have a dedicated
-    // count endpoint, so we just open the dialog and let the user confirm. The DELETE call
-    // returns the count, but we want to show it BEFORE confirming. Solution: query the
-    // /api/admin/cakes endpoint and count locally.
     try {
       const res = await fetch(`/api/admin/cakes`);
       if (res.ok) {
@@ -142,6 +225,8 @@ export default function CategoriesManager({ initial }: Props) {
     }
   }
 
+  const editorId = editing.mode === "new" ? editing.tempId : editing.mode === "edit" ? editing.id : "";
+
   return (
     <div className="max-w-4xl mx-auto space-y-5">
       <div className="flex items-center justify-between">
@@ -149,7 +234,7 @@ export default function CategoriesManager({ initial }: Props) {
           <h1 className="text-xl font-bold text-gray-800">Catégories</h1>
           <p className="text-sm text-gray-500">
             {categories.length} catégorie{categories.length !== 1 ? "s" : ""} ·
-            modifiables, leurs libellés se propagent aux gâteaux existants
+            libellés et image modifiables
           </p>
         </div>
         <button
@@ -171,9 +256,12 @@ export default function CategoriesManager({ initial }: Props) {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {editing.mode === "new" && (
           <EditorRow
-            labels={editing.labels}
+            id={editorId}
+            data={editing.data}
             saving={saving}
-            onChange={updateField}
+            onChangeLabel={updateField}
+            onImageUploaded={setImage}
+            onRemoveImage={removeImageInEditor}
             onSave={saveEdit}
             onCancel={cancelEdit}
           />
@@ -193,18 +281,28 @@ export default function CategoriesManager({ initial }: Props) {
               editing.mode === "edit" && editing.id === cat.id ? (
                 <li key={cat.id}>
                   <EditorRow
-                    labels={editing.labels}
+                    id={editorId}
+                    data={editing.data}
                     saving={saving}
-                    onChange={updateField}
+                    onChangeLabel={updateField}
+                    onImageUploaded={setImage}
+                    onRemoveImage={removeImageInEditor}
                     onSave={saveEdit}
                     onCancel={cancelEdit}
                   />
                 </li>
               ) : (
                 <li key={cat.id} className="px-4 py-3 hover:bg-gray-50/60 transition flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
-                    <Tag size={14} />
+                  {/* Image thumbnail */}
+                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center">
+                    {cat.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={cat.image} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <Tag size={16} className="text-gray-300" />
+                    )}
                   </div>
+
                   <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-3 gap-1 md:gap-4">
                     <div className="min-w-0">
                       <p className="text-[10px] uppercase tracking-wide text-gray-400">🇫🇷 FR</p>
@@ -255,7 +353,7 @@ export default function CategoriesManager({ initial }: Props) {
               <div>
                 <h2 className="font-semibold text-gray-800">Supprimer la catégorie ?</h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  « {deleteState.label} » sera supprimée définitivement.
+                  « {deleteState.label} » sera supprimée définitivement (image incluse).
                 </p>
               </div>
             </div>
@@ -297,65 +395,170 @@ export default function CategoriesManager({ initial }: Props) {
 }
 
 function EditorRow({
-  labels,
+  id,
+  data,
   saving,
-  onChange,
+  onChangeLabel,
+  onImageUploaded,
+  onRemoveImage,
   onSave,
   onCancel,
 }: {
-  labels: { fr: string; ar: string; en: string };
+  id: string;
+  data: EditorPayload;
   saving: boolean;
-  onChange: (field: "fr" | "ar" | "en", value: string) => void;
+  onChangeLabel: (field: "fr" | "ar" | "en", value: string) => void;
+  onImageUploaded: (url: string) => void;
+  onRemoveImage: () => void;
   onSave: () => void;
   onCancel: () => void;
 }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
+  async function handleFile(file: File | null) {
+    if (!file) return;
+    setUploadError("");
+    setUploading(true);
+    try {
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          scope: "categories",
+          files: [{ contentType: file.type, contentLength: file.size }],
+        }),
+      });
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(err.error || `Upload failed (${res.status})`);
+      }
+      const json = (await res.json()) as {
+        uploads: Array<{ uploadUrl?: string; publicUrl?: string; error?: string }>;
+      };
+      const slot = json.uploads[0];
+      if (!slot || slot.error || !slot.uploadUrl || !slot.publicUrl) {
+        throw new Error(slot?.error || "Échec du téléchargement");
+      }
+      const put = await fetch(slot.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!put.ok) throw new Error(`S3 upload failed (${put.status})`);
+      onImageUploaded(slot.publicUrl);
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
   return (
     <div className="px-4 py-3 bg-rose-50/40 border-b border-rose-100">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
-        <div>
-          <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">🇫🇷 FR (requis)</label>
-          <input
-            type="text"
-            value={labels.fr}
-            onChange={(e) => onChange("fr", e.target.value)}
-            placeholder="Ex: Mariage & Fiançailles"
-            autoFocus
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm"
-          />
+      <div className="flex flex-col md:flex-row gap-3 mb-3">
+        {/* Image upload tile */}
+        <div className="md:w-28 shrink-0">
+          <div
+            onClick={() => !uploading && !data.image && fileRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); }}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (!data.image && !uploading) handleFile(e.dataTransfer.files?.[0] || null);
+            }}
+            className={`relative w-full aspect-square rounded-xl overflow-hidden bg-white border-2 border-dashed transition ${
+              data.image ? "border-transparent" : "border-gray-200 hover:border-rose-300 cursor-pointer"
+            }`}
+          >
+            {data.image ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={data.image} alt="" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemoveImage();
+                  }}
+                  className="absolute top-1 right-1 p-1 bg-white/90 rounded-lg text-red-500 hover:bg-white shadow-sm"
+                  title="Retirer l'image"
+                >
+                  <X size={12} />
+                </button>
+              </>
+            ) : uploading ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+                <Loader2 size={18} className="animate-spin mb-1" />
+                <span className="text-[10px]">Téléchargement…</span>
+              </div>
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+                <ImagePlus size={18} className="mb-1" />
+                <span className="text-[10px] px-2 text-center">Image (optionnelle)</span>
+              </div>
+            )}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => handleFile(e.target.files?.[0] || null)}
+            />
+          </div>
+          {uploadError && <p className="text-[10px] text-red-500 mt-1">{uploadError}</p>}
         </div>
-        <div>
-          <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">🇩🇿 AR (optionnel)</label>
-          <input
-            type="text"
-            value={labels.ar}
-            onChange={(e) => onChange("ar", e.target.value)}
-            placeholder="مثل: زفاف وخطوبة"
-            dir="rtl"
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">🇬🇧 EN (optionnel)</label>
-          <input
-            type="text"
-            value={labels.en}
-            onChange={(e) => onChange("en", e.target.value)}
-            placeholder="Ex: Wedding & Engagement"
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm"
-          />
+
+        {/* Label inputs */}
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div>
+            <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">🇫🇷 FR (requis)</label>
+            <input
+              type="text"
+              value={data.labels.fr}
+              onChange={(e) => onChangeLabel("fr", e.target.value)}
+              placeholder="Ex: Mariage & Fiançailles"
+              autoFocus
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">🇩🇿 AR (optionnel)</label>
+            <input
+              type="text"
+              value={data.labels.ar}
+              onChange={(e) => onChangeLabel("ar", e.target.value)}
+              placeholder="مثل: زفاف وخطوبة"
+              dir="rtl"
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">🇬🇧 EN (optionnel)</label>
+            <input
+              type="text"
+              value={data.labels.en}
+              onChange={(e) => onChangeLabel("en", e.target.value)}
+              placeholder="Ex: Wedding & Engagement"
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm"
+            />
+          </div>
         </div>
       </div>
+
       <div className="flex items-center justify-end gap-2">
         <button
           onClick={onCancel}
-          disabled={saving}
+          disabled={saving || uploading}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition"
         >
           <X size={13} /> Annuler
         </button>
         <button
           onClick={onSave}
-          disabled={saving || !labels.fr.trim()}
+          disabled={saving || uploading || !data.labels.fr.trim()}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-50 transition"
         >
           {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
