@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLocale } from "next-intl";
+import useEmblaCarousel from "embla-carousel-react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -33,20 +34,37 @@ export default function CakeDetailClient({
   const prefix = locale === "fr" ? "" : `/${locale}`;
   const t = cake.translations[locale as Locale] ?? cake.translations.fr;
 
-  const [activeImage, setActiveImage] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    loop: cake.images.length > 1,
+    align: "center",
+    dragFree: false,
+    direction: isRTL ? "rtl" : "ltr",
+  });
+  const [activeImage, setActiveImage] = useState(0);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onSelect = () => setActiveImage(emblaApi.selectedScrollSnap());
+    onSelect();
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
+    return () => {
+      emblaApi.off("select", onSelect);
+      emblaApi.off("reInit", onSelect);
+    };
+  }, [emblaApi]);
 
   const whatsappMsg = encodeURIComponent(
     `${locale === "ar" ? "مرحباً Gateaux Patience! أنا مهتم/ة بـ" : locale === "en" ? "Hello Gateaux Patience! I'm interested in:" : "Bonjour Gateaux Patience ! Je suis intéressé(e) par :"} ${t.title}`
   );
 
-  function prevImage() {
-    setActiveImage((i) => (i === 0 ? cake.images.length - 1 : i - 1));
-  }
-
-  function nextImage() {
-    setActiveImage((i) => (i === cake.images.length - 1 ? 0 : i + 1));
-  }
+  const prevImage = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
+  const nextImage = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
+  const goToImage = useCallback(
+    (i: number) => emblaApi?.scrollTo(i),
+    [emblaApi]
+  );
 
   function handleShare() {
     navigator.clipboard.writeText(window.location.href).then(() => {
@@ -102,43 +120,58 @@ export default function CakeDetailClient({
 
             {/* Image gallery */}
             <div className="flex flex-col gap-4">
-              {/* Main image */}
+              {/* Main image — Embla carousel: all slides mounted up front so
+                  neighbours preload and switching is instant; native touch
+                  drag + mouse drag handled by Embla. */}
               <div className="relative aspect-square rounded-2xl overflow-hidden bg-surface-alt shadow-cake">
-                {cake.images[activeImage] && (
-                  <Image
-                    src={cake.images[activeImage]}
-                    alt={t.title}
-                    fill
-                    className="object-cover transition-opacity duration-300"
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    priority
-                  />
-                )}
+                <div className="absolute inset-0 overflow-hidden" ref={emblaRef}>
+                  <div className="flex h-full touch-pan-y">
+                    {cake.images.map((src, i) => (
+                      <div
+                        key={src}
+                        className="relative flex-[0_0_100%] min-w-0 h-full select-none"
+                      >
+                        <Image
+                          src={src}
+                          alt={i === 0 ? t.title : `${t.title} ${i + 1}`}
+                          fill
+                          className="object-cover pointer-events-none"
+                          sizes="(max-width: 1024px) 100vw, 50vw"
+                          priority={i === 0}
+                          draggable={false}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Nav arrows */}
                 {cake.images.length > 1 && (
                   <>
                     <button
                       onClick={prevImage}
+                      aria-label="Image précédente"
                       className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm shadow flex items-center justify-center hover:bg-white transition-colors z-10"
                     >
                       <ChevronLeft size={18} className="text-charcoal" />
                     </button>
                     <button
                       onClick={nextImage}
+                      aria-label="Image suivante"
                       className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm shadow flex items-center justify-center hover:bg-white transition-colors z-10"
                     >
                       <ChevronRight size={18} className="text-charcoal" />
                     </button>
                     {/* Dots */}
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
                       {cake.images.map((_, i) => (
                         <button
                           key={i}
-                          onClick={() => setActiveImage(i)}
+                          onClick={() => goToImage(i)}
+                          aria-label={`Aller à l'image ${i + 1}`}
                           className={cn(
-                            "w-2 h-2 rounded-full transition-all",
-                            i === activeImage ? "bg-white w-4" : "bg-white/50"
+                            "h-2 rounded-full transition-all",
+                            i === activeImage ? "bg-white w-4" : "bg-white/50 w-2"
                           )}
                         />
                       ))}
@@ -152,8 +185,9 @@ export default function CakeDetailClient({
                 <div className="grid grid-cols-5 gap-2">
                   {cake.images.map((img, i) => (
                     <button
-                      key={i}
-                      onClick={() => setActiveImage(i)}
+                      key={img}
+                      onClick={() => goToImage(i)}
+                      aria-label={`Image ${i + 1}`}
                       className={cn(
                         "relative aspect-square rounded-xl overflow-hidden border-2 transition-all",
                         i === activeImage ? "border-rose shadow-sm" : "border-transparent hover:border-rose/40"
