@@ -3,7 +3,7 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin();
 
 const s3Bucket = process.env.S3_BUCKET || "gateaux-patience-media";
-const s3Region = process.env.AWS_REGION || "eu-west-3";
+const s3Region = process.env.S3_REGION || "eu-west-3";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

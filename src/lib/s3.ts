@@ -7,16 +7,16 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
 
-const region = process.env.AWS_REGION || "eu-west-3";
+const region = process.env.S3_REGION || "eu-west-3";
 const bucket = process.env.S3_BUCKET;
-const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+const accessKeyId = process.env.S3_ACCESS_KEY_ID;
+const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY;
 
 if (!bucket) {
   throw new Error("S3_BUCKET is not set in env.");
 }
 if (!accessKeyId || !secretAccessKey) {
-  throw new Error("AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY are not set in env.");
+  throw new Error("S3_ACCESS_KEY_ID / S3_SECRET_ACCESS_KEY are not set in env.");
 }
 
 export const s3Client = new S3Client({
