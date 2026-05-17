@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCakes } from "@/lib/admin-data";
 import AdminShell from "@/components/admin/AdminShell";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import DeleteCakeButton from "@/components/admin/DeleteCakeButton";
+import { Plus, Pencil } from "lucide-react";
 
 export default async function AdminCakesPage() {
   const cookieStore = await cookies();
@@ -95,7 +96,7 @@ export default async function AdminCakesPage() {
                           >
                             <Pencil size={15} />
                           </Link>
-                          <DeleteButton id={cake.id} />
+                          <DeleteCakeButton id={cake.id} />
                         </div>
                       </td>
                     </tr>
@@ -110,21 +111,3 @@ export default async function AdminCakesPage() {
   );
 }
 
-function DeleteButton({ id }: { id: string }) {
-  return (
-    <form action={`/api/admin/cakes/${id}`} method="post" className="inline">
-      <button
-        type="button"
-        onClick={async () => {
-          if (!confirm("Supprimer ce gâteau ?")) return;
-          await fetch(`/api/admin/cakes/${id}`, { method: "DELETE" });
-          window.location.reload();
-        }}
-        className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
-        title="Supprimer"
-      >
-        <Trash2 size={15} />
-      </button>
-    </form>
-  );
-}
