@@ -48,6 +48,7 @@ const config: Config = {
         "slide-up": "slideUp 0.6s ease-out",
         "float": "float 3s ease-in-out infinite",
         "shimmer": "shimmer 2s linear infinite",
+        "scale-in": "scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
       },
       keyframes: {
         fadeIn: {
@@ -65,6 +66,10 @@ const config: Config = {
         shimmer: {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
+        },
+        scaleIn: {
+          "0%": { transform: "scale(0.92)", opacity: "0" },
+          "100%": { transform: "scale(1)", opacity: "1" },
         },
       },
       boxShadow: {

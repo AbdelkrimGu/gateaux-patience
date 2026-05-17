@@ -1,5 +1,6 @@
 import { getCakesCollection } from "./mongodb";
-import type { Cake } from "./db-types";
+import { getCategories } from "./categories-data";
+import type { Cake, Category } from "./db-types";
 
 export type { Cake, Locale, CakeTranslation, CategoryLabel } from "./db-types";
 
@@ -97,6 +98,40 @@ export async function getSimilarCakes(cake: Cake, count = 3): Promise<Cake[]> {
     return docs as unknown as Cake[];
   } catch (err) {
     return logAndEmpty<Cake>("getSimilarCakes", err);
+  }
+}
+
+export interface CategoryImageGroup {
+  category: Category;
+  images: string[];
+}
+
+export async function getCategoryImageGroups(
+  maxCategories = 6,
+  imagesPerCategory = 4
+): Promise<CategoryImageGroup[]> {
+  try {
+    const [categories, cakes] = await Promise.all([
+      getCategories(),
+      getAllPublishedCakes(),
+    ]);
+
+    const groups: CategoryImageGroup[] = [];
+    for (const cat of categories) {
+      const mainImages = cakes
+        .filter((c) => c.category === cat.slug && c.images.length > 0)
+        .map((c) => c.images[0]);
+      if (mainImages.length === 0) continue;
+      groups.push({
+        category: cat,
+        images: mainImages.slice(0, imagesPerCategory),
+      });
+      if (groups.length >= maxCategories) break;
+    }
+    return groups;
+  } catch (err) {
+    console.error("[cakes-data:getCategoryImageGroups]", err instanceof Error ? err.message : err);
+    return [];
   }
 }
 
