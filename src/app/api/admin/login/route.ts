@@ -1,20 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
+export const runtime = "nodejs";
+
 export async function POST(req: NextRequest) {
-  const { password } = await req.json();
-  const adminPassword = process.env.ADMIN_PASSWORD || "patience2024";
+  const { password } = (await req.json()) as { password?: string };
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminPassword) {
+    console.error("[admin/login] ADMIN_PASSWORD is not set — refusing all logins.");
+    return NextResponse.json(
+      { error: "Service mal configuré. Contactez l'administrateur." },
+      { status: 503 }
+    );
+  }
 
   if (password !== adminPassword) {
     return NextResponse.json({ error: "Mot de passe incorrect" }, { status: 401 });
   }
 
-  const cookieStore = await cookies();
-  cookieStore.set("admin_session", "authenticated", {
+  const c = await cookies();
+  c.set("admin_session", "authenticated", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 60 * 60 * 24 * 7,
     path: "/",
   });
 
@@ -22,7 +32,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE() {
-  const cookieStore = await cookies();
-  cookieStore.delete("admin_session");
+  const c = await cookies();
+  c.delete("admin_session");
   return NextResponse.json({ ok: true });
 }

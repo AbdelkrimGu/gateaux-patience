@@ -13,12 +13,14 @@ import {
   X,
   Plus,
   ChevronRight,
+  Tag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/admin", label: "Tableau de bord", icon: LayoutDashboard, exact: true },
   { href: "/admin/cakes", label: "Gâteaux", icon: CakeSlice, exact: false },
+  { href: "/admin/categories", label: "Catégories", icon: Tag, exact: false },
   { href: "/admin/orders", label: "Commandes", icon: ShoppingBag, exact: false },
 ];
 

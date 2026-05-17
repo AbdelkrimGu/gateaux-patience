@@ -9,7 +9,7 @@ export default async function AdminCakesPage() {
   const cookieStore = await cookies();
   if (cookieStore.get("admin_session")?.value !== "authenticated") redirect("/admin/login");
 
-  const cakes = getCakes();
+  const cakes = await getCakes();
 
   return (
     <AdminShell>

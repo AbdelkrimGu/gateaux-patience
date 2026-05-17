@@ -2,14 +2,19 @@ import { cookies } from "next/headers";
 import { redirect, notFound } from "next/navigation";
 import AdminShell from "@/components/admin/AdminShell";
 import CakeForm from "@/components/admin/CakeForm";
-import { getCakes } from "@/lib/admin-data";
+import { getCakeById } from "@/lib/admin-data";
+import { getCategories } from "@/lib/categories-data";
+
+export const dynamic = "force-dynamic";
 
 export default async function EditCakePage({ params }: { params: { id: string } }) {
   const cookieStore = await cookies();
   if (cookieStore.get("admin_session")?.value !== "authenticated") redirect("/admin/login");
 
-  const cakes = getCakes();
-  const cake = cakes.find((c) => c.id === params.id);
+  const [cake, categories] = await Promise.all([
+    getCakeById(params.id),
+    getCategories(),
+  ]);
   if (!cake) notFound();
 
   return (
@@ -21,7 +26,7 @@ export default async function EditCakePage({ params }: { params: { id: string } 
             {cake.translations.fr.title || "Sans titre"}
           </p>
         </div>
-        <CakeForm mode="edit" cake={cake} />
+        <CakeForm mode="edit" cake={cake} categories={categories} />
       </div>
     </AdminShell>
   );

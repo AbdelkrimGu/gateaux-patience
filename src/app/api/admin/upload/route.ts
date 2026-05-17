@@ -1,31 +1,77 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import { cookies } from "next/headers";
+import {
+  deleteS3Object,
+  getPresignedUploadUrl,
+  isAllowedContentType,
+  MAX_UPLOAD_BYTES,
+} from "@/lib/s3";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+interface FileSpec {
+  contentType: string;
+  contentLength?: number;
+}
+
+async function isAuthed() {
+  const c = await cookies();
+  return c.get("admin_session")?.value === "authenticated";
+}
 
 export async function POST(req: NextRequest) {
-  const formData = await req.formData();
-  const files = formData.getAll("files") as File[];
-  const cakeId = formData.get("cakeId") as string;
-
-  if (!files.length || !cakeId) {
-    return NextResponse.json({ error: "Missing files or cakeId" }, { status: 400 });
+  if (!(await isAuthed())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  let body: { cakeId?: string; files?: FileSpec[] };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  const cakeId = (body.cakeId || "misc").toString();
+  const files = Array.isArray(body.files) ? body.files : [];
+  if (files.length === 0) {
+    return NextResponse.json({ error: "No files specified" }, { status: 400 });
+  }
+  if (files.length > 20) {
+    return NextResponse.json({ error: "Too many files (max 20)" }, { status: 400 });
   }
 
-  const uploadDir = path.join(process.cwd(), "public", "uploads", cakeId);
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+  const uploads = await Promise.all(
+    files.map(async (f) => {
+      if (!f.contentType || !isAllowedContentType(f.contentType)) {
+        return { error: `Unsupported type: ${f.contentType || "(none)"}` };
+      }
+      try {
+        return await getPresignedUploadUrl({
+          cakeId,
+          contentType: f.contentType,
+          contentLength: f.contentLength,
+        });
+      } catch (err) {
+        return { error: err instanceof Error ? err.message : "Failed to sign URL" };
+      }
+    })
+  );
+
+  return NextResponse.json({ uploads, maxBytes: MAX_UPLOAD_BYTES });
+}
+
+export async function DELETE(req: NextRequest) {
+  if (!(await isAuthed())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  const savedPaths: string[] = [];
-
-  for (const file of files) {
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
-    const filepath = path.join(uploadDir, filename);
-    const bytes = await file.arrayBuffer();
-    fs.writeFileSync(filepath, Buffer.from(bytes));
-    savedPaths.push(`/uploads/${cakeId}/${filename}`);
+  try {
+    const { url } = (await req.json()) as { url?: string };
+    if (!url || typeof url !== "string") {
+      return NextResponse.json({ error: "Missing url" }, { status: 400 });
+    }
+    await deleteS3Object(url);
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[DELETE /api/admin/upload]", err);
+    return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
   }
-
-  return NextResponse.json({ paths: savedPaths });
 }

@@ -11,8 +11,7 @@ export default async function AdminDashboard() {
     redirect("/admin/login");
   }
 
-  const cakes = getCakes();
-  const orders = getOrders();
+  const [cakes, orders] = await Promise.all([getCakes(), getOrders()]);
   const newOrders = orders.filter((o) => o.status === "new");
 
   const stats = [

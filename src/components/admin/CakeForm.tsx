@@ -1,24 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import {
   Sparkles, Upload, X, Loader2, Save, ChevronDown,
-  Globe, Trash2, GripVertical, Check
+  Globe, GripVertical, Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AdminCake } from "@/lib/admin-data";
-
-const CATEGORIES = [
-  { id: "birthday-kids", label: "Anniversaire Enfants", ar: "عيد ميلاد الأطفال", en: "Kids Birthday" },
-  { id: "birthday-adults", label: "Anniversaire Adultes", ar: "عيد ميلاد البالغين", en: "Adult Birthday" },
-  { id: "wedding", label: "Mariage & Fiançailles", ar: "زفاف وخطوبة", en: "Wedding & Engagement" },
-  { id: "graduation", label: "Diplôme & Remise", ar: "التخرج والتكريم", en: "Graduation" },
-  { id: "daily", label: "Gâteaux du Quotidien", ar: "كعكات يومية", en: "Everyday Cakes" },
-  { id: "customs", label: "Personnalisés", ar: "مخصص", en: "Custom" },
-  { id: "desserts", label: "Desserts", ar: "حلويات", en: "Desserts" },
-];
+import type { Category } from "@/lib/db-types";
 
 type Lang = "fr" | "ar" | "en";
 const LANGS: { code: Lang; label: string; flag: string; dir: string }[] = [
@@ -30,29 +20,73 @@ const LANGS: { code: Lang; label: string; flag: string; dir: string }[] = [
 interface Props {
   cake?: AdminCake;
   mode: "new" | "edit";
+  categories: Category[];
 }
 
-export default function CakeForm({ cake, mode }: Props) {
+interface PresignedUpload {
+  uploadUrl?: string;
+  publicUrl?: string;
+  key?: string;
+  expiresAt?: number;
+  error?: string;
+}
+
+interface AiResponse {
+  titles: { ar?: string; en?: string };
+  descriptions: { fr?: string; ar?: string; en?: string };
+}
+
+export default function CakeForm({ cake, mode, categories }: Props) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
-  const cakeId = cake?.id || ("new-" + Date.now().toString(36));
 
-  // Form state
+  const cakeIdRef = useRef<string>(
+    cake?.id || `new-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
+  );
+  const originalImagesRef = useRef<Set<string>>(new Set(cake?.images || []));
+
+  // If the cake references a category that has since been deleted, synthesize
+  // an option from its denormalized categoryLabel so the dropdown still
+  // displays the current value.
+  const categoryOptions = useMemo<Category[]>(() => {
+    if (
+      cake &&
+      cake.category &&
+      !categories.find((c) => c.slug === cake.category)
+    ) {
+      const ghost: Category = {
+        id: `__ghost__${cake.category}`,
+        slug: cake.category,
+        labels: cake.categoryLabel,
+        order: 9999,
+        createdAt: "",
+        updatedAt: "",
+      };
+      return [...categories, ghost];
+    }
+    return categories;
+  }, [categories, cake]);
+
+  const initialCategory =
+    cake?.category ||
+    (categoryOptions[0]?.slug ?? "");
+
   const [activeLang, setActiveLang] = useState<Lang>("fr");
   const [images, setImages] = useState<string[]>(cake?.images || []);
-  const [uploading, setUploading] = useState(false);
-  const [category, setCategory] = useState(cake?.category || "birthday-adults");
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
+  const [uploadError, setUploadError] = useState("");
+  const [category, setCategory] = useState(initialCategory);
   const [translations, setTranslations] = useState({
     fr: { title: cake?.translations.fr.title || "", description: cake?.translations.fr.description || "" },
     ar: { title: cake?.translations.ar.title || "", description: cake?.translations.ar.description || "" },
     en: { title: cake?.translations.en.title || "", description: cake?.translations.en.description || "" },
   });
   const [dims, setDims] = useState({
-    length: cake?.length || "",
-    width: cake?.width || "",
-    height: cake?.height || "",
-    pieces: cake?.pieces || "",
-    persons: cake?.persons || "",
+    length: cake?.length?.toString() || "",
+    width: cake?.width?.toString() || "",
+    height: cake?.height?.toString() || "",
+    pieces: cake?.pieces?.toString() || "",
+    persons: cake?.persons?.toString() || "",
   });
   const [featured, setFeatured] = useState(cake?.featured || false);
   const [published, setPublished] = useState(cake?.published ?? true);
@@ -61,21 +95,88 @@ export default function CakeForm({ cake, mode }: Props) {
   const [aiError, setAiError] = useState("");
   const [saved, setSaved] = useState(false);
 
-  // --- Image upload ---
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
-    setUploading(true);
-    const form = new FormData();
-    form.append("cakeId", cakeId);
-    Array.from(files).forEach((f) => form.append("files", f));
-    const res = await fetch("/api/admin/upload", { method: "POST", body: form });
-    const data = await res.json() as { paths: string[] };
-    setImages((prev) => [...prev, ...data.paths]);
-    setUploading(false);
+    const arr = Array.from(files);
+    setUploadError("");
+    setUploadProgress({ done: 0, total: arr.length });
+
+    try {
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cakeId: cakeIdRef.current,
+          files: arr.map((f) => ({
+            contentType: f.type || "application/octet-stream",
+            contentLength: f.size,
+          })),
+        }),
+      });
+
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(err.error || `Upload request failed (${res.status})`);
+      }
+
+      const data = (await res.json()) as { uploads: PresignedUpload[] };
+      const uploaded: string[] = [];
+      let done = 0;
+
+      await Promise.all(
+        arr.map(async (file, i) => {
+          const slot = data.uploads[i];
+          if (!slot || slot.error || !slot.uploadUrl || !slot.publicUrl) {
+            console.warn(`[upload] ${file.name}: ${slot?.error || "no slot"}`);
+            done++;
+            setUploadProgress({ done, total: arr.length });
+            return;
+          }
+          const putRes = await fetch(slot.uploadUrl, {
+            method: "PUT",
+            headers: { "Content-Type": file.type || "application/octet-stream" },
+            body: file,
+          });
+          done++;
+          setUploadProgress({ done, total: arr.length });
+          if (!putRes.ok) {
+            console.error(`[upload] PUT failed for ${file.name}: ${putRes.status}`);
+            return;
+          }
+          uploaded.push(slot.publicUrl);
+        })
+      );
+
+      if (uploaded.length > 0) {
+        setImages((prev) => [...prev, ...uploaded]);
+      }
+      if (uploaded.length < arr.length) {
+        setUploadError(`${arr.length - uploaded.length} fichier(s) n'ont pas pu être téléchargés.`);
+      }
+    } catch (e) {
+      console.error("[upload]", e);
+      setUploadError(e instanceof Error ? e.message : "Erreur de téléchargement");
+    } finally {
+      setUploadProgress(null);
+      if (fileRef.current) fileRef.current.value = "";
+    }
   }
 
-  function removeImage(idx: number) {
+  async function removeImage(idx: number) {
+    const url = images[idx];
     setImages((prev) => prev.filter((_, i) => i !== idx));
+
+    if (url && !originalImagesRef.current.has(url)) {
+      try {
+        await fetch("/api/admin/upload", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+      } catch {
+        // best-effort; orphan is acceptable
+      }
+    }
   }
 
   function moveImage(from: number, to: number) {
@@ -87,16 +188,14 @@ export default function CakeForm({ cake, mode }: Props) {
     });
   }
 
-  // --- AI description ---
   async function handleGenerate() {
-    if (!translations.fr.title) {
+    if (!translations.fr.title.trim()) {
       setAiError("Ajoutez d'abord un titre en français.");
       return;
     }
     setGenerating(true);
     setAiError("");
 
-    // Convert first 2 images to base64 for Gemini
     const imgBase64: string[] = [];
     for (const imgPath of images.slice(0, 2)) {
       try {
@@ -108,30 +207,42 @@ export default function CakeForm({ cake, mode }: Props) {
           reader.readAsDataURL(blob);
         });
         imgBase64.push(b64);
-      } catch { /* skip */ }
+      } catch {
+        /* skip */
+      }
     }
 
     try {
+      const cat = categoryOptions.find((c) => c.slug === category);
       const res = await fetch("/api/generate-description", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: translations.fr.title,
-          category: CATEGORIES.find((c) => c.id === category)?.label || category,
+          category: cat?.labels.fr || category,
           images: imgBase64,
         }),
       });
 
       if (!res.ok) {
-        const err = await res.json() as { error?: string };
+        const err = (await res.json()) as { error?: string };
         throw new Error(err.error || "Erreur API");
       }
 
-      const data = await res.json() as { fr: string; ar: string; en: string };
+      const data = (await res.json()) as AiResponse;
       setTranslations((prev) => ({
-        fr: { ...prev.fr, description: data.fr },
-        ar: { ...prev.ar, description: data.ar },
-        en: { ...prev.en, description: data.en },
+        fr: {
+          title: prev.fr.title, // FR is the user's source of truth — untouched.
+          description: data.descriptions.fr ?? prev.fr.description,
+        },
+        ar: {
+          title: data.titles.ar ?? prev.ar.title,
+          description: data.descriptions.ar ?? prev.ar.description,
+        },
+        en: {
+          title: data.titles.en ?? prev.en.title,
+          description: data.descriptions.en ?? prev.en.description,
+        },
       }));
     } catch (e) {
       setAiError(e instanceof Error ? e.message : "Erreur lors de la génération");
@@ -139,18 +250,28 @@ export default function CakeForm({ cake, mode }: Props) {
     setGenerating(false);
   }
 
-  // --- Save ---
   async function handleSave() {
     setSaving(true);
-    const cat = CATEGORIES.find((c) => c.id === category)!;
+    const cat = categoryOptions.find((c) => c.slug === category);
+    if (!cat) {
+      setUploadError("Sélectionnez une catégorie valide.");
+      setSaving(false);
+      return;
+    }
     const payload = {
       images,
-      category,
-      categoryLabel: { fr: cat.label, ar: cat.ar, en: cat.en },
+      category: cat.slug,
+      categoryLabel: cat.labels,
       translations: {
         fr: { title: translations.fr.title, description: translations.fr.description },
-        ar: { title: translations.ar.title || translations.fr.title, description: translations.ar.description || translations.fr.description },
-        en: { title: translations.en.title || translations.fr.title, description: translations.en.description || translations.fr.description },
+        ar: {
+          title: translations.ar.title || translations.fr.title,
+          description: translations.ar.description || translations.fr.description,
+        },
+        en: {
+          title: translations.en.title || translations.fr.title,
+          description: translations.en.description || translations.fr.description,
+        },
       },
       length: dims.length ? Number(dims.length) : undefined,
       width: dims.width ? Number(dims.width) : undefined,
@@ -161,29 +282,35 @@ export default function CakeForm({ cake, mode }: Props) {
       published,
     };
 
-    if (mode === "new") {
-      await fetch("/api/admin/cakes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    } else {
-      await fetch(`/api/admin/cakes/${cake!.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+    try {
+      const res = await fetch(
+        mode === "new" ? "/api/admin/cakes" : `/api/admin/cakes/${cake!.id}`,
+        {
+          method: mode === "new" ? "POST" : "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(err.error || `Save failed (${res.status})`);
+      }
+      setSaved(true);
+      setTimeout(() => {
+        router.push("/admin/cakes");
+        router.refresh();
+      }, 800);
+    } catch (e) {
+      console.error("[save]", e);
+      setUploadError(e instanceof Error ? e.message : "Erreur lors de l'enregistrement");
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => {
-      router.push("/admin/cakes");
-      router.refresh();
-    }, 800);
   }
 
   const cur = translations[activeLang];
+  const uploading = uploadProgress !== null;
+  const noCategories = categoryOptions.length === 0;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -198,7 +325,6 @@ export default function CakeForm({ cake, mode }: Props) {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Published toggle */}
           <label className="flex items-center gap-2 cursor-pointer">
             <span className="text-sm text-gray-600 font-medium">
               {published ? "Publié" : "Brouillon"}
@@ -219,7 +345,7 @@ export default function CakeForm({ cake, mode }: Props) {
 
           <button
             onClick={handleSave}
-            disabled={saving || !translations.fr.title}
+            disabled={saving || !translations.fr.title || uploading || noCategories}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-500 text-white text-sm font-semibold hover:bg-rose-600 disabled:opacity-50 transition shadow-sm"
           >
             {saving ? <Loader2 size={15} className="animate-spin" /> : saved ? <Check size={15} /> : <Save size={15} />}
@@ -228,6 +354,13 @@ export default function CakeForm({ cake, mode }: Props) {
         </div>
       </div>
 
+      {noCategories && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-xl px-4 py-3">
+          Aucune catégorie disponible. Créez-en au moins une dans{" "}
+          <a href="/admin/categories" className="font-semibold underline">Catégories</a>{" "}avant d&apos;ajouter un gâteau.
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left col — images + category */}
         <div className="lg:col-span-1 space-y-4">
@@ -235,7 +368,6 @@ export default function CakeForm({ cake, mode }: Props) {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
             <h3 className="font-semibold text-gray-700 mb-3 text-sm">Photos</h3>
 
-            {/* Upload zone */}
             <div
               onClick={() => fileRef.current?.click()}
               onDragOver={(e) => e.preventDefault()}
@@ -248,7 +380,9 @@ export default function CakeForm({ cake, mode }: Props) {
                 <Upload size={20} className="text-gray-400 mx-auto mb-1" />
               )}
               <p className="text-xs text-gray-500">
-                {uploading ? "Téléchargement..." : "Cliquez ou glissez vos photos"}
+                {uploading
+                  ? `Téléchargement ${uploadProgress!.done}/${uploadProgress!.total}...`
+                  : "Cliquez ou glissez vos photos"}
               </p>
               <input
                 ref={fileRef}
@@ -260,7 +394,10 @@ export default function CakeForm({ cake, mode }: Props) {
               />
             </div>
 
-            {/* Image grid */}
+            {uploadError && (
+              <p className="text-xs text-red-500 mb-2">{uploadError}</p>
+            )}
+
             {images.length > 0 && (
               <div className="grid grid-cols-3 gap-2">
                 {images.map((img, i) => (
@@ -306,14 +443,20 @@ export default function CakeForm({ cake, mode }: Props) {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 py-2.5 pr-8 rounded-xl border border-gray-200 text-sm focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none appearance-none bg-white"
+                disabled={noCategories}
+                className="w-full px-3 py-2.5 pr-8 rounded-xl border border-gray-200 text-sm focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none appearance-none bg-white disabled:bg-gray-50 disabled:text-gray-400"
               >
-                {CATEGORIES.map((c) => (
-                  <option key={c.id} value={c.id}>{c.label}</option>
+                {categoryOptions.map((c) => (
+                  <option key={c.id} value={c.slug}>
+                    {c.labels.fr}{c.id.startsWith("__ghost__") ? " (supprimée)" : ""}
+                  </option>
                 ))}
               </select>
               <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
+            <p className="text-[10px] text-gray-400 mt-2">
+              Gérer la liste dans <a href="/admin/categories" className="text-rose-500 hover:underline">Catégories</a>.
+            </p>
           </div>
 
           {/* Dimensions */}
@@ -383,14 +526,12 @@ export default function CakeForm({ cake, mode }: Props) {
 
         {/* Right col — titles + descriptions */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Language tabs */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
             <div className="flex items-center gap-2 mb-4">
               <Globe size={15} className="text-gray-400" />
               <span className="text-sm font-semibold text-gray-700">Titres & Descriptions</span>
             </div>
 
-            {/* Tabs */}
             <div className="flex gap-1 mb-4 bg-gray-100 p-1 rounded-xl">
               {LANGS.map((l) => (
                 <button
@@ -412,11 +553,10 @@ export default function CakeForm({ cake, mode }: Props) {
               ))}
             </div>
 
-            {/* Fields */}
             <div className="space-y-3" dir={LANGS.find((l) => l.code === activeLang)?.dir}>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1.5">
-                  Titre {activeLang === "fr" ? "(requis)" : "(optionnel — sera copié du FR si vide)"}
+                  Titre {activeLang === "fr" ? "(requis)" : "(rempli par l'IA ou copié du FR)"}
                 </label>
                 <input
                   type="text"
@@ -446,7 +586,7 @@ export default function CakeForm({ cake, mode }: Props) {
                       ) : (
                         <Sparkles size={12} />
                       )}
-                      {generating ? "Génération IA..." : "Générer avec IA (3 langues)"}
+                      {generating ? "Génération IA..." : "Traduire & générer (IA)"}
                     </button>
                   )}
                 </div>
@@ -461,7 +601,7 @@ export default function CakeForm({ cake, mode }: Props) {
                   }
                   placeholder={
                     activeLang === "fr"
-                      ? "Description du gâteau... ou cliquez sur 'Générer avec IA'"
+                      ? "Description du gâteau... ou cliquez sur 'Traduire & générer'"
                       : activeLang === "ar"
                       ? "وصف الكعكة..."
                       : "Cake description..."
@@ -473,7 +613,7 @@ export default function CakeForm({ cake, mode }: Props) {
                 )}
                 {activeLang === "fr" && !aiError && (
                   <p className="text-[10px] text-gray-400 mt-1">
-                    💡 Le bouton IA génère les descriptions en français, arabe et anglais en une fois.
+                    💡 L&apos;IA traduit le titre FR vers AR/EN et génère les 3 descriptions en une fois.
                     Ajoutez des photos avant de générer pour un meilleur résultat.
                   </p>
                 )}
@@ -497,7 +637,7 @@ export default function CakeForm({ cake, mode }: Props) {
                     {translations.fr.title || "—"}
                   </p>
                   <p className="text-xs text-rose-500 mt-0.5">
-                    {CATEGORIES.find((c) => c.id === category)?.label}
+                    {categoryOptions.find((c) => c.slug === category)?.labels.fr || "—"}
                   </p>
                   {translations.fr.description && (
                     <p className="text-xs text-gray-500 mt-1 line-clamp-2">

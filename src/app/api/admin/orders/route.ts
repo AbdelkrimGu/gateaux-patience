@@ -1,28 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getOrders, saveOrders, generateId, type Order } from "@/lib/admin-data";
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { getOrders } from "@/lib/admin-data";
 
-export async function GET() {
-  const orders = getOrders();
-  return NextResponse.json({ orders });
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+async function isAuthed() {
+  const c = await cookies();
+  return c.get("admin_session")?.value === "authenticated";
 }
 
-export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const orders = getOrders();
-
-  const newOrder: Order = {
-    id: generateId(),
-    cakeId: body.cakeId,
-    cakeTitle: body.cakeTitle,
-    name: body.name || "",
-    phone: body.phone || "",
-    message: body.message || "",
-    status: "new",
-    createdAt: new Date().toISOString(),
-  };
-
-  orders.unshift(newOrder);
-  saveOrders(orders);
-
-  return NextResponse.json({ order: newOrder }, { status: 201 });
+export async function GET() {
+  if (!(await isAuthed())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const orders = await getOrders();
+  return NextResponse.json(orders);
 }

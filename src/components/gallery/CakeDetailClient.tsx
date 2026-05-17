@@ -18,15 +18,20 @@ import {
   Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { type Cake, type Locale, getSimilarCakes } from "@/lib/cakes-data";
+import type { Cake, Locale } from "@/lib/cakes-data";
 import { CONTACT } from "@/lib/constants";
 
-export default function CakeDetailClient({ cake }: { cake: Cake }) {
+export default function CakeDetailClient({
+  cake,
+  similar,
+}: {
+  cake: Cake;
+  similar: Cake[];
+}) {
   const locale = useLocale();
   const isRTL = locale === "ar";
   const prefix = locale === "fr" ? "" : `/${locale}`;
   const t = cake.translations[locale as Locale] ?? cake.translations.fr;
-  const similar = getSimilarCakes(cake);
 
   const [activeImage, setActiveImage] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -99,14 +104,16 @@ export default function CakeDetailClient({ cake }: { cake: Cake }) {
             <div className="flex flex-col gap-4">
               {/* Main image */}
               <div className="relative aspect-square rounded-2xl overflow-hidden bg-surface-alt shadow-cake">
-                <Image
-                  src={cake.images[activeImage]}
-                  alt={t.title}
-                  fill
-                  className="object-cover transition-opacity duration-300"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  priority
-                />
+                {cake.images[activeImage] && (
+                  <Image
+                    src={cake.images[activeImage]}
+                    alt={t.title}
+                    fill
+                    className="object-cover transition-opacity duration-300"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    priority
+                  />
+                )}
 
                 {/* Nav arrows */}
                 {cake.images.length > 1 && (

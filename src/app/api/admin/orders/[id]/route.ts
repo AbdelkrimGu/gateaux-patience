@@ -1,20 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOrders, saveOrders } from "@/lib/admin-data";
+import { cookies } from "next/headers";
+import { deleteOrder, updateOrder, type OrderPatch } from "@/lib/admin-data";
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const body = await req.json();
-  const orders = getOrders();
-  const idx = orders.findIndex((o) => o.id === id);
-  if (idx === -1) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  orders[idx] = { ...orders[idx], ...body };
-  saveOrders(orders);
-  return NextResponse.json({ order: orders[idx] });
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const ALLOWED_STATUS = new Set(["new", "seen", "done"]);
+
+async function isAuthed() {
+  const c = await cookies();
+  return c.get("admin_session")?.value === "authenticated";
 }
 
-export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthed())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const { id } = await params;
-  const orders = getOrders().filter((o) => o.id !== id);
-  saveOrders(orders);
+  try {
+    const body = (await req.json()) as OrderPatch;
+    if (body.status && !ALLOWED_STATUS.has(body.status)) {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    }
+    const updated = await updateOrder(id, body);
+    if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json(updated);
+  } catch (err) {
+    console.error(`[PUT /api/admin/orders/${id}]`, err);
+    return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthed())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const { id } = await params;
+  const ok = await deleteOrder(id);
+  if (!ok) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

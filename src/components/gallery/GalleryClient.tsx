@@ -3,24 +3,17 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useTranslations, useLocale } from "next-intl";
+import { useLocale } from "next-intl";
 import { useInView } from "react-intersection-observer";
 import { Eye, ShoppingBag, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CAKES, type Locale } from "@/lib/cakes-data";
+import type { Cake, Locale } from "@/lib/cakes-data";
+import type { Category } from "@/lib/db-types";
 import { CONTACT } from "@/lib/constants";
 
-const CATEGORY_FILTERS = [
-  { id: "all", labelFr: "Tous", labelAr: "الكل", labelEn: "All" },
-  { id: "birthday-kids", labelFr: "Enfants", labelAr: "أطفال", labelEn: "Kids" },
-  { id: "birthday-adults", labelFr: "Adultes", labelAr: "بالغون", labelEn: "Adults" },
-  { id: "wedding", labelFr: "Mariage", labelAr: "زفاف", labelEn: "Wedding" },
-  { id: "graduation", labelFr: "Diplôme", labelAr: "تخرج", labelEn: "Graduation" },
-  { id: "customs", labelFr: "Personnalisé", labelAr: "مخصص", labelEn: "Custom" },
-  { id: "daily", labelFr: "Quotidien", labelAr: "يومي", labelEn: "Daily" },
-];
+const ALL_LABEL: Record<Locale, string> = { fr: "Tous", ar: "الكل", en: "All" };
 
-function CakeCard({ cake, locale }: { cake: (typeof CAKES)[0]; locale: string }) {
+function CakeCard({ cake, locale }: { cake: Cake; locale: string }) {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
   const t = cake.translations[locale as Locale] ?? cake.translations.fr;
   const prefix = locale === "fr" ? "" : `/${locale}`;
@@ -97,18 +90,24 @@ function CakeCard({ cake, locale }: { cake: (typeof CAKES)[0]; locale: string })
   );
 }
 
-export default function GalleryClient() {
+export default function GalleryClient({
+  cakes,
+  categories,
+}: {
+  cakes: Cake[];
+  categories: Category[];
+}) {
   const locale = useLocale();
   const isRTL = locale === "ar";
   const [activeCategory, setActiveCategory] = useState("all");
 
-  const filtered = activeCategory === "all" ? CAKES : CAKES.filter((c) => c.category === activeCategory);
+  const visible = cakes.filter((c) => c.images.length > 0);
+  const filtered = activeCategory === "all" ? visible : visible.filter((c) => c.category === activeCategory);
 
-  function getFilterLabel(f: (typeof CATEGORY_FILTERS)[0]) {
-    if (locale === "ar") return f.labelAr;
-    if (locale === "en") return f.labelEn;
-    return f.labelFr;
-  }
+  // Only show categories that actually have at least one visible cake (avoids
+  // empty filter buttons when admin deletes the last cake of a category).
+  const slugsInUse = new Set(visible.map((c) => c.category));
+  const usableCategories = categories.filter((c) => slugsInUse.has(c.slug));
 
   return (
     <>
@@ -138,18 +137,30 @@ export default function GalleryClient() {
         <div className="container-custom py-3">
           <div className={cn("flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1", isRTL && "flex-row-reverse")}>
             <SlidersHorizontal size={15} className="text-charcoal-light shrink-0" />
-            {CATEGORY_FILTERS.map((f) => (
+            <button
+              key="all"
+              onClick={() => setActiveCategory("all")}
+              className={cn(
+                "shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap",
+                activeCategory === "all"
+                  ? "bg-rose text-white shadow-sm"
+                  : "bg-surface-alt text-charcoal-light hover:text-rose hover:bg-rose/5 border border-border"
+              )}
+            >
+              {ALL_LABEL[locale as Locale] ?? ALL_LABEL.fr}
+            </button>
+            {usableCategories.map((c) => (
               <button
-                key={f.id}
-                onClick={() => setActiveCategory(f.id)}
+                key={c.id}
+                onClick={() => setActiveCategory(c.slug)}
                 className={cn(
                   "shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap",
-                  activeCategory === f.id
+                  activeCategory === c.slug
                     ? "bg-rose text-white shadow-sm"
                     : "bg-surface-alt text-charcoal-light hover:text-rose hover:bg-rose/5 border border-border"
                 )}
               >
-                {getFilterLabel(f)}
+                {c.labels[locale as Locale] ?? c.labels.fr}
               </button>
             ))}
           </div>
@@ -165,7 +176,13 @@ export default function GalleryClient() {
 
           {filtered.length === 0 ? (
             <div className="text-center py-20 text-charcoal-light">
-              {locale === "ar" ? "لا توجد نتائج" : locale === "en" ? "No results" : "Aucun résultat"}
+              {cakes.length === 0
+                ? (locale === "ar"
+                    ? "لا توجد إبداعات بعد. ترقبوا قريباً!"
+                    : locale === "en"
+                    ? "No creations yet. Stay tuned!"
+                    : "Aucune création pour l'instant. À très bientôt !")
+                : (locale === "ar" ? "لا توجد نتائج" : locale === "en" ? "No results" : "Aucun résultat")}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">

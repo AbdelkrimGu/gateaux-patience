@@ -1,17 +1,11 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import CakeDetailClient from "@/components/gallery/CakeDetailClient";
-import { CAKES, getCakeBySlug, type Locale } from "@/lib/cakes-data";
+import { getCakeBySlug, getSimilarCakes, type Locale } from "@/lib/cakes-data";
 
-export async function generateStaticParams() {
-  const locales = ["fr", "ar", "en"];
-  return locales.flatMap((locale) =>
-    CAKES.map((cake) => ({ locale, slug: cake.slug }))
-  );
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -19,15 +13,13 @@ export async function generateMetadata({
   params: Promise<{ locale: string; slug: string }>;
 }): Promise<Metadata> {
   const { locale, slug } = await params;
-  const cake = getCakeBySlug(slug);
+  const cake = await getCakeBySlug(slug);
   if (!cake) return {};
   const t = cake.translations[locale as Locale] ?? cake.translations.fr;
   return {
     title: `${t.title} | Gateaux Patience`,
     description: t.description.slice(0, 160),
-    openGraph: {
-      images: [{ url: cake.images[0] }],
-    },
+    openGraph: cake.images[0] ? { images: [{ url: cake.images[0] }] } : undefined,
   };
 }
 
@@ -37,13 +29,14 @@ export default async function CakeDetailPage({
   params: Promise<{ locale: string; slug: string }>;
 }) {
   const { slug } = await params;
-  const cake = getCakeBySlug(slug);
+  const cake = await getCakeBySlug(slug);
   if (!cake) notFound();
+  const similar = await getSimilarCakes(cake);
 
   return (
     <main>
       <Header />
-      <CakeDetailClient cake={cake} />
+      <CakeDetailClient cake={cake} similar={similar} />
       <Footer />
     </main>
   );

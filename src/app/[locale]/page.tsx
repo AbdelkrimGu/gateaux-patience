@@ -10,6 +10,9 @@ import AboutSection from "@/components/home/AboutSection";
 import HowToOrderSection from "@/components/home/HowToOrderSection";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
 import SocialCTASection from "@/components/home/SocialCTASection";
+import { getFeaturedCakes } from "@/lib/cakes-data";
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -33,13 +36,14 @@ export async function generateMetadata({
   };
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const featured = await getFeaturedCakes(6);
   return (
     <main>
       <Header />
       <HeroSection />
       <StatsBar />
-      <FeaturedCakes />
+      <FeaturedCakes cakes={featured} />
       <CategoriesSection />
       <AboutSection />
       <HowToOrderSection />

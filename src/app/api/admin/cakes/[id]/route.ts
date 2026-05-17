@@ -1,50 +1,74 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCakes, saveCakes, slugify } from "@/lib/admin-data";
-import fs from "fs";
-import path from "path";
+import { cookies } from "next/headers";
+import { deleteCake, getCakeById, updateCake, type CakePatch } from "@/lib/admin-data";
+import { deleteS3Objects } from "@/lib/s3";
 
-export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const cakes = getCakes();
-  const cake = cakes.find((c) => c.id === id);
-  if (!cake) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json({ cake });
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+async function isAuthed() {
+  const c = await cookies();
+  return c.get("admin_session")?.value === "authenticated";
 }
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const body = await req.json();
-  const cakes = getCakes();
-  const idx = cakes.findIndex((c) => c.id === id);
-  if (idx === -1) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-  const updated = {
-    ...cakes[idx],
-    ...body,
-    id,
-    slug: slugify(body.translations?.fr?.title || cakes[idx].translations.fr.title),
-    updatedAt: new Date().toISOString(),
-  };
-
-  cakes[idx] = updated;
-  saveCakes(cakes);
-  return NextResponse.json({ cake: updated });
-}
-
-export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const cakes = getCakes();
-  const cake = cakes.find((c) => c.id === id);
-
-  if (cake) {
-    // Remove uploaded images from disk
-    const uploadDir = path.join(process.cwd(), "public", "uploads", id);
-    if (fs.existsSync(uploadDir)) {
-      fs.rmSync(uploadDir, { recursive: true });
-    }
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthed())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const { id } = await params;
+  const cake = await getCakeById(id);
+  if (!cake) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json(cake);
+}
 
-  const filtered = cakes.filter((c) => c.id !== id);
-  saveCakes(filtered);
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthed())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const { id } = await params;
+  const existing = await getCakeById(id);
+  if (!existing) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  try {
+    const patch = (await req.json()) as CakePatch;
+    const updated = await updateCake(id, patch);
+
+    if (Array.isArray(patch.images)) {
+      const next = new Set(patch.images);
+      const removed = existing.images.filter((url) => !next.has(url));
+      if (removed.length > 0) {
+        await deleteS3Objects(removed);
+      }
+    }
+
+    return NextResponse.json(updated);
+  } catch (err) {
+    console.error(`[PUT /api/admin/cakes/${id}]`, err);
+    return NextResponse.json({ error: "Failed to update cake" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthed())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const { id } = await params;
+  const deleted = await deleteCake(id);
+  if (!deleted) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  if (deleted.images?.length) {
+    await deleteS3Objects(deleted.images);
+  }
   return NextResponse.json({ ok: true });
 }

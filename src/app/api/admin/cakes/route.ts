@@ -1,38 +1,52 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCakes, saveCakes, generateId, slugify, type AdminCake } from "@/lib/admin-data";
+import { cookies } from "next/headers";
+import { createCake, getCakes, type CakeInput } from "@/lib/admin-data";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+async function isAuthed() {
+  const c = await cookies();
+  return c.get("admin_session")?.value === "authenticated";
+}
 
 export async function GET() {
-  return NextResponse.json({ cakes: getCakes() });
+  if (!(await isAuthed())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const cakes = await getCakes();
+  return NextResponse.json(cakes);
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const cakes = getCakes();
-
-  const newCake: AdminCake = {
-    id: generateId(),
-    slug: slugify(body.translations?.fr?.title || body.id || "gateau"),
-    images: body.images || [],
-    category: body.category || "daily",
-    categoryLabel: body.categoryLabel || { fr: "Quotidien", ar: "يومي", en: "Daily" },
-    translations: body.translations || {
-      fr: { title: "", description: "" },
-      ar: { title: "", description: "" },
-      en: { title: "", description: "" },
-    },
-    length: body.length || undefined,
-    width: body.width || undefined,
-    height: body.height || undefined,
-    pieces: body.pieces || undefined,
-    persons: body.persons || undefined,
-    featured: body.featured || false,
-    published: body.published ?? true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  cakes.unshift(newCake);
-  saveCakes(cakes);
-
-  return NextResponse.json({ cake: newCake }, { status: 201 });
+  if (!(await isAuthed())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  try {
+    const body = (await req.json()) as Partial<CakeInput>;
+    if (!body?.translations?.fr?.title) {
+      return NextResponse.json({ error: "Title (FR) is required" }, { status: 400 });
+    }
+    const cake = await createCake({
+      images: Array.isArray(body.images) ? body.images : [],
+      category: body.category || "daily",
+      categoryLabel: body.categoryLabel || {
+        fr: "Quotidien",
+        ar: "يومي",
+        en: "Daily",
+      },
+      translations: body.translations,
+      length: body.length,
+      width: body.width,
+      height: body.height,
+      pieces: body.pieces,
+      persons: body.persons,
+      featured: Boolean(body.featured),
+      published: body.published ?? true,
+    });
+    return NextResponse.json(cake, { status: 201 });
+  } catch (err) {
+    console.error("[POST /api/admin/cakes]", err);
+    return NextResponse.json({ error: "Failed to create cake" }, { status: 500 });
+  }
 }
