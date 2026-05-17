@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import {
   Plus, Pencil, Trash2, Check, X, Loader2, Tag, AlertTriangle,
-  Upload, ImagePlus,
+  Upload, ImagePlus, Sparkles,
 } from "lucide-react";
 import type { Category } from "@/lib/db-types";
 
@@ -416,6 +416,36 @@ function EditorRow({
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [translating, setTranslating] = useState(false);
+  const [translateError, setTranslateError] = useState("");
+
+  async function handleTranslate() {
+    const fr = data.labels.fr.trim();
+    if (!fr) {
+      setTranslateError("Saisissez d'abord le libellé FR.");
+      return;
+    }
+    setTranslating(true);
+    setTranslateError("");
+    try {
+      const res = await fetch("/api/admin/translate-label", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fr }),
+      });
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(err.error || `Translation failed (${res.status})`);
+      }
+      const json = (await res.json()) as { ar?: string; en?: string };
+      if (json.ar) onChangeLabel("ar", json.ar);
+      if (json.en) onChangeLabel("en", json.en);
+    } catch (e) {
+      setTranslateError(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setTranslating(false);
+    }
+  }
 
   async function handleFile(file: File | null) {
     if (!file) return;
@@ -514,7 +544,23 @@ function EditorRow({
         {/* Label inputs */}
         <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2">
           <div>
-            <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">🇫🇷 FR (requis)</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-[10px] uppercase tracking-wide text-gray-500">🇫🇷 FR (requis)</label>
+              <button
+                type="button"
+                onClick={handleTranslate}
+                disabled={translating || !data.labels.fr.trim()}
+                title="Traduire en arabe + anglais avec l'IA"
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-violet-500 text-white hover:bg-violet-600 disabled:opacity-50 transition"
+              >
+                {translating ? (
+                  <Loader2 size={10} className="animate-spin" />
+                ) : (
+                  <Sparkles size={10} />
+                )}
+                {translating ? "..." : "Traduire IA"}
+              </button>
+            </div>
             <input
               type="text"
               value={data.labels.fr}
@@ -523,6 +569,9 @@ function EditorRow({
               autoFocus
               className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm"
             />
+            {translateError && (
+              <p className="text-[10px] text-red-500 mt-1">{translateError}</p>
+            )}
           </div>
           <div>
             <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">🇩🇿 AR (optionnel)</label>
