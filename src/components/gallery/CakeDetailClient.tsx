@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useLocale } from "next-intl";
 import useEmblaCarousel from "embla-carousel-react";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import {
   ArrowLeft,
   ArrowRight,
@@ -17,6 +18,8 @@ import {
   Phone,
   Share2,
   Check,
+  X,
+  ZoomIn,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Cake, Locale } from "@/lib/cakes-data";
@@ -35,6 +38,7 @@ export default function CakeDetailClient({
   const t = cake.translations[locale as Locale] ?? cake.translations.fr;
 
   const [copied, setCopied] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: cake.images.length > 1,
     align: "center",
@@ -89,6 +93,12 @@ export default function CakeDetailClient({
     copied: { fr: "Copié !", ar: "تم النسخ!", en: "Copied!" },
     similar: { fr: "Créations Similaires", ar: "إبداعات مشابهة", en: "Similar Creations" },
     view: { fr: "Voir", ar: "عرض", en: "View" },
+    zoom: { fr: "Zoomer", ar: "تكبير", en: "Zoom" },
+    zoomHint: {
+      fr: "Pincez ou double-tapez pour zoomer",
+      ar: "اقرص أو اضغط مرتين للتكبير",
+      en: "Pinch or double-tap to zoom",
+    },
   };
 
   function lbl(key: keyof typeof labels) {
@@ -127,9 +137,12 @@ export default function CakeDetailClient({
                 <div className="absolute inset-0 overflow-hidden" ref={emblaRef}>
                   <div className="flex h-full touch-pan-y">
                     {cake.images.map((src, i) => (
-                      <div
+                      <button
                         key={src}
-                        className="relative flex-[0_0_100%] min-w-0 h-full select-none"
+                        type="button"
+                        onClick={() => setLightboxIndex(i)}
+                        className="relative flex-[0_0_100%] min-w-0 h-full select-none cursor-zoom-in"
+                        aria-label={`${t.title} — agrandir`}
                       >
                         <Image
                           src={src}
@@ -140,9 +153,15 @@ export default function CakeDetailClient({
                           priority={i === 0}
                           draggable={false}
                         />
-                      </div>
+                      </button>
                     ))}
                   </div>
+                </div>
+
+                {/* Subtle zoom hint */}
+                <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white text-[10px] font-medium pointer-events-none z-10">
+                  <ZoomIn size={11} />
+                  {lbl("zoom")}
                 </div>
 
                 {/* Nav arrows */}
@@ -359,6 +378,146 @@ export default function CakeDetailClient({
           </div>
         </section>
       )}
+
+      {lightboxIndex !== null && (
+        <Lightbox
+          images={cake.images}
+          initialIndex={lightboxIndex}
+          alt={t.title}
+          hint={lbl("zoomHint")}
+          onClose={() => setLightboxIndex(null)}
+        />
+      )}
     </>
+  );
+}
+
+function Lightbox({
+  images,
+  initialIndex,
+  alt,
+  hint,
+  onClose,
+}: {
+  images: string[];
+  initialIndex: number;
+  alt: string;
+  hint: string;
+  onClose: () => void;
+}) {
+  const [index, setIndex] = useState(initialIndex);
+
+  const prev = useCallback(
+    () => setIndex((i) => (i === 0 ? images.length - 1 : i - 1)),
+    [images.length]
+  );
+  const next = useCallback(
+    () => setIndex((i) => (i === images.length - 1 ? 0 : i + 1)),
+    [images.length]
+  );
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      else if (e.key === "ArrowLeft") prev();
+      else if (e.key === "ArrowRight") next();
+    };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [prev, next, onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center animate-fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-label={alt}
+    >
+      {/* Close */}
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Fermer"
+        className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-colors"
+      >
+        <X size={18} />
+      </button>
+
+      {/* Counter */}
+      {images.length > 1 && (
+        <div className="absolute top-4 left-4 z-20 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm text-white text-xs font-medium">
+          {index + 1} / {images.length}
+        </div>
+      )}
+
+      {/* Zoomable image — TransformWrapper handles pinch, pan, double-tap,
+          and mouse wheel. key={index} forces a remount on slide change so
+          zoom resets back to 1×. */}
+      <div className="w-full h-full">
+        <TransformWrapper
+          key={index}
+          initialScale={1}
+          minScale={1}
+          maxScale={5}
+          centerOnInit
+          doubleClick={{ mode: "toggle", step: 2.5 }}
+          wheel={{ step: 0.15 }}
+          pinch={{ step: 8 }}
+          panning={{ velocityDisabled: true, disabled: false }}
+          limitToBounds
+        >
+          <TransformComponent
+            wrapperStyle={{ width: "100%", height: "100%" }}
+            contentStyle={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={images[index]}
+              alt={alt}
+              className="max-w-screen max-h-screen object-contain select-none"
+              draggable={false}
+            />
+          </TransformComponent>
+        </TransformWrapper>
+      </div>
+
+      {/* Prev/Next */}
+      {images.length > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={prev}
+            aria-label="Précédent"
+            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-colors"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <button
+            type="button"
+            onClick={next}
+            aria-label="Suivant"
+            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-colors"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </>
+      )}
+
+      {/* Hint */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm text-white/80 text-xs font-medium pointer-events-none">
+        {hint}
+      </div>
+    </div>
   );
 }
