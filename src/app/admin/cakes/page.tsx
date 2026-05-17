@@ -45,66 +45,108 @@ export default async function AdminCakesPage() {
             </Link>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50">
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Gâteau</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Catégorie</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
-                    <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {cakes.map((cake) => (
-                    <tr key={cake.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0">
-                            {cake.images[0] ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={cake.images[0]} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-300 text-lg">🎂</div>
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-medium text-gray-800 truncate max-w-[180px]">
-                              {cake.translations.fr.title || "Sans titre"}
-                            </p>
-                            <p className="text-xs text-gray-400">{cake.images.length} photo{cake.images.length !== 1 ? "s" : ""}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 hidden md:table-cell">
-                        <span className="text-gray-600">{cake.categoryLabel.fr}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                          cake.published ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                        }`}>
-                          {cake.published ? "Publié" : "Brouillon"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-2">
-                          <Link
-                            href={`/admin/cakes/${cake.id}`}
-                            className="p-2 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition"
-                            title="Modifier"
-                          >
-                            <Pencil size={15} />
-                          </Link>
-                          <DeleteCakeButton id={cake.id} />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <>
+            {/* Mobile card list */}
+            <div className="md:hidden space-y-3">
+              {cakes.map((cake) => (
+                <div key={cake.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 flex items-center gap-3">
+                  <Link href={`/admin/cakes/${cake.id}`} className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+                      {cake.images[0] ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={cake.images[0]} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-300 text-lg">🎂</div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-gray-800 truncate">
+                        {cake.translations.fr.title || "Sans titre"}
+                      </p>
+                      <p className="text-xs text-gray-400 truncate">{cake.categoryLabel.fr}</p>
+                      <span className={`inline-flex items-center px-2 py-0.5 mt-1 rounded-full text-[10px] font-medium ${
+                        cake.published ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                      }`}>
+                        {cake.published ? "Publié" : "Brouillon"}
+                      </span>
+                    </div>
+                  </Link>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Link
+                      href={`/admin/cakes/${cake.id}`}
+                      className="p-2 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition"
+                      title="Modifier"
+                    >
+                      <Pencil size={16} />
+                    </Link>
+                    <DeleteCakeButton id={cake.id} />
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 bg-gray-50">
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Gâteau</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Catégorie</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {cakes.map((cake) => (
+                      <tr key={cake.id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-4 py-3">
+                          <Link href={`/admin/cakes/${cake.id}`} className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+                              {cake.images[0] ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={cake.images[0]} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-300 text-lg">🎂</div>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium text-gray-800 truncate max-w-[220px] hover:text-rose-500 transition-colors">
+                                {cake.translations.fr.title || "Sans titre"}
+                              </p>
+                              <p className="text-xs text-gray-400">{cake.images.length} photo{cake.images.length !== 1 ? "s" : ""}</p>
+                            </div>
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-gray-600">{cake.categoryLabel.fr}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                            cake.published ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                          }`}>
+                            {cake.published ? "Publié" : "Brouillon"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-2">
+                            <Link
+                              href={`/admin/cakes/${cake.id}`}
+                              className="p-2 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition"
+                              title="Modifier"
+                            >
+                              <Pencil size={15} />
+                            </Link>
+                            <DeleteCakeButton id={cake.id} />
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </AdminShell>
