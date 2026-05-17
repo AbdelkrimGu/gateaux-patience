@@ -9,6 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { AdminCake } from "@/lib/admin-data";
 import type { Category } from "@/lib/db-types";
+import { compressImage } from "@/lib/image-compress";
 
 type Lang = "fr" | "ar" | "en";
 const LANGS: { code: Lang; label: string; flag: string; dir: string }[] = [
@@ -73,7 +74,11 @@ export default function CakeForm({ cake, mode, categories }: Props) {
 
   const [activeLang, setActiveLang] = useState<Lang>("fr");
   const [images, setImages] = useState<string[]>(cake?.images || []);
-  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<{
+    done: number;
+    total: number;
+    phase: "preparing" | "uploading";
+  } | null>(null);
   const [uploadError, setUploadError] = useState("");
   const [category, setCategory] = useState(initialCategory);
   const [translations, setTranslations] = useState({
@@ -99,15 +104,28 @@ export default function CakeForm({ cake, mode, categories }: Props) {
     if (!files || files.length === 0) return;
     const arr = Array.from(files);
     setUploadError("");
-    setUploadProgress({ done: 0, total: arr.length });
+    setUploadProgress({ done: 0, total: arr.length, phase: "preparing" });
 
     try {
+      // Compress on-device first — drops phone photos from 5–15 MB to ~300–500 KB.
+      const prepared = await Promise.all(
+        arr.map(async (f) => {
+          try {
+            return await compressImage(f);
+          } catch {
+            return f;
+          }
+        })
+      );
+      setUploadProgress({ done: 0, total: prepared.length, phase: "uploading" });
+
       const res = await fetch("/api/admin/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          cakeId: cakeIdRef.current,
-          files: arr.map((f) => ({
+          id: cakeIdRef.current,
+          scope: "cakes",
+          files: prepared.map((f) => ({
             contentType: f.type || "application/octet-stream",
             contentLength: f.size,
           })),
@@ -124,12 +142,12 @@ export default function CakeForm({ cake, mode, categories }: Props) {
       let done = 0;
 
       await Promise.all(
-        arr.map(async (file, i) => {
+        prepared.map(async (file, i) => {
           const slot = data.uploads[i];
           if (!slot || slot.error || !slot.uploadUrl || !slot.publicUrl) {
             console.warn(`[upload] ${file.name}: ${slot?.error || "no slot"}`);
             done++;
-            setUploadProgress({ done, total: arr.length });
+            setUploadProgress({ done, total: prepared.length, phase: "uploading" });
             return;
           }
           const putRes = await fetch(slot.uploadUrl, {
@@ -138,7 +156,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
             body: file,
           });
           done++;
-          setUploadProgress({ done, total: arr.length });
+          setUploadProgress({ done, total: prepared.length, phase: "uploading" });
           if (!putRes.ok) {
             console.error(`[upload] PUT failed for ${file.name}: ${putRes.status}`);
             return;
@@ -150,8 +168,8 @@ export default function CakeForm({ cake, mode, categories }: Props) {
       if (uploaded.length > 0) {
         setImages((prev) => [...prev, ...uploaded]);
       }
-      if (uploaded.length < arr.length) {
-        setUploadError(`${arr.length - uploaded.length} fichier(s) n'ont pas pu être téléchargés.`);
+      if (uploaded.length < prepared.length) {
+        setUploadError(`${prepared.length - uploaded.length} fichier(s) n'ont pas pu être téléchargés.`);
       }
     } catch (e) {
       console.error("[upload]", e);
@@ -381,7 +399,9 @@ export default function CakeForm({ cake, mode, categories }: Props) {
               )}
               <p className="text-xs text-gray-500">
                 {uploading
-                  ? `Téléchargement ${uploadProgress!.done}/${uploadProgress!.total}...`
+                  ? uploadProgress!.phase === "preparing"
+                    ? `Préparation des images...`
+                    : `Téléchargement ${uploadProgress!.done}/${uploadProgress!.total}...`
                   : "Cliquez ou glissez vos photos"}
               </p>
               <input

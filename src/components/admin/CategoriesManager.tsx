@@ -6,6 +6,7 @@ import {
   Upload, ImagePlus, Sparkles,
 } from "lucide-react";
 import type { Category } from "@/lib/db-types";
+import { compressImage } from "@/lib/image-compress";
 
 interface Props {
   initial: Category[];
@@ -447,11 +448,18 @@ function EditorRow({
     }
   }
 
-  async function handleFile(file: File | null) {
-    if (!file) return;
+  async function handleFile(rawFile: File | null) {
+    if (!rawFile) return;
     setUploadError("");
     setUploading(true);
     try {
+      // Compress on-device first to keep upload times fast.
+      let file = rawFile;
+      try {
+        file = await compressImage(rawFile);
+      } catch {
+        /* fall back to original */
+      }
       const res = await fetch("/api/admin/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
