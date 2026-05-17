@@ -1,0 +1,21 @@
+# Netlify build configuration.
+# Docs: https://docs.netlify.com/configure-builds/file-based-configuration/
+#
+# Build command + publish directory are configured in the Netlify UI;
+# this file only adds settings the UI can't express conveniently.
+
+[build.environment]
+  # Skip these keys when scanning the build output for leaked secrets.
+  # They are NOT secrets — they're public configuration that legitimately
+  # appears in compiled JS, image-manifest.json, and other build artifacts:
+  #
+  #   MONGODB_DB           — database name (also baked into the project name)
+  #   S3_REGION            — AWS region, visible in every public image URL
+  #   S3_BUCKET            — bucket name, visible in every public image URL
+  #   S3_MAX_UPLOAD_BYTES  — just a number (100 MB default)
+  #   NEXT_PUBLIC_SITE_URL — explicitly meant to be public (NEXT_PUBLIC_ prefix)
+  #
+  # The REAL secrets — MONGODB_URI, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY,
+  # GEMINI_API_KEY, ADMIN_PASSWORD — are intentionally NOT in this list.
+  # The scanner will keep flagging them if they ever leak into the repo.
+  SECRETS_SCAN_OMIT_KEYS = "MONGODB_DB,S3_REGION,S3_BUCKET,S3_MAX_UPLOAD_BYTES,NEXT_PUBLIC_SITE_URL"
