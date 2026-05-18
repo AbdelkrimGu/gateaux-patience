@@ -5,7 +5,7 @@ import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/home/HeroSection";
 import FeaturedCakes from "@/components/home/FeaturedCakes";
 import CategoriesSection from "@/components/home/CategoriesSection";
-import { getCategoryImageGroups, getFeaturedCakes } from "@/lib/cakes-data";
+import { getFeaturedCakes } from "@/lib/cakes-data";
 import { getCategories } from "@/lib/categories-data";
 import { unstable_noStore as noStore } from "next/cache";
 
@@ -35,15 +35,14 @@ export async function generateMetadata({
 
 export default async function HomePage() {
   noStore();
-  const [featured, categories, floatingGroups] = await Promise.all([
+  const [featured, categories] = await Promise.all([
     getFeaturedCakes(6),
     getCategories(),
-    getCategoryImageGroups(6, 4),
   ]);
   return (
     <main>
       <Header />
-      <HeroSection floatingGroups={floatingGroups} />
+      <HeroSection cakes={featured} />
       <FeaturedCakes cakes={featured} />
       <CategoriesSection categories={categories} />
       <Footer />
