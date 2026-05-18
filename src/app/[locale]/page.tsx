@@ -3,13 +3,8 @@ import { getTranslations } from "next-intl/server";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/home/HeroSection";
-import StatsBar from "@/components/home/StatsBar";
 import FeaturedCakes from "@/components/home/FeaturedCakes";
 import CategoriesSection from "@/components/home/CategoriesSection";
-import AboutSection from "@/components/home/AboutSection";
-import HowToOrderSection from "@/components/home/HowToOrderSection";
-import TestimonialsSection from "@/components/home/TestimonialsSection";
-import SocialCTASection from "@/components/home/SocialCTASection";
 import { getCategoryImageGroups, getFeaturedCakes } from "@/lib/cakes-data";
 import { getCategories } from "@/lib/categories-data";
 import { unstable_noStore as noStore } from "next/cache";
@@ -49,13 +44,8 @@ export default async function HomePage() {
     <main>
       <Header />
       <HeroSection floatingGroups={floatingGroups} />
-      <StatsBar />
       <FeaturedCakes cakes={featured} />
       <CategoriesSection categories={categories} />
-      <AboutSection />
-      <HowToOrderSection />
-      <TestimonialsSection />
-      <SocialCTASection />
       <Footer />
     </main>
   );
