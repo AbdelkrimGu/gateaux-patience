@@ -6,10 +6,100 @@ import {
   Sparkles, Upload, X, Loader2, Save, ChevronDown,
   Globe, GripVertical, Check
 } from "lucide-react";
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  arrayMove,
+  rectSortingStrategy,
+  sortableKeyboardCoordinates,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 import type { AdminCake } from "@/lib/admin-data";
 import type { Category } from "@/lib/db-types";
 import { compressImage } from "@/lib/image-compress";
+
+function SortableImage({
+  id,
+  url,
+  index,
+  onRemove,
+}: {
+  id: string;
+  url: string;
+  index: number;
+  onRemove: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : "auto",
+    cursor: isDragging ? "grabbing" : "grab",
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="relative group aspect-square rounded-xl overflow-hidden bg-gray-100 touch-none"
+      {...attributes}
+      {...listeners}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={url} alt="" className="w-full h-full object-cover pointer-events-none" draggable={false} />
+
+      {/* Position badge (always visible) — 01, 02, 03… */}
+      <div className="absolute top-1 left-1 bg-white/95 text-gray-700 text-[9px] px-1.5 py-0.5 rounded font-semibold tracking-wider shadow-sm">
+        {index === 0 ? "PRINCIPALE" : String(index + 1).padStart(2, "0")}
+      </div>
+
+      {/* Drag handle — always visible (no hover required) */}
+      <div className="absolute top-1 right-1 bg-white/90 text-gray-500 p-1 rounded shadow-sm">
+        <GripVertical size={12} />
+      </div>
+
+      {/* Remove button — always visible bottom-right.
+          stopPropagation/preventDefault on pointerdown stops the drag from
+          starting when the user taps the X (the drag listeners are on the
+          whole tile). */}
+      <button
+        type="button"
+        onPointerDown={(e) => {
+          e.stopPropagation();
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove();
+        }}
+        className="absolute bottom-1 right-1 p-1.5 bg-white/95 rounded-lg text-red-500 hover:bg-red-50 shadow-sm"
+        title="Supprimer"
+        aria-label="Supprimer la photo"
+      >
+        <X size={12} />
+      </button>
+    </div>
+  );
+}
 
 type Lang = "fr" | "ar" | "en";
 const LANGS: { code: Lang; label: string; flag: string; dir: string }[] = [
@@ -197,12 +287,22 @@ export default function CakeForm({ cake, mode, categories }: Props) {
     }
   }
 
-  function moveImage(from: number, to: number) {
+  const dndSensors = useSensors(
+    // Mouse / pen: small drag distance avoids accidental drags when tapping buttons.
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    // Touch: short long-press so taps on the X / drag handle don't start a drag.
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
     setImages((prev) => {
-      const arr = [...prev];
-      const [item] = arr.splice(from, 1);
-      arr.splice(to, 0, item);
-      return arr;
+      const oldIndex = prev.indexOf(String(active.id));
+      const newIndex = prev.indexOf(String(over.id));
+      if (oldIndex < 0 || newIndex < 0) return prev;
+      return arrayMove(prev, oldIndex, newIndex);
     });
   }
 
@@ -419,40 +519,30 @@ export default function CakeForm({ cake, mode, categories }: Props) {
             )}
 
             {images.length > 0 && (
-              <div className="grid grid-cols-3 gap-2">
-                {images.map((img, i) => (
-                  <div key={img} className="relative group aspect-square rounded-xl overflow-hidden bg-gray-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img} alt="" className="w-full h-full object-cover" />
-                    {i === 0 && (
-                      <div className="absolute top-1 left-1 bg-rose-500 text-white text-[9px] px-1.5 py-0.5 rounded font-medium">
-                        Principale
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                      {i > 0 && (
-                        <button
-                          onClick={() => moveImage(i, i - 1)}
-                          className="p-1 bg-white rounded-lg text-gray-600 hover:text-rose-500"
-                          title="Déplacer à gauche"
-                        >
-                          <GripVertical size={12} />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => removeImage(i)}
-                        className="p-1 bg-white rounded-lg text-red-500"
-                        title="Supprimer"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
+              <DndContext
+                sensors={dndSensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext items={images} strategy={rectSortingStrategy}>
+                  <div className="grid grid-cols-3 gap-2">
+                    {images.map((img, i) => (
+                      <SortableImage
+                        key={img}
+                        id={img}
+                        url={img}
+                        index={i}
+                        onRemove={() => removeImage(i)}
+                      />
+                    ))}
                   </div>
-                ))}
-              </div>
+                </SortableContext>
+              </DndContext>
             )}
             {images.length > 0 && (
-              <p className="text-[10px] text-gray-400 mt-2">La 1ère photo sera la photo principale.</p>
+              <p className="text-[10px] text-gray-400 mt-2">
+                Glissez les photos pour les réorganiser. La 1ère sera la photo principale.
+              </p>
             )}
           </div>
 
