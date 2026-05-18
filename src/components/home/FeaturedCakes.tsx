@@ -2,151 +2,201 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useTranslations, useLocale } from "next-intl";
+import { useLocale } from "next-intl";
 import { useInView } from "react-intersection-observer";
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { MessageCircle, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Cake, Locale } from "@/lib/cakes-data";
 import { CONTACT } from "@/lib/constants";
 
-function localized(locale: string, fr: string, ar: string, en: string): string {
-  if (locale === "ar") return ar;
-  if (locale === "en") return en;
-  return fr;
-}
+const COPY = {
+  fr: {
+    sectionNumber: "I.",
+    sectionTitle: "Le Catalogue",
+    sectionLead:
+      "Une sélection de pièces issues de l'atelier — chacune façonnée à la main, sur commande.",
+    order: "Commander",
+    request: "Commander cette pièce",
+    portionsFor: (p: number) => `${p} portions`,
+    personsFor: (p: number) => `pour ${p}`,
+    viewAll: "Toutes les pièces",
+    greeting: "Bonjour Gateaux Patience ! Je suis intéressé(e) par :",
+  },
+  ar: {
+    sectionNumber: "I.",
+    sectionTitle: "المعرض",
+    sectionLead: "مجموعة من القطع المصنوعة يدوياً، حسب الطلب.",
+    order: "اطلب",
+    request: "اطلب هذه القطعة",
+    portionsFor: (p: number) => `${p} حصة`,
+    personsFor: (p: number) => `لـ ${p}`,
+    viewAll: "كل القطع",
+    greeting: "مرحباً Gateaux Patience! أنا مهتم/ة بـ:",
+  },
+  en: {
+    sectionNumber: "I.",
+    sectionTitle: "The Catalogue",
+    sectionLead: "A selection from the atelier — each piece handmade to order.",
+    order: "Order",
+    request: "Order this piece",
+    portionsFor: (p: number) => `${p} portions`,
+    personsFor: (p: number) => `for ${p}`,
+    viewAll: "All pieces",
+    greeting: "Hello Gateaux Patience! I'm interested in:",
+  },
+};
 
-function CakeCard({
+function CatalogTile({
   cake,
-  index,
   locale,
+  prominent,
+  index,
 }: {
   cake: Cake;
-  index: number;
   locale: string;
+  prominent: boolean;
+  index: number;
 }) {
-  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
+  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.05 });
   const tr = cake.translations[locale as Locale] ?? cake.translations.fr;
   const prefix = locale === "fr" ? "" : `/${locale}`;
+  const copy = COPY[locale as Locale] ?? COPY.fr;
+  const isRTL = locale === "ar";
   const detailHref = `${prefix}/galerie/${cake.slug}`;
-
-  const orderLabel = localized(locale, "Commander", "اطلب", "Order");
-  const priceLabel = localized(
-    locale,
-    "Devis sur demande",
-    "السعر عند الطلب",
-    "Price on request"
-  );
-  const greeting = localized(
-    locale,
-    "Bonjour Gateaux Patience ! Je suis intéressé(e) par :",
-    "مرحباً Gateaux Patience! أنا مهتم/ة بـ:",
-    "Hello Gateaux Patience! I'm interested in:"
-  );
   const whatsappUrl = `https://wa.me/${CONTACT.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(
-    `${greeting} ${tr.title}`
+    `${copy.greeting} ${tr.title}`
   )}`;
 
   return (
-    <div
+    <article
       ref={ref}
       className={cn(
-        "cake-card group transition-all duration-700",
-        inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        "group relative transition-all duration-[1200ms] ease-out",
+        prominent ? "md:col-span-2 md:row-span-2" : "md:col-span-1",
+        inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
       )}
-      style={{ transitionDelay: `${index * 100}ms` }}
+      style={{ transitionDelay: `${Math.min(index * 90, 360)}ms` }}
     >
-      {/* Image area — image and category badge are inside the link to the
-          detail page. The WhatsApp button is a sibling, anchored to the
-          bottom-right corner, kept visible at all times. */}
-      <div className="relative aspect-square overflow-hidden">
-        <Link
-          href={detailHref}
-          className="block absolute inset-0 z-0"
-          aria-label={tr.title}
-        >
-          {cake.images[0] && (
-            <Image
-              src={cake.images[0]}
-              alt={tr.title}
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
-          )}
-        </Link>
+      <Link
+        href={detailHref}
+        className="block relative overflow-hidden bg-[#F4ECE3] aspect-[4/5]"
+      >
+        {cake.images[0] && (
+          <Image
+            src={cake.images[0]}
+            alt={tr.title}
+            fill
+            sizes={prominent ? "(max-width: 768px) 100vw, 66vw" : "(max-width: 768px) 100vw, 33vw"}
+            className="object-cover transition-transform duration-[1500ms] ease-out group-hover:scale-[1.03]"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
-        <div className="absolute top-3 left-3 z-10 pointer-events-none">
-          <span className="px-2.5 py-1 rounded-full bg-white/90 text-rose text-xs font-medium backdrop-blur-sm shadow-sm">
-            {cake.categoryLabel[locale as Locale] ?? cake.categoryLabel.fr}
-          </span>
-        </div>
-
+        {/* Quiet WhatsApp pill (it's the ONLY chrome we put on the image) */}
         <a
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
-          title={orderLabel}
-          aria-label={orderLabel}
-          className="absolute bottom-3 right-3 z-10 flex items-center justify-center gap-1.5 w-11 h-11 md:w-auto md:h-auto md:px-4 md:py-2.5 rounded-full bg-[#25D366] text-white shadow-lg hover:bg-[#1ebd5c] hover:scale-105 active:scale-95 transition-all"
+          onClick={(e) => e.stopPropagation()}
+          title={copy.order}
+          aria-label={copy.order}
+          className="absolute bottom-4 right-4 flex items-center justify-center gap-1.5 w-11 h-11 md:w-auto md:h-auto md:px-4 md:py-2.5 rounded-full bg-[#25D366] text-white shadow-lg hover:bg-[#1ebd5c] hover:scale-105 active:scale-95 transition-all"
         >
-          <MessageCircle size={16} />
-          <span className="hidden md:inline text-xs font-semibold whitespace-nowrap">
-            {orderLabel}
+          <MessageCircle size={15} />
+          <span className="hidden md:inline text-[11px] font-semibold whitespace-nowrap tracking-wider uppercase">
+            {copy.order}
           </span>
         </a>
-      </div>
+      </Link>
 
-      {/* Title block — also a link to the detail page */}
-      <Link href={detailHref} className="block p-4">
-        <h3 className="font-playfair font-semibold text-charcoal group-hover:text-rose transition-colors line-clamp-1">
+      {/* Caption — magazine style: small uppercase category + serif title + thin rule + meta */}
+      <Link href={detailHref} className={cn("block pt-5", isRTL && "text-right")}>
+        <p className="text-[9px] md:text-[10px] tracking-[0.35em] uppercase text-charcoal-lighter mb-2">
+          {cake.categoryLabel[locale as Locale] ?? cake.categoryLabel.fr}
+        </p>
+        <h3
+          className={cn(
+            "font-playfair text-charcoal leading-tight group-hover:text-rose transition-colors",
+            prominent ? "text-2xl md:text-3xl" : "text-xl md:text-2xl"
+          )}
+        >
           {tr.title}
         </h3>
-        <p className="text-xs text-charcoal-light mt-1">{priceLabel}</p>
+        <div className="mt-3 h-px w-8 bg-gold/60" />
+        {(cake.persons || cake.pieces) && (
+          <p className="mt-3 text-xs text-charcoal-light font-playfair italic">
+            {cake.persons ? copy.personsFor(cake.persons) : ""}
+            {cake.persons && cake.pieces ? " · " : ""}
+            {cake.pieces ? copy.portionsFor(cake.pieces) : ""}
+          </p>
+        )}
       </Link>
-    </div>
+    </article>
   );
 }
 
 export default function FeaturedCakes({ cakes }: { cakes: Cake[] }) {
-  const t = useTranslations("featured");
   const locale = useLocale();
+  const copy = COPY[locale as Locale] ?? COPY.fr;
   const isRTL = locale === "ar";
   const prefix = locale === "fr" ? "" : `/${locale}`;
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
   const visible = cakes.filter((c) => c.images.length > 0);
-
   if (visible.length === 0) return null;
 
   return (
-    <section className="section-padding bg-white">
-      <div className="container-custom">
+    <section className="py-24 md:py-32 bg-[#FDF8F2]">
+      <div className="max-w-7xl mx-auto px-6 md:px-12">
+        {/* Section header — magazine departments style */}
         <div
           ref={ref}
           className={cn(
-            "flex flex-col gap-3 mb-12",
-            isRTL ? "items-end text-right" : "items-start",
-            inView ? "animate-slide-up" : "opacity-0"
+            "max-w-2xl mb-16 md:mb-24 transition-all duration-1000",
+            isRTL ? "ml-auto text-right" : "",
+            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           )}
         >
-          <span className="section-badge">{t("badge")}</span>
-          <h2 className="section-title">{t("title")}</h2>
-          <p className="section-subtitle">{t("subtitle")}</p>
+          <div className={cn("flex items-baseline gap-4 mb-6", isRTL && "flex-row-reverse")}>
+            <span className="font-playfair italic text-rose text-3xl md:text-4xl">
+              {copy.sectionNumber}
+            </span>
+            <span className="text-[10px] tracking-[0.4em] uppercase text-charcoal-lighter">
+              {copy.sectionTitle}
+            </span>
+          </div>
+          <h2 className="font-playfair text-charcoal text-4xl md:text-6xl font-bold leading-[1.05] tracking-tight">
+            {copy.sectionLead}
+          </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Editorial grid — first piece spans 2 cols on desktop, others alternate */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-16 md:gap-y-24">
           {visible.map((cake, i) => (
-            <CakeCard key={cake.id} cake={cake} index={i} locale={locale} />
+            <CatalogTile
+              key={cake.id}
+              cake={cake}
+              locale={locale}
+              prominent={i === 0 || i === 3}
+              index={i}
+            />
           ))}
         </div>
 
-        <div className={cn("flex mt-12", isRTL ? "justify-start flex-row-reverse" : "justify-center")}>
+        {/* Closing CTA — quiet, full-width line */}
+        <div className={cn("mt-20 md:mt-28 flex", isRTL ? "justify-start" : "justify-end")}>
           <Link
             href={`${prefix}/galerie`}
-            className={cn("btn-primary", isRTL && "flex-row-reverse")}
+            className="group inline-flex items-center gap-3 text-charcoal hover:text-rose transition-colors"
           >
-            {t("view_all")}
-            <ArrowRight size={16} className={isRTL ? "rotate-180" : ""} />
+            <span className="font-playfair italic text-lg md:text-xl">{copy.viewAll}</span>
+            <ArrowRight
+              size={20}
+              className={cn(
+                "transition-transform group-hover:translate-x-1",
+                isRTL && "rotate-180 group-hover:-translate-x-1"
+              )}
+            />
           </Link>
         </div>
       </div>
