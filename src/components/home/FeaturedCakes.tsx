@@ -2,151 +2,183 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useTranslations, useLocale } from "next-intl";
+import { useLocale } from "next-intl";
 import { useInView } from "react-intersection-observer";
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Cake, Locale } from "@/lib/cakes-data";
 import { CONTACT } from "@/lib/constants";
 
-function localized(locale: string, fr: string, ar: string, en: string): string {
-  if (locale === "ar") return ar;
-  if (locale === "en") return en;
-  return fr;
-}
+const COPY = {
+  fr: {
+    eyebrow: "Cabinet de Curiosités",
+    title: "Les Pièces Maîtresses",
+    blurb:
+      "Une sélection de l'atelier. Chaque pièce est une commande, façonnée à la main, signée.",
+    order: "Commander",
+    viewAll: "Toutes les pièces",
+    greeting: "Bonjour Gateaux Patience ! Je suis intéressé(e) par :",
+  },
+  ar: {
+    eyebrow: "خزانة العجائب",
+    title: "القطع الرئيسية",
+    blurb: "مجموعة من الورشة. كل قطعة هي طلب، مصنوعة يدوياً، موقعة.",
+    order: "اطلب",
+    viewAll: "كل القطع",
+    greeting: "مرحباً Gateaux Patience! أنا مهتم/ة بـ:",
+  },
+  en: {
+    eyebrow: "Cabinet of Curiosities",
+    title: "Signature Pieces",
+    blurb: "A selection from the atelier. Each piece is a commission, handmade, signed.",
+    order: "Order",
+    viewAll: "All pieces",
+    greeting: "Hello Gateaux Patience! I'm interested in:",
+  },
+};
 
-function CakeCard({
-  cake,
-  index,
-  locale,
-}: {
-  cake: Cake;
-  index: number;
-  locale: string;
-}) {
-  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
+function Tile({ cake, locale, index }: { cake: Cake; locale: string; index: number }) {
+  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.05 });
   const tr = cake.translations[locale as Locale] ?? cake.translations.fr;
   const prefix = locale === "fr" ? "" : `/${locale}`;
+  const copy = COPY[locale as Locale] ?? COPY.fr;
   const detailHref = `${prefix}/galerie/${cake.slug}`;
-
-  const orderLabel = localized(locale, "Commander", "اطلب", "Order");
-  const priceLabel = localized(
-    locale,
-    "Devis sur demande",
-    "السعر عند الطلب",
-    "Price on request"
-  );
-  const greeting = localized(
-    locale,
-    "Bonjour Gateaux Patience ! Je suis intéressé(e) par :",
-    "مرحباً Gateaux Patience! أنا مهتم/ة بـ:",
-    "Hello Gateaux Patience! I'm interested in:"
-  );
   const whatsappUrl = `https://wa.me/${CONTACT.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(
-    `${greeting} ${tr.title}`
+    `${copy.greeting} ${tr.title}`
   )}`;
 
   return (
-    <div
+    <article
       ref={ref}
       className={cn(
-        "cake-card group transition-all duration-700",
+        "group transition-all duration-[900ms]",
         inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       )}
       style={{ transitionDelay: `${index * 100}ms` }}
     >
-      {/* Image area — image and category badge are inside the link to the
-          detail page. The WhatsApp button is a sibling, anchored to the
-          bottom-right corner, kept visible at all times. */}
-      <div className="relative aspect-square overflow-hidden">
-        <Link
-          href={detailHref}
-          className="block absolute inset-0 z-0"
-          aria-label={tr.title}
-        >
-          {cake.images[0] && (
+      {/* Framed portrait — gold thin border + warm vignette */}
+      <div className="relative">
+        <div className="absolute -inset-[3px] border border-gold/30 group-hover:border-gold/60 transition-colors pointer-events-none" />
+        <div className="relative aspect-[4/5] overflow-hidden bg-[#1A1410]">
+          <Link href={detailHref} className="block absolute inset-0">
             <Image
               src={cake.images[0]}
               alt={tr.title}
               fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              sizes="(max-width: 768px) 100vw, 33vw"
+              className="object-cover transition-transform duration-[1500ms] group-hover:scale-[1.05]"
             />
-          )}
-        </Link>
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(ellipse at center, transparent 35%, rgba(15,10,8,0.45) 100%)",
+              }}
+            />
+          </Link>
 
-        <div className="absolute top-3 left-3 z-10 pointer-events-none">
-          <span className="px-2.5 py-1 rounded-full bg-white/90 text-rose text-xs font-medium backdrop-blur-sm shadow-sm">
-            {cake.categoryLabel[locale as Locale] ?? cake.categoryLabel.fr}
-          </span>
+          {/* Order button — green dot in the bottom corner */}
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            title={copy.order}
+            aria-label={copy.order}
+            className="absolute bottom-3 right-3 z-10 flex items-center justify-center gap-2 w-11 h-11 md:w-auto md:h-auto md:px-4 md:py-2.5 rounded-full bg-[#25D366] text-white shadow-[0_4px_20px_rgba(37,211,102,0.45)] hover:bg-[#1ebd5c] hover:scale-105 transition-all"
+          >
+            <MessageCircle size={15} />
+            <span className="hidden md:inline text-[10px] tracking-[0.2em] uppercase font-semibold">
+              {copy.order}
+            </span>
+          </a>
         </div>
-
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          title={orderLabel}
-          aria-label={orderLabel}
-          className="absolute bottom-3 right-3 z-10 flex items-center justify-center gap-1.5 w-11 h-11 md:w-auto md:h-auto md:px-4 md:py-2.5 rounded-full bg-[#25D366] text-white shadow-lg hover:bg-[#1ebd5c] hover:scale-105 active:scale-95 transition-all"
-        >
-          <MessageCircle size={16} />
-          <span className="hidden md:inline text-xs font-semibold whitespace-nowrap">
-            {orderLabel}
-          </span>
-        </a>
       </div>
 
-      {/* Title block — also a link to the detail page */}
-      <Link href={detailHref} className="block p-4">
-        <h3 className="font-playfair font-semibold text-charcoal group-hover:text-rose transition-colors line-clamp-1">
+      {/* Caption — like a museum label */}
+      <Link href={detailHref} className="block pt-7 text-center">
+        <p className="text-gold/70 text-[9px] md:text-[10px] tracking-[0.4em] uppercase mb-2">
+          {cake.categoryLabel[locale as Locale] ?? cake.categoryLabel.fr}
+        </p>
+        <h3 className="font-playfair text-cream text-xl md:text-2xl leading-tight group-hover:text-gold transition-colors">
           {tr.title}
         </h3>
-        <p className="text-xs text-charcoal-light mt-1">{priceLabel}</p>
+        <div className="mt-3 flex items-center justify-center gap-3">
+          <div className="h-px w-6 bg-gold/30" />
+          <span className="text-gold/60 text-[10px]">◆</span>
+          <div className="h-px w-6 bg-gold/30" />
+        </div>
+        {(cake.persons || cake.pieces) && (
+          <p className="mt-2 text-cream/50 text-xs tracking-wide font-playfair italic">
+            {cake.persons ? (locale === "ar" ? `${cake.persons} أشخاص` : `${cake.persons} pers.`) : ""}
+            {cake.persons && cake.pieces ? " · " : ""}
+            {cake.pieces ? `${cake.pieces} ${locale === "ar" ? "حصة" : "portions"}` : ""}
+          </p>
+        )}
       </Link>
-    </div>
+    </article>
   );
 }
 
 export default function FeaturedCakes({ cakes }: { cakes: Cake[] }) {
-  const t = useTranslations("featured");
   const locale = useLocale();
+  const copy = COPY[locale as Locale] ?? COPY.fr;
   const isRTL = locale === "ar";
   const prefix = locale === "fr" ? "" : `/${locale}`;
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
   const visible = cakes.filter((c) => c.images.length > 0);
-
   if (visible.length === 0) return null;
 
   return (
-    <section className="section-padding bg-white">
-      <div className="container-custom">
+    <section className="relative py-24 md:py-32 bg-[#0F0A08] overflow-hidden">
+      {/* Warm wash */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-50"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 0%, rgba(212,175,55,0.15) 0%, rgba(15,10,8,0) 50%)",
+        }}
+      />
+
+      <div className="relative max-w-[1440px] mx-auto px-6 md:px-12">
+        {/* Section header */}
         <div
           ref={ref}
           className={cn(
-            "flex flex-col gap-3 mb-12",
-            isRTL ? "items-end text-right" : "items-start",
-            inView ? "animate-slide-up" : "opacity-0"
+            "text-center max-w-2xl mx-auto mb-16 md:mb-20 transition-all duration-1000",
+            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           )}
         >
-          <span className="section-badge">{t("badge")}</span>
-          <h2 className="section-title">{t("title")}</h2>
-          <p className="section-subtitle">{t("subtitle")}</p>
+          <p className="text-gold/70 text-[10px] md:text-[11px] tracking-[0.5em] uppercase mb-5">
+            — {copy.eyebrow} —
+          </p>
+          <h2 className="font-playfair text-cream text-4xl md:text-6xl font-bold leading-tight">
+            {copy.title}
+          </h2>
+          <div className="my-6 flex items-center justify-center gap-3">
+            <div className="h-px w-16 bg-gold/40" />
+            <span className="text-gold">◆</span>
+            <div className="h-px w-16 bg-gold/40" />
+          </div>
+          <p className="text-cream/60 text-base md:text-lg max-w-xl mx-auto font-light">
+            {copy.blurb}
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-12 lg:gap-16">
           {visible.map((cake, i) => (
-            <CakeCard key={cake.id} cake={cake} index={i} locale={locale} />
+            <Tile key={cake.id} cake={cake} locale={locale} index={i} />
           ))}
         </div>
 
-        <div className={cn("flex mt-12", isRTL ? "justify-start flex-row-reverse" : "justify-center")}>
+        <div className={cn("mt-20 flex", isRTL ? "justify-start" : "justify-center")}>
           <Link
             href={`${prefix}/galerie`}
-            className={cn("btn-primary", isRTL && "flex-row-reverse")}
+            className="inline-flex items-center gap-3 group border border-gold/50 text-cream px-7 py-3.5 hover:bg-gold hover:text-[#0F0A08] hover:border-gold transition-all"
           >
-            {t("view_all")}
-            <ArrowRight size={16} className={isRTL ? "rotate-180" : ""} />
+            <span className="font-playfair italic">{copy.viewAll}</span>
+            <span className="transition-transform group-hover:translate-x-1">→</span>
           </Link>
         </div>
       </div>
