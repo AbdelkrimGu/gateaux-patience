@@ -2,116 +2,92 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useTranslations, useLocale } from "next-intl";
+import { useLocale } from "next-intl";
 import { useInView } from "react-intersection-observer";
-import { ArrowRight, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Category, Locale } from "@/lib/db-types";
 
-const FALLBACK_GRADIENTS = [
-  "from-rose-400 to-pink-500",
-  "from-sky-400 to-violet-500",
-  "from-amber-400 to-yellow-500",
-  "from-purple-400 to-indigo-500",
-  "from-orange-400 to-rose-400",
-  "from-emerald-400 to-teal-500",
-  "from-red-400 to-rose-500",
-];
+const COPY = {
+  fr: { index: "III.", label: "Spécialités", title: "Par occasion" },
+  ar: { index: "III.", label: "التخصصات", title: "حسب المناسبة" },
+  en: { index: "III.", label: "Specialities", title: "By occasion" },
+};
 
-function CategoryCard({
-  category,
-  index,
-  locale,
-}: {
-  category: Category;
-  index: number;
-  locale: string;
-}) {
+function Tile({ category, locale, index }: { category: Category; locale: string; index: number }) {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
-  const isRTL = locale === "ar";
-  const prefix = locale === "fr" ? "" : `/${locale}`;
   const label = category.labels[locale as Locale] ?? category.labels.fr;
-  const gradient = FALLBACK_GRADIENTS[index % FALLBACK_GRADIENTS.length];
+  const prefix = locale === "fr" ? "" : `/${locale}`;
 
   return (
-    <div
+    <Link
       ref={ref}
+      href={`${prefix}/galerie?category=${category.slug}`}
       className={cn(
-        "category-card rounded-2xl overflow-hidden shadow-cake hover:shadow-cake-hover transition-all duration-500",
-        inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        "group block transition-all duration-700",
+        inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
       )}
       style={{ transitionDelay: `${index * 80}ms` }}
     >
-      <Link href={`${prefix}/galerie?category=${category.slug}`}>
-        <div className="relative h-48 md:h-56 group">
-          {category.image ? (
-            <Image
-              src={category.image}
-              alt={label}
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-110"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-            />
-          ) : (
-            <div
-              className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}
-            >
-              <Tag size={42} className="text-white/70" />
-            </div>
-          )}
-
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-charcoal/20 to-transparent" />
-
-          {/* Content */}
-          <div
-            className={cn(
-              "absolute bottom-0 left-0 right-0 p-4",
-              isRTL && "text-right"
-            )}
-          >
-            <div className={cn("flex items-end justify-between gap-3", isRTL && "flex-row-reverse")}>
-              <h3 className="font-playfair font-bold text-white text-lg leading-tight">
-                {label}
-              </h3>
-              <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 border border-white/30 hover:bg-rose transition-colors">
-                <ArrowRight size={14} className={cn("text-white", isRTL && "rotate-180")} />
-              </div>
-            </div>
+      <div className="relative aspect-[3/4] overflow-hidden bg-[#F5F1EB]">
+        {category.image ? (
+          <Image
+            src={category.image}
+            alt={label}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover transition-transform duration-700 group-hover:scale-[1.04] grayscale-[15%] group-hover:grayscale-0"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-charcoal/90">
+            <span className="font-playfair text-white/30 text-7xl">
+              {String(index + 1).padStart(2, "0")}
+            </span>
           </div>
-        </div>
-      </Link>
-    </div>
+        )}
+      </div>
+
+      <div className="pt-4 flex items-baseline justify-between gap-4">
+        <h3 className="font-playfair text-charcoal text-lg md:text-xl leading-tight group-hover:underline underline-offset-4 decoration-rose decoration-1">
+          {label}
+        </h3>
+        <p className="text-charcoal/40 text-[9px] tracking-[0.3em] uppercase shrink-0">
+          № {String(index + 1).padStart(2, "0")}
+        </p>
+      </div>
+    </Link>
   );
 }
 
 export default function CategoriesSection({ categories }: { categories: Category[] }) {
-  const t = useTranslations("categories");
   const locale = useLocale();
+  const copy = COPY[locale as Locale] ?? COPY.fr;
   const isRTL = locale === "ar";
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
   if (categories.length === 0) return null;
 
   return (
-    <section className="section-padding bg-surface-alt">
-      <div className="container-custom">
+    <section className="py-20 md:py-28 bg-[#F5F1EB] border-t border-charcoal/10">
+      <div className="max-w-[1440px] mx-auto px-6 md:px-10">
         <div
           ref={ref}
           className={cn(
-            "flex flex-col gap-3 mb-12",
-            isRTL ? "items-end text-right" : "items-center text-center",
-            inView ? "animate-slide-up" : "opacity-0"
+            "pb-10 md:pb-16 border-b border-charcoal/15 transition-all duration-1000",
+            isRTL ? "text-right" : "",
+            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}
         >
-          <span className="section-badge">{t("badge")}</span>
-          <h2 className="section-title">{t("title")}</h2>
-          <p className="section-subtitle">{t("subtitle")}</p>
+          <p className="text-charcoal/50 text-[10px] md:text-[11px] tracking-[0.35em] uppercase font-semibold mb-3 md:mb-4">
+            {copy.index} · {copy.label}
+          </p>
+          <h2 className="font-playfair text-charcoal text-5xl md:text-7xl font-bold leading-[0.95] tracking-tight">
+            {copy.title}
+          </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 md:gap-x-6 gap-y-10 md:gap-y-14 pt-12 md:pt-16">
           {categories.map((cat, i) => (
-            <CategoryCard key={cat.id} category={cat} index={i} locale={locale} />
+            <Tile key={cat.id} category={cat} locale={locale} index={i} />
           ))}
         </div>
       </div>
