@@ -2,116 +2,128 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useTranslations, useLocale } from "next-intl";
+import { useLocale } from "next-intl";
 import { useInView } from "react-intersection-observer";
-import { ArrowRight, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Category, Locale } from "@/lib/db-types";
 
-const FALLBACK_GRADIENTS = [
-  "from-rose-400 to-pink-500",
-  "from-sky-400 to-violet-500",
-  "from-amber-400 to-yellow-500",
-  "from-purple-400 to-indigo-500",
-  "from-orange-400 to-rose-400",
-  "from-emerald-400 to-teal-500",
-  "from-red-400 to-rose-500",
+const COPY = {
+  fr: {
+    eyebrow: "Pour chaque occasion",
+    title: "Une création unique",
+    blurb: "Mariage, anniversaire, baptême, ou tout simplement parce que. Trouvez votre inspiration.",
+  },
+  ar: {
+    eyebrow: "لكل مناسبة",
+    title: "إبداع فريد",
+    blurb: "زفاف، عيد ميلاد، عماد، أو ببساطة لأنك تريد. اعثر على إلهامك.",
+  },
+  en: {
+    eyebrow: "For every occasion",
+    title: "A unique creation",
+    blurb: "Wedding, birthday, baptism, or simply because. Find your inspiration.",
+  },
+};
+
+const FALLBACK_TINTS = [
+  "from-rose-100 to-rose-200",
+  "from-amber-100 to-rose-100",
+  "from-pink-100 to-rose-200",
+  "from-orange-100 to-rose-100",
+  "from-purple-100 to-pink-100",
+  "from-blue-100 to-rose-100",
+  "from-emerald-100 to-rose-100",
 ];
 
 function CategoryCard({
   category,
-  index,
   locale,
+  index,
 }: {
   category: Category;
-  index: number;
   locale: string;
+  index: number;
 }) {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
-  const isRTL = locale === "ar";
-  const prefix = locale === "fr" ? "" : `/${locale}`;
   const label = category.labels[locale as Locale] ?? category.labels.fr;
-  const gradient = FALLBACK_GRADIENTS[index % FALLBACK_GRADIENTS.length];
+  const prefix = locale === "fr" ? "" : `/${locale}`;
+  const tint = FALLBACK_TINTS[index % FALLBACK_TINTS.length];
 
   return (
-    <div
+    <Link
       ref={ref}
+      href={`${prefix}/galerie?category=${category.slug}`}
       className={cn(
-        "category-card rounded-2xl overflow-hidden shadow-cake hover:shadow-cake-hover transition-all duration-500",
+        "group block transition-all duration-1000",
         inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       )}
-      style={{ transitionDelay: `${index * 80}ms` }}
+      style={{ transitionDelay: `${Math.min(index * 100, 400)}ms` }}
     >
-      <Link href={`${prefix}/galerie?category=${category.slug}`}>
-        <div className="relative h-48 md:h-56 group">
+      <div className="bg-white rounded-[2rem] overflow-hidden shadow-lg shadow-rose-200/40 hover:shadow-2xl hover:shadow-rose-300/50 hover:-translate-y-1 transition-all duration-500">
+        <div className="relative aspect-[4/3] overflow-hidden">
           {category.image ? (
             <Image
               src={category.image}
               alt={label}
               fill
-              className="object-cover transition-transform duration-700 group-hover:scale-110"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+              sizes="(max-width: 768px) 100vw, 33vw"
+              className="object-cover transition-transform duration-[1200ms] group-hover:scale-110"
             />
           ) : (
-            <div
-              className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}
-            >
-              <Tag size={42} className="text-white/70" />
+            <div className={`absolute inset-0 bg-gradient-to-br ${tint} flex items-center justify-center`}>
+              <span className="font-playfair italic text-rose/40 text-7xl">❦</span>
             </div>
           )}
+          <div className="absolute inset-0 bg-gradient-to-t from-rose-900/30 via-transparent to-transparent" />
+        </div>
 
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-charcoal/20 to-transparent" />
-
-          {/* Content */}
-          <div
-            className={cn(
-              "absolute bottom-0 left-0 right-0 p-4",
-              isRTL && "text-right"
-            )}
-          >
-            <div className={cn("flex items-end justify-between gap-3", isRTL && "flex-row-reverse")}>
-              <h3 className="font-playfair font-bold text-white text-lg leading-tight">
-                {label}
-              </h3>
-              <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 border border-white/30 hover:bg-rose transition-colors">
-                <ArrowRight size={14} className={cn("text-white", isRTL && "rotate-180")} />
-              </div>
-            </div>
+        <div className="text-center px-5 py-6">
+          <h3 className="font-playfair italic text-charcoal text-2xl leading-tight group-hover:text-rose transition-colors">
+            {label}
+          </h3>
+          <div className="mt-3 flex items-center justify-center gap-3 text-gold/60">
+            <div className="h-px w-6 bg-gold/40" />
+            <span className="text-rose text-xs">✿</span>
+            <div className="h-px w-6 bg-gold/40" />
           </div>
         </div>
-      </Link>
-    </div>
+      </div>
+    </Link>
   );
 }
 
 export default function CategoriesSection({ categories }: { categories: Category[] }) {
-  const t = useTranslations("categories");
   const locale = useLocale();
-  const isRTL = locale === "ar";
+  const copy = COPY[locale as Locale] ?? COPY.fr;
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
   if (categories.length === 0) return null;
 
   return (
-    <section className="section-padding bg-surface-alt">
-      <div className="container-custom">
+    <section className="py-24 md:py-32 bg-gradient-to-b from-white via-[#FFF6F0] to-[#FFE8E8]">
+      <div className="max-w-7xl mx-auto px-6 md:px-12">
         <div
           ref={ref}
           className={cn(
-            "flex flex-col gap-3 mb-12",
-            isRTL ? "items-end text-right" : "items-center text-center",
-            inView ? "animate-slide-up" : "opacity-0"
+            "text-center max-w-2xl mx-auto mb-16 transition-all duration-1000",
+            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           )}
         >
-          <span className="section-badge">{t("badge")}</span>
-          <h2 className="section-title">{t("title")}</h2>
-          <p className="section-subtitle">{t("subtitle")}</p>
+          <p className="font-playfair italic text-rose text-sm mb-3">{copy.eyebrow}</p>
+          <h2 className="font-playfair text-charcoal text-4xl md:text-5xl font-bold leading-tight mb-4">
+            {copy.title}
+          </h2>
+          <div className="flex items-center justify-center gap-3 text-gold mb-4">
+            <div className="h-px w-12 bg-gold/40" />
+            <span className="text-rose text-lg">❦</span>
+            <div className="h-px w-12 bg-gold/40" />
+          </div>
+          <p className="text-charcoal-light text-base md:text-lg">{copy.blurb}</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {categories.map((cat, i) => (
-            <CategoryCard key={cat.id} category={cat} index={i} locale={locale} />
+            <CategoryCard key={cat.id} category={cat} locale={locale} index={i} />
           ))}
         </div>
       </div>
