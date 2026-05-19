@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import {
-  ChevronDown, Sparkles, Star, X,
+  Sparkles, Star, X,
   Facebook, Instagram, MessageCircle, Phone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,66 @@ const SLOTS = [
   { className: "absolute bottom-4 left-4 z-20", delay: "1.8s", size: "w-16 h-16 md:w-20 md:h-20" },
   { className: "absolute bottom-4 right-4 z-20", delay: "2.2s", size: "w-16 h-16 md:w-20 md:h-20" },
 ];
+
+// Decorative particles that float behind the title/description text in the
+// hero. Tiny dots + sparkle icons in brand colours with varied delays and
+// durations for an organic, non-uniform drift.
+const HERO_PARTICLES = [
+  { top: "8%",  left: "6%",  size: 6,  color: "#C9727A", opacity: 0.45, delay: "0s",   dur: "5.5s",  shape: "dot" as const },
+  { top: "18%", left: "82%", size: 4,  color: "#D4AF37", opacity: 0.55, delay: "0.8s", dur: "6.2s",  shape: "dot" as const },
+  { top: "26%", left: "22%", size: 10, color: "#F2A8AD", opacity: 0.35, delay: "1.4s", dur: "7.1s",  shape: "dot" as const },
+  { top: "35%", left: "68%", size: 5,  color: "#D4AF37", opacity: 0.40, delay: "0.3s", dur: "5.8s",  shape: "sparkle" as const },
+  { top: "44%", left: "10%", size: 7,  color: "#C9727A", opacity: 0.30, delay: "2.0s", dur: "6.5s",  shape: "dot" as const },
+  { top: "52%", left: "88%", size: 12, color: "#F0D060", opacity: 0.25, delay: "1.1s", dur: "7.4s",  shape: "dot" as const },
+  { top: "62%", left: "32%", size: 4,  color: "#C9727A", opacity: 0.50, delay: "0.6s", dur: "5.2s",  shape: "sparkle" as const },
+  { top: "70%", left: "74%", size: 8,  color: "#D4AF37", opacity: 0.35, delay: "1.7s", dur: "6.8s",  shape: "dot" as const },
+  { top: "78%", left: "16%", size: 5,  color: "#F2A8AD", opacity: 0.45, delay: "0.4s", dur: "5.9s",  shape: "dot" as const },
+  { top: "86%", left: "60%", size: 6,  color: "#D4AF37", opacity: 0.40, delay: "2.3s", dur: "7.0s",  shape: "sparkle" as const },
+  { top: "12%", left: "48%", size: 3,  color: "#C9727A", opacity: 0.55, delay: "1.3s", dur: "5.4s",  shape: "dot" as const },
+  { top: "90%", left: "38%", size: 4,  color: "#F0D060", opacity: 0.50, delay: "0.9s", dur: "6.3s",  shape: "dot" as const },
+];
+
+function HeroParticles() {
+  return (
+    <div
+      className="absolute inset-0 overflow-hidden pointer-events-none"
+      aria-hidden="true"
+    >
+      {HERO_PARTICLES.map((p, i) =>
+        p.shape === "sparkle" ? (
+          <Sparkles
+            key={i}
+            size={Math.max(8, p.size + 6)}
+            className="absolute animate-float"
+            style={{
+              top: p.top,
+              left: p.left,
+              color: p.color,
+              opacity: p.opacity,
+              animationDelay: p.delay,
+              animationDuration: p.dur,
+            }}
+          />
+        ) : (
+          <span
+            key={i}
+            className="absolute rounded-full animate-float"
+            style={{
+              top: p.top,
+              left: p.left,
+              width: p.size,
+              height: p.size,
+              background: p.color,
+              opacity: p.opacity,
+              animationDelay: p.delay,
+              animationDuration: p.dur,
+            }}
+          />
+        )
+      )}
+    </div>
+  );
+}
 
 function CyclingImage({ images, alt }: { images: string[]; alt: string }) {
   const [index, setIndex] = useState(0);
@@ -325,78 +385,82 @@ export default function HeroSection({ floatingGroups }: Props) {
             isRTL && "lg:grid-cols-2"
           )}
         >
-          {/* Text content */}
-          <div
-            className={cn(
-              "flex flex-col gap-6 animate-slide-up",
-              isRTL ? "text-right items-end" : "text-left items-start"
-            )}
-          >
-            <div className="section-badge">
-              <Sparkles size={13} className="text-rose" />
-              <span>{t("badge")}</span>
-            </div>
-
-            <h1 className="section-title text-4xl md:text-5xl lg:text-6xl text-balance">
-              {t("title")}{" "}
-              <span className="text-gradient font-playfair italic">
-                {t("titleAccent")}
-              </span>
-            </h1>
-
-            <p className="section-subtitle text-base md:text-lg">
-              {t("subtitle")}
-            </p>
-
-            <div className={cn("flex items-center gap-1", isRTL && "flex-row-reverse")}>
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} size={16} className="text-gold fill-gold" />
-              ))}
-              <span className="text-xs text-charcoal-light ml-2">
-                100+ clients satisfaits
-              </span>
-            </div>
-
-            <div className={cn("flex flex-wrap gap-3 mt-2", isRTL && "flex-row-reverse")}>
-              <Link href={`${prefix}/galerie`} className="btn-primary">
-                <Sparkles size={15} />
-                {t("cta_primary")}
-              </Link>
-              <a
-                href={`https://wa.me/${CONTACT.whatsapp.replace(/\D/g, "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-secondary"
-              >
-                {t("cta_secondary")}
-              </a>
-            </div>
-
+          {/* Text content — decorative particles drift behind it on mobile/desktop */}
+          <div className="relative order-2 lg:order-1">
+            <HeroParticles />
             <div
               className={cn(
-                "flex items-center gap-6 mt-4 pt-6 border-t border-border",
-                isRTL && "flex-row-reverse"
+                "relative z-10 flex flex-col gap-6 animate-slide-up",
+                isRTL ? "text-right items-end" : "text-left items-start"
               )}
             >
-              {[
-                { value: "+100", label: locale === "ar" ? "طلبية" : locale === "en" ? "orders" : "commandes" },
-                { value: "2018", label: locale === "ar" ? "منذ" : locale === "en" ? "since" : "depuis" },
-                { value: "100%", label: locale === "ar" ? "حرفي" : locale === "en" ? "artisan" : "artisanal" },
-              ].map((stat) => (
-                <div key={stat.value} className={cn("flex flex-col", isRTL && "items-end")}>
-                  <span className="font-playfair text-2xl font-bold text-rose">
-                    {stat.value}
-                  </span>
-                  <span className="text-xs text-charcoal-light uppercase tracking-wide">
-                    {stat.label}
-                  </span>
-                </div>
-              ))}
+              <div className="section-badge">
+                <Sparkles size={13} className="text-rose" />
+                <span>{t("badge")}</span>
+              </div>
+
+              <h1 className="section-title text-4xl md:text-5xl lg:text-6xl text-balance">
+                {t("title")}{" "}
+                <span className="text-gradient font-playfair italic">
+                  {t("titleAccent")}
+                </span>
+              </h1>
+
+              <p className="section-subtitle text-base md:text-lg">
+                {t("subtitle")}
+              </p>
+
+              <div className={cn("flex items-center gap-1", isRTL && "flex-row-reverse")}>
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} size={16} className="text-gold fill-gold" />
+                ))}
+                <span className="text-xs text-charcoal-light ml-2">
+                  100+ clients satisfaits
+                </span>
+              </div>
+
+              <div className={cn("flex flex-wrap gap-3 mt-2", isRTL && "flex-row-reverse")}>
+                <Link href={`${prefix}/galerie`} className="btn-primary">
+                  <Sparkles size={15} />
+                  {t("cta_primary")}
+                </Link>
+                <a
+                  href={`https://wa.me/${CONTACT.whatsapp.replace(/\D/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary"
+                >
+                  {t("cta_secondary")}
+                </a>
+              </div>
+
+              <div
+                className={cn(
+                  "flex items-center gap-6 mt-4 pt-6 border-t border-border",
+                  isRTL && "flex-row-reverse"
+                )}
+              >
+                {[
+                  { value: "+100", label: locale === "ar" ? "طلبية" : locale === "en" ? "orders" : "commandes" },
+                  { value: "2018", label: locale === "ar" ? "منذ" : locale === "en" ? "since" : "depuis" },
+                  { value: "100%", label: locale === "ar" ? "حرفي" : locale === "en" ? "artisan" : "artisanal" },
+                ].map((stat) => (
+                  <div key={stat.value} className={cn("flex flex-col", isRTL && "items-end")}>
+                    <span className="font-playfair text-2xl font-bold text-rose">
+                      {stat.value}
+                    </span>
+                    <span className="text-xs text-charcoal-light uppercase tracking-wide">
+                      {stat.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Hero right — clickable logo at centre, category cards floating around */}
-          <div className="relative flex justify-center items-center h-[440px] md:h-[520px]">
+          {/* Hero right — clickable logo at centre, category cards floating around.
+              On mobile this comes first so the logo greets the visitor before the copy. */}
+          <div className="relative order-1 lg:order-2 flex justify-center items-center h-[440px] md:h-[520px]">
 
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="w-[340px] h-[340px] md:w-[420px] md:h-[420px] rounded-full border-2 border-dashed border-rose/20 animate-[spin_30s_linear_infinite]" />
@@ -435,11 +499,6 @@ export default function HeroSection({ floatingGroups }: Props) {
             ))}
           </div>
         </div>
-      </div>
-
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-charcoal-lighter animate-bounce">
-        <span className="text-xs uppercase tracking-widest">{t("scroll")}</span>
-        <ChevronDown size={18} />
       </div>
 
       <div className="absolute bottom-0 left-0 right-0">

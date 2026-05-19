@@ -3,7 +3,6 @@ import { getTranslations } from "next-intl/server";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/home/HeroSection";
-import StatsBar from "@/components/home/StatsBar";
 import FeaturedCakes from "@/components/home/FeaturedCakes";
 import CategoriesSection from "@/components/home/CategoriesSection";
 import AboutSection from "@/components/home/AboutSection";
@@ -49,7 +48,6 @@ export default async function HomePage() {
     <main>
       <Header />
       <HeroSection floatingGroups={floatingGroups} />
-      <StatsBar />
       <FeaturedCakes cakes={featured} />
       <CategoriesSection categories={categories} />
       <AboutSection />
