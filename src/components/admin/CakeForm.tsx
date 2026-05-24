@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Sparkles, Upload, X, Loader2, Save, ChevronDown,
-  Globe, GripVertical, Check
+  Globe, GripVertical, Check, Eye, ChevronLeft, ChevronRight
 } from "lucide-react";
 import {
   DndContext,
@@ -34,11 +34,13 @@ function SortableImage({
   url,
   index,
   onRemove,
+  onPreview,
 }: {
   id: string;
   url: string;
   index: number;
   onRemove: () => void;
+  onPreview: () => void;
 }) {
   const {
     attributes,
@@ -54,13 +56,16 @@ function SortableImage({
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 10 : "auto",
-    cursor: isDragging ? "grabbing" : "grab",
+    cursor: isDragging ? "grabbing" : "zoom-in",
   };
 
   return (
     <div
       ref={setNodeRef}
       style={style}
+      onClick={() => {
+        if (!isDragging) onPreview();
+      }}
       className="relative group aspect-square rounded-xl overflow-hidden bg-gray-100 touch-none"
       {...attributes}
       {...listeners}
@@ -68,20 +73,27 @@ function SortableImage({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={url} alt="" className="w-full h-full object-cover pointer-events-none" draggable={false} />
 
+      {/* Hover hint — tells the user the tile is clickable. */}
+      <div className="absolute inset-0 bg-charcoal/0 group-hover:bg-charcoal/35 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
+        <div className="bg-white/95 rounded-full px-3 py-1.5 flex items-center gap-1.5 text-[11px] font-medium text-charcoal shadow">
+          <Eye size={12} />
+          Aperçu
+        </div>
+      </div>
+
       {/* Position badge (always visible) — 01, 02, 03… */}
-      <div className="absolute top-1 left-1 bg-white/95 text-gray-700 text-[9px] px-1.5 py-0.5 rounded font-semibold tracking-wider shadow-sm">
+      <div className="absolute top-1 left-1 bg-white/95 text-gray-700 text-[9px] px-1.5 py-0.5 rounded font-semibold tracking-wider shadow-sm pointer-events-none">
         {index === 0 ? "PRINCIPALE" : String(index + 1).padStart(2, "0")}
       </div>
 
       {/* Drag handle — always visible (no hover required) */}
-      <div className="absolute top-1 right-1 bg-white/90 text-gray-500 p-1 rounded shadow-sm">
+      <div className="absolute top-1 right-1 bg-white/90 text-gray-500 p-1 rounded shadow-sm pointer-events-none">
         <GripVertical size={12} />
       </div>
 
       {/* Remove button — always visible bottom-right.
-          stopPropagation/preventDefault on pointerdown stops the drag from
-          starting when the user taps the X (the drag listeners are on the
-          whole tile). */}
+          stopPropagation on pointerdown + click stops the drag AND the preview
+          modal from opening when the user taps the X. */}
       <button
         type="button"
         onPointerDown={(e) => {
@@ -97,6 +109,101 @@ function SortableImage({
       >
         <X size={12} />
       </button>
+    </div>
+  );
+}
+
+function ImagePreviewModal({
+  images,
+  index,
+  onClose,
+  onNavigate,
+}: {
+  images: string[];
+  index: number;
+  onClose: () => void;
+  onNavigate: (i: number) => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft" && images.length > 1) {
+        onNavigate((index - 1 + images.length) % images.length);
+      }
+      if (e.key === "ArrowRight" && images.length > 1) {
+        onNavigate((index + 1) % images.length);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [index, images.length, onClose, onNavigate]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[200] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-sm"
+        aria-label="Fermer"
+      >
+        <X size={20} />
+      </button>
+
+      <div className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-full bg-white/10 text-white text-sm backdrop-blur-sm pointer-events-none">
+        {index + 1} / {images.length}
+      </div>
+
+      {images.length > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onNavigate((index - 1 + images.length) % images.length);
+            }}
+            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-10 w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-sm"
+            aria-label="Précédent"
+          >
+            <ChevronLeft size={22} />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onNavigate((index + 1) % images.length);
+            }}
+            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-10 w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-sm"
+            aria-label="Suivant"
+          >
+            <ChevronRight size={22} />
+          </button>
+        </>
+      )}
+
+      <div
+        className="relative max-w-[92vw] max-h-[88vh] flex items-center justify-center animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={images[index]}
+          alt=""
+          className="max-w-full max-h-[88vh] object-contain rounded-lg shadow-2xl"
+        />
+      </div>
     </div>
   );
 }
@@ -170,6 +277,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
     phase: "preparing" | "uploading";
   } | null>(null);
   const [uploadError, setUploadError] = useState("");
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [category, setCategory] = useState(initialCategory);
   const [translations, setTranslations] = useState({
     fr: { title: cake?.translations.fr.title || "", description: cake?.translations.fr.description || "" },
@@ -533,6 +641,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                         url={img}
                         index={i}
                         onRemove={() => removeImage(i)}
+                        onPreview={() => setPreviewIndex(i)}
                       />
                     ))}
                   </div>
@@ -764,6 +873,15 @@ export default function CakeForm({ cake, mode, categories }: Props) {
           )}
         </div>
       </div>
+
+      {previewIndex !== null && images[previewIndex] && (
+        <ImagePreviewModal
+          images={images}
+          index={previewIndex}
+          onClose={() => setPreviewIndex(null)}
+          onNavigate={(i) => setPreviewIndex(i)}
+        />
+      )}
     </div>
   );
 }
