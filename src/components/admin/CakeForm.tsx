@@ -184,6 +184,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
     persons: cake?.persons?.toString() || "",
   });
   const [featured, setFeatured] = useState(cake?.featured || false);
+  const [hero, setHero] = useState(cake?.hero || false);
   const [published, setPublished] = useState(cake?.published ?? true);
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -397,6 +398,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
       pieces: dims.pieces ? Number(dims.pieces) : undefined,
       persons: dims.persons ? Number(dims.persons) : undefined,
       featured,
+      hero,
       published,
     };
 
@@ -628,6 +630,31 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                 <div className={cn(
                   "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform",
                   featured ? "translate-x-5" : "translate-x-0"
+                )} />
+              </div>
+            </label>
+          </div>
+
+          {/* Hero showcase */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+            <label className="flex items-center justify-between cursor-pointer">
+              <div>
+                <p className="font-semibold text-gray-700 text-sm flex items-center gap-1.5">
+                  <Sparkles size={12} className="text-amber-500" />
+                  Vitrine d&apos;accueil
+                </p>
+                <p className="text-xs text-gray-400">Apparait dans le carrousel cinéma en haut du site</p>
+              </div>
+              <div
+                onClick={() => setHero(!hero)}
+                className={cn(
+                  "relative w-11 h-6 rounded-full transition-colors cursor-pointer",
+                  hero ? "bg-amber-400" : "bg-gray-300"
+                )}
+              >
+                <div className={cn(
+                  "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform",
+                  hero ? "translate-x-5" : "translate-x-0"
                 )} />
               </div>
             </label>

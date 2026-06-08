@@ -9,7 +9,11 @@ import AboutSection from "@/components/home/AboutSection";
 import HowToOrderSection from "@/components/home/HowToOrderSection";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
 import SocialCTASection from "@/components/home/SocialCTASection";
-import { getCategoryImageGroups, getFeaturedCakes } from "@/lib/cakes-data";
+import {
+  getCategoryImageGroups,
+  getFeaturedCakes,
+  getHeroCakes,
+} from "@/lib/cakes-data";
 import { getCategories } from "@/lib/categories-data";
 import { unstable_noStore as noStore } from "next/cache";
 
@@ -39,15 +43,16 @@ export async function generateMetadata({
 
 export default async function HomePage() {
   noStore();
-  const [featured, categories, floatingGroups] = await Promise.all([
+  const [hero, featured, categories, floatingGroups] = await Promise.all([
+    getHeroCakes(5),
     getFeaturedCakes(6),
     getCategories(),
-    getCategoryImageGroups(6, 4),
+    getCategoryImageGroups(24, 4),
   ]);
   return (
     <main>
       <Header />
-      <HeroSection floatingGroups={floatingGroups} />
+      <HeroSection hero={hero} floatingGroups={floatingGroups} />
       <FeaturedCakes cakes={featured} />
       <CategoriesSection categories={categories} />
       <AboutSection />

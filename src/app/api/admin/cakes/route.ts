@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
       pieces: body.pieces,
       persons: body.persons,
       featured: Boolean(body.featured),
+      hero: Boolean(body.hero),
       published: body.published ?? true,
     });
     return NextResponse.json(cake, { status: 201 });
