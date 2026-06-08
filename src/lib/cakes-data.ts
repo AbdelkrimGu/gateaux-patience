@@ -52,6 +52,27 @@ export async function getCakesByCategory(category: string): Promise<Cake[]> {
   }
 }
 
+/**
+ * Hero showcase cakes — explicitly flagged by the admin via the `hero` boolean.
+ * If she hasn't flagged any, fall back to featured so the hero never shows up
+ * empty.
+ */
+export async function getHeroCakes(limit = 5): Promise<Cake[]> {
+  try {
+    const col = await getCakesCollection();
+    const flagged = (await col
+      .find({ published: true, hero: true }, { projection: PROJECT_NO_ID })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .toArray()) as unknown as Cake[];
+
+    if (flagged.length > 0) return flagged;
+    return getFeaturedCakes(limit);
+  } catch (err) {
+    return logAndEmpty<Cake>("getHeroCakes", err);
+  }
+}
+
 export async function getFeaturedCakes(limit = 6): Promise<Cake[]> {
   try {
     const col = await getCakesCollection();

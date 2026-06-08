@@ -21,6 +21,7 @@ export interface Cake {
   pieces?: number;
   persons?: number;
   featured: boolean;
+  hero?: boolean;
   published: boolean;
   createdAt: string;
   updatedAt: string;

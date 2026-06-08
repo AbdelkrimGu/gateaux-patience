@@ -1,58 +1,34 @@
 import { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import HeroSection from "@/components/home/HeroSection";
+import ZelligeHero from "@/components/home/ZelligeHero";
 import FeaturedCakes from "@/components/home/FeaturedCakes";
 import CategoriesSection from "@/components/home/CategoriesSection";
 import AboutSection from "@/components/home/AboutSection";
 import HowToOrderSection from "@/components/home/HowToOrderSection";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
 import SocialCTASection from "@/components/home/SocialCTASection";
-import {
-  getCategoryImageGroups,
-  getFeaturedCakes,
-  getHeroCakes,
-} from "@/lib/cakes-data";
+import { getFeaturedCakes } from "@/lib/cakes-data";
 import { getCategories } from "@/lib/categories-data";
 import { unstable_noStore as noStore } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
-  const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "meta" });
+export const metadata: Metadata = {
+  title: "Hero preview — Zellige",
+  robots: { index: false, follow: false },
+};
 
-  return {
-    title: t("home_title"),
-    description: t("home_desc"),
-    alternates: {
-      canonical: locale === "fr" ? "/" : `/${locale}`,
-      languages: {
-        fr: "/",
-        ar: "/ar",
-        en: "/en",
-      },
-    },
-  };
-}
-
-export default async function HomePage() {
+export default async function HeroZelligePreviewPage() {
   noStore();
-  const [hero, featured, categories, floatingGroups] = await Promise.all([
-    getHeroCakes(5),
-    getFeaturedCakes(6),
+  const [featured, categories] = await Promise.all([
+    getFeaturedCakes(8),
     getCategories(),
-    getCategoryImageGroups(24, 4),
   ]);
   return (
     <main>
       <Header />
-      <HeroSection hero={hero} floatingGroups={floatingGroups} />
+      <ZelligeHero cakes={featured} />
       <FeaturedCakes cakes={featured} />
       <CategoriesSection categories={categories} />
       <AboutSection />
