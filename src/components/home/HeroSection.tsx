@@ -633,7 +633,7 @@ export default function HeroSection({ hero, floatingGroups }: Props) {
               className="relative z-10 rounded-full focus:outline-none focus-visible:ring-4 focus-visible:ring-rose/30"
               aria-label={socialTitle}
             >
-              <div className="w-[230px] h-[230px] md:w-[360px] md:h-[360px] rounded-full overflow-hidden ring-4 ring-white shadow-[0_25px_55px_-15px_rgba(201,114,122,0.5)] cursor-pointer transition-transform hover:scale-[1.04]">
+              <div className="w-[200px] h-[200px] md:w-[320px] md:h-[320px] rounded-full overflow-hidden ring-4 ring-white shadow-[0_25px_55px_-15px_rgba(201,114,122,0.5)] cursor-pointer transition-transform hover:scale-[1.04]">
                 <Image
                   src="/Logo/Logo-Photoroom.png"
                   alt="Gateaux Patience"
