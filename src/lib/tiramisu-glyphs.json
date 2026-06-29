@@ -1,0 +1,189 @@
+{
+  "disc": {
+    "cx": 0.5375,
+    "cy": 0.5156,
+    "r": 0.3864
+  },
+  "glyphs": {
+    "0": {
+      "file": "0.png",
+      "aspect": 0.6977,
+      "hr": 0.9885
+    },
+    "1": {
+      "file": "1.png",
+      "aspect": 0.5191,
+      "hr": 1.0038
+    },
+    "2": {
+      "file": "2.png",
+      "aspect": 0.6628,
+      "hr": 1
+    },
+    "3": {
+      "file": "3.png",
+      "aspect": 0.6705,
+      "hr": 0.9885
+    },
+    "4": {
+      "file": "4.png",
+      "aspect": 0.7176,
+      "hr": 1.0038
+    },
+    "5": {
+      "file": "5.png",
+      "aspect": 0.7294,
+      "hr": 0.9909
+    },
+    "6": {
+      "file": "6.png",
+      "aspect": 0.75,
+      "hr": 1
+    },
+    "7": {
+      "file": "7.png",
+      "aspect": 0.7397,
+      "hr": 0.9955
+    },
+    "8": {
+      "file": "8.png",
+      "aspect": 0.7964,
+      "hr": 1.0045
+    },
+    "9": {
+      "file": "9.png",
+      "aspect": 0.7636,
+      "hr": 1
+    },
+    "A": {
+      "file": "A.png",
+      "aspect": 0.8663,
+      "hr": 1.0178
+    },
+    "B": {
+      "file": "B.png",
+      "aspect": 0.7471,
+      "hr": 1.0059
+    },
+    "C": {
+      "file": "C.png",
+      "aspect": 0.741,
+      "hr": 0.9822
+    },
+    "D": {
+      "file": "D.png",
+      "aspect": 0.7531,
+      "hr": 0.9586
+    },
+    "E": {
+      "file": "E.png",
+      "aspect": 0.631,
+      "hr": 0.9941
+    },
+    "F": {
+      "file": "F.png",
+      "aspect": 0.6118,
+      "hr": 1.0059
+    },
+    "G": {
+      "file": "G.png",
+      "aspect": 0.7633,
+      "hr": 1
+    },
+    "H": {
+      "file": "H.png",
+      "aspect": 0.7937,
+      "hr": 1
+    },
+    "I": {
+      "file": "I.png",
+      "aspect": 0.3292,
+      "hr": 1.0063
+    },
+    "J": {
+      "file": "J.png",
+      "aspect": 0.6687,
+      "hr": 1
+    },
+    "K": {
+      "file": "K.png",
+      "aspect": 0.8063,
+      "hr": 1
+    },
+    "L": {
+      "file": "L.png",
+      "aspect": 0.6541,
+      "hr": 0.9938
+    },
+    "M": {
+      "file": "M.png",
+      "aspect": 0.9051,
+      "hr": 0.9875
+    },
+    "N": {
+      "file": "N.png",
+      "aspect": 0.7848,
+      "hr": 0.9875
+    },
+    "O": {
+      "file": "O.png",
+      "aspect": 0.8303,
+      "hr": 1.0123
+    },
+    "P": {
+      "file": "P.png",
+      "aspect": 0.7178,
+      "hr": 1
+    },
+    "Q": {
+      "file": "Q.png",
+      "aspect": 0.7167,
+      "hr": 1.1043
+    },
+    "R": {
+      "file": "R.png",
+      "aspect": 0.7469,
+      "hr": 0.9939
+    },
+    "S": {
+      "file": "S.png",
+      "aspect": 0.7333,
+      "hr": 1.0123
+    },
+    "T": {
+      "file": "T.png",
+      "aspect": 0.7607,
+      "hr": 1
+    },
+    "U": {
+      "file": "U.png",
+      "aspect": 0.8037,
+      "hr": 1
+    },
+    "V": {
+      "file": "V.png",
+      "aspect": 0.8953,
+      "hr": 1.016
+    },
+    "W": {
+      "file": "W.png",
+      "aspect": 1.1862,
+      "hr": 1
+    },
+    "X": {
+      "file": "X.png",
+      "aspect": 0.867,
+      "hr": 1
+    },
+    "Y": {
+      "file": "Y.png",
+      "aspect": 0.8564,
+      "hr": 1
+    },
+    "Z": {
+      "file": "Z.png",
+      "aspect": 0.7696,
+      "hr": 1.016
+    }
+  }
+}

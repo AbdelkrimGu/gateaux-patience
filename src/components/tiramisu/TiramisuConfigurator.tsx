@@ -6,11 +6,10 @@ import { motion } from "framer-motion";
 import { MessageCircle, Sparkles, Plus, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CONTACT } from "@/lib/constants";
-import TiramisuPreview from "./TiramisuPreview";
+import TiramisuCanvas from "./TiramisuCanvas";
 import {
   TIRAMISU_SIZES,
   TIRAMISU_BOXES,
-  TIRAMISU_IMAGES,
   STYLE_META,
   sanitizeTiramisuText,
   type Locale,
@@ -86,7 +85,7 @@ function waLink(text: string) {
   )}`;
 }
 
-export default function TiramisuConfigurator() {
+export default function TiramisuConfigurator({ writingFont }: { writingFont: string }) {
   const locale = useLocale() as Locale;
   const isRTL = locale === "ar";
 
@@ -143,12 +142,11 @@ export default function TiramisuConfigurator() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.7, ease: EASE }}
             >
-              <TiramisuPreview
+              <TiramisuCanvas
                 style={style}
                 size={size}
                 text={text}
-                placeholder={T.sample[locale]}
-                imageSrc={TIRAMISU_IMAGES[style]}
+                writingFont={writingFont}
               />
             </motion.div>
             {text.trim().length === 0 && (

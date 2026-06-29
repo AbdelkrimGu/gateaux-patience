@@ -125,9 +125,9 @@ export const TIRAMISU_BOXES: TiramisuBox[] = [
   },
 ];
 
-/** Base photos used by the live preview (drop your real photos here). */
+/** Tiramisu photos. The live preview composites cacao+cream on a canvas. */
 export const TIRAMISU_IMAGES = {
-  cacao: "/images/tiramisu/base-cacao.jpg",
-  pieces: "/images/tiramisu/base-pieces.jpg",
-  hero: "/images/tiramisu/hero.jpg",
+  cacao: "/images/tiramisu/base/cacao.png",
+  cream: "/images/tiramisu/base/cream.png",
+  hero: "/images/tiramisu/hero/hero-1.png",
 };

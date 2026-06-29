@@ -1,18 +1,11 @@
 import type { Metadata } from "next";
-import { Anton, Cinzel_Decorative } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import TiramisuConfigurator from "@/components/tiramisu/TiramisuConfigurator";
 
-// Display fonts used only inside the live preview.
-const tiraCacao = Anton({
+// Font used to render the cacao writing inside the live preview.
+const writing = Montserrat({
   subsets: ["latin"],
-  weight: "400",
-  variable: "--font-tira-cacao",
-  display: "swap",
-});
-const tiraPieces = Cinzel_Decorative({
-  subsets: ["latin"],
-  weight: ["700", "900"],
-  variable: "--font-tira-pieces",
+  weight: ["700", "800"],
   display: "swap",
 });
 
@@ -67,7 +60,7 @@ export default async function TiramisuPage({
   const L = (o: Record<string, string>) => o[locale] ?? o.fr;
 
   return (
-    <div className={`${tiraCacao.variable} ${tiraPieces.variable}`}>
+    <div>
       {/* ---- Hero ---- */}
       <section className="relative overflow-hidden bg-charcoal pt-28 pb-20 text-cream md:pt-36 md:pb-28">
         {/* warm cacao glow */}
@@ -109,7 +102,7 @@ export default async function TiramisuPage({
       {/* ---- Configurator ---- */}
       <section id="composer" className="section-padding bg-background">
         <div className="container-custom">
-          <TiramisuConfigurator />
+          <TiramisuConfigurator writingFont={writing.style.fontFamily} />
         </div>
       </section>
     </div>
