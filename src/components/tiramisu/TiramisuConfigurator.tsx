@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useLocale } from "next-intl";
 import { motion } from "framer-motion";
 import { MessageCircle, Sparkles, Plus, Minus } from "lucide-react";
@@ -115,17 +115,40 @@ export default function TiramisuConfigurator({ writingFont }: { writingFont: str
     [lines, size.maxLines]
   );
 
-  function setLine(i: number, v: string) {
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const focusLine = (i: number) => inputRefs.current[i]?.focus();
+
+  function handleChange(i: number, v: string) {
+    const prevLen = (lines[i] ?? "").length;
+    const clean = sanitizeTiramisuLine(v, style, size).toUpperCase();
     setLines((prev) => {
       const next = [...prev];
-      next[i] = sanitizeTiramisuLine(v, style, size);
+      next[i] = clean;
       return next;
     });
+    // auto-advance to the next line once this one fills up
+    if (
+      clean.length >= perLine &&
+      clean.length > prevLen &&
+      i < size.maxLines - 1
+    ) {
+      requestAnimationFrame(() => focusLine(i + 1));
+    }
+  }
+
+  function handleKeyDown(i: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (i < size.maxLines - 1) focusLine(i + 1);
+      else e.currentTarget.blur();
+    }
   }
 
   // Re-clamp every line when the style/size shrinks the per-line limit.
   function reclamp(s: TiramisuStyle, sz: typeof size) {
-    setLines((prev) => prev.map((l) => sanitizeTiramisuLine(l, s, sz)));
+    setLines((prev) =>
+      prev.map((l) => sanitizeTiramisuLine(l, s, sz).toUpperCase())
+    );
   }
   function changeStyle(s: TiramisuStyle) {
     setStyle(s);
@@ -252,20 +275,24 @@ export default function TiramisuConfigurator({ writingFont }: { writingFont: str
                 return (
                   <div key={i} className="relative">
                     <input
+                      ref={(el) => {
+                        inputRefs.current[i] = el;
+                      }}
                       type="text"
+                      inputMode="text"
+                      autoCapitalize="characters"
+                      enterKeyHint={i < size.maxLines - 1 ? "next" : "done"}
                       value={val}
                       maxLength={perLine}
-                      onChange={(e) => setLine(i, e.target.value)}
+                      onChange={(e) => handleChange(i, e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(i, e)}
                       placeholder={
                         size.maxLines > 1
                           ? `${T.lineWord[locale]} ${i + 1}`
                           : T.placeholder[locale]
                       }
                       dir={isRTL ? "rtl" : "ltr"}
-                      className={cn(
-                        "w-full rounded-2xl border border-border bg-white px-4 py-3 pe-14 font-playfair text-lg text-charcoal outline-none transition-colors focus:border-rose focus:ring-2 focus:ring-rose/20",
-                        style === "pieces" && "uppercase"
-                      )}
+                      className="w-full rounded-2xl border border-border bg-white px-4 py-3 pe-14 font-playfair text-lg uppercase text-charcoal outline-none transition-colors focus:border-rose focus:ring-2 focus:ring-rose/20"
                     />
                     <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-[11px] tabular-nums text-charcoal-lighter">
                       {val.length}/{perLine}

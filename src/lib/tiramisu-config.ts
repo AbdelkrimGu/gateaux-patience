@@ -23,7 +23,7 @@ export const TIRAMISU_SIZES: TiramisuSize[] = [
   {
     id: "large",
     maxLines: 1,
-    charsPerLine: { cacao: 8, pieces: 6 },
+    charsPerLine: { cacao: 8, pieces: 8 },
     fontScale: 1,
     labels: { fr: "Grand", ar: "كبير", en: "Large" },
     hint: { fr: "1 ligne", ar: "سطر واحد", en: "1 line" },
@@ -31,7 +31,7 @@ export const TIRAMISU_SIZES: TiramisuSize[] = [
   {
     id: "medium",
     maxLines: 2,
-    charsPerLine: { cacao: 11, pieces: 8 },
+    charsPerLine: { cacao: 11, pieces: 11 },
     fontScale: 0.74,
     labels: { fr: "Moyen", ar: "متوسط", en: "Medium" },
     hint: { fr: "jusqu'à 2 lignes", ar: "حتى سطرين", en: "up to 2 lines" },
@@ -39,7 +39,7 @@ export const TIRAMISU_SIZES: TiramisuSize[] = [
   {
     id: "small",
     maxLines: 3,
-    charsPerLine: { cacao: 14, pieces: 11 },
+    charsPerLine: { cacao: 14, pieces: 14 },
     fontScale: 0.56,
     labels: { fr: "Petit", ar: "صغير", en: "Small" },
     hint: { fr: "jusqu'à 3 lignes", ar: "حتى 3 أسطر", en: "up to 3 lines" },

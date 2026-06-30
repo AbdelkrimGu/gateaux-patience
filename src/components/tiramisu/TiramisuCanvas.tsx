@@ -160,7 +160,7 @@ function drawWriting(
   ctx.clearRect(0, 0, S, S);
   ctx.drawImage(cacao, 0, 0, S, S);
 
-  const lines = text.split("\n");
+  const lines = text.toUpperCase().split("\n");
   const cx = disc.cx * S;
   const cy = disc.cy * S;
   const safe = disc.r * S * SAFE;
