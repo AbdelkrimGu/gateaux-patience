@@ -92,7 +92,7 @@ function waLink(text: string) {
   )}`;
 }
 
-export default function TiramisuConfigurator({ writingFont }: { writingFont: string }) {
+export default function TiramisuConfigurator() {
   const locale = useLocale() as Locale;
   const isRTL = locale === "ar";
 
@@ -183,12 +183,7 @@ export default function TiramisuConfigurator({ writingFont }: { writingFont: str
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.7, ease: EASE }}
             >
-              <TiramisuCanvas
-                style={style}
-                size={size}
-                text={text}
-                writingFont={writingFont}
-              />
+              <TiramisuCanvas style={style} size={size} text={text} />
             </motion.div>
             {text.trim().length === 0 && (
               <p className="mt-4 text-center text-sm text-charcoal-light">

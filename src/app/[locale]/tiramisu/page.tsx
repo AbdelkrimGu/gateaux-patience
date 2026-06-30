@@ -1,14 +1,5 @@
 import type { Metadata } from "next";
-import { Oswald } from "next/font/google";
 import TiramisuConfigurator from "@/components/tiramisu/TiramisuConfigurator";
-
-// Condensed font used to render the cacao writing inside the live preview
-// (close to the hand-piped KIKIM lettering).
-const writing = Oswald({
-  subsets: ["latin"],
-  weight: ["600", "700"],
-  display: "swap",
-});
 
 const META: Record<string, { title: string; desc: string }> = {
   fr: {
@@ -103,7 +94,7 @@ export default async function TiramisuPage({
       {/* ---- Configurator ---- */}
       <section id="composer" className="section-padding bg-background">
         <div className="container-custom">
-          <TiramisuConfigurator writingFont={writing.style.fontFamily} />
+          <TiramisuConfigurator />
         </div>
       </section>
     </div>

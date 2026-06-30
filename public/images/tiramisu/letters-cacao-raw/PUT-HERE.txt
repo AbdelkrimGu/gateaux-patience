@@ -1,0 +1,5 @@
+Drop the 6 CACAO-WRITING letter strips here (pale piped cream dusted with cocoa,
+on PURE BLACK), matching the KIKIM photo:
+  ABCDEFG.png  HIJKLMN.png  OPQRSTU.png  VWXYZ.png  01234.png  56789.png
+Each = one horizontal row, letters in that order, on a matte black background.
+I auto-segment each glyph into transparent sprites in ../letters-cacao/.
