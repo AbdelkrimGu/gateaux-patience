@@ -74,9 +74,30 @@ function lineUnits(line: string, set: GlyphSet) {
   return Math.max(0, u - set.track);
 }
 
-async function drawGlyphs(
+// Preload every sprite a line of text needs. Async — does NOT touch the canvas.
+async function loadSprites(
+  text: string,
+  set: GlyphSet
+): Promise<Record<string, HTMLImageElement>> {
+  const need = Array.from(
+    new Set(text.toUpperCase().split("").filter((ch) => set.glyphs[ch]))
+  );
+  const imgs: Record<string, HTMLImageElement> = {};
+  await Promise.all(
+    need.map(async (ch) => {
+      imgs[ch] = await loadImage(`${BASE}/${set.folder}/${set.glyphs[ch].file}`);
+    })
+  );
+  return imgs;
+}
+
+// Paint a frame. FULLY SYNCHRONOUS — no awaits — so two overlapping renders can
+// never interleave and stack glyphs on top of each other. All sprites must be
+// preloaded via loadSprites first; any missing glyph is simply skipped.
+function paint(
   ctx: CanvasRenderingContext2D,
   cacao: HTMLImageElement,
+  imgs: Record<string, HTMLImageElement>,
   text: string,
   fontScale: number,
   set: GlyphSet
@@ -85,15 +106,6 @@ async function drawGlyphs(
   ctx.drawImage(cacao, 0, 0, S, S);
 
   const lines = text.toUpperCase().split("\n");
-  const need = Array.from(
-    new Set(lines.join("").split("").filter((ch) => set.glyphs[ch]))
-  );
-  const imgs: Record<string, HTMLImageElement> = {};
-  await Promise.all(
-    need.map(async (ch) => {
-      imgs[ch] = await loadImage(`${BASE}/${set.folder}/${set.glyphs[ch].file}`);
-    })
-  );
 
   const safe = disc.r * S * SAFE;
   const D = 2 * safe;
@@ -132,6 +144,8 @@ async function drawGlyphs(
       if (!g) { x += 0.45 * cap; continue; }
       const h = g.hr * cap;
       const w = g.aspect * h;
+      const sprite = imgs[ch];
+      if (!sprite) { x += w + set.track * cap; continue; }
       const seed = ((ch.charCodeAt(0) * 37 + k * 101) % 1000) / 1000;
       const ang = (seed - 0.5) * set.rot;
       const dy = (((seed * 13) % 1) - 0.5) * cap * 0.03;
@@ -143,7 +157,7 @@ async function drawGlyphs(
       ctx.shadowBlur = cap * set.blurK;
       ctx.shadowOffsetX = cap * 0.012;
       ctx.shadowOffsetY = cap * set.offYK;
-      ctx.drawImage(imgs[ch], -w / 2, -h / 2, w, h);
+      ctx.drawImage(sprite, -w / 2, -h / 2, w, h);
       ctx.restore();
 
       x += w + set.track * cap;
@@ -169,12 +183,19 @@ export default function TiramisuCanvas({ style, size, text }: Props) {
   useEffect(() => {
     if (!ready) return;
     const id = ++token.current;
+    const set = SETS[style];
     (async () => {
-      const cacao = await loadImage(`${BASE}/base/cacao.png`);
+      // Do all the async work (image loads) first…
+      const [cacao, imgs] = await Promise.all([
+        loadImage(`${BASE}/base/cacao.png`),
+        loadSprites(text, set),
+      ]);
+      // …then bail if a newer render superseded us, and paint synchronously so
+      // two renders can never interleave and stack letters on each other.
+      if (id !== token.current) return;
       const canvas = canvasRef.current;
-      if (!canvas || id !== token.current) return;
-      const ctx = canvas.getContext("2d")!;
-      await drawGlyphs(ctx, cacao, text, size.fontScale, SETS[style]);
+      if (!canvas) return;
+      paint(canvas.getContext("2d")!, cacao, imgs, text, size.fontScale, set);
     })();
   }, [ready, style, size, text]);
 

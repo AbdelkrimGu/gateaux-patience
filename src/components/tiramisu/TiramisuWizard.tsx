@@ -17,13 +17,10 @@ import {
   Sparkles,
   PartyPopper,
   Loader2,
+  WandSparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  TIRAMISU_CATALOG,
-  formatDA,
-  findOption,
-} from "@/lib/tiramisu-catalog";
+import { TIRAMISU_CATALOG, formatDA, findOption } from "@/lib/tiramisu-catalog";
 import { STYLE_META, type Locale } from "@/lib/tiramisu-config";
 import ItemCustomizer, {
   personalizationText,
@@ -39,7 +36,7 @@ const STEP_ORDER: Step[] = ["mode", "boxes", "bucket", "review", "confirm"];
 interface BucketItem {
   uid: string;
   optionId: string;
-  qty: number;
+  qty: number; // always 1 in custom mode (each box is its own unit)
   personalization: Personalization | null;
 }
 
@@ -55,6 +52,7 @@ export default function TiramisuWizard() {
   const [bucket, setBucket] = useState<BucketItem[]>([]);
   const [activeCat, setActiveCat] = useState(TIRAMISU_CATALOG[0].id);
   const [customizingUid, setCustomizingUid] = useState<string | null>(null);
+  const [gateOpen, setGateOpen] = useState(false);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -75,35 +73,62 @@ export default function TiramisuWizard() {
     [bucket]
   );
 
+  // Customizable boxes that still have no message.
+  const plainUnits = useMemo(
+    () =>
+      bucket.filter((b) => {
+        const f = findOption(b.optionId);
+        return f?.option.customizable && !b.personalization;
+      }),
+    [bucket]
+  );
+
   // ---- bucket ops ----
   function addToBucket(optionId: string) {
     setBucket((prev) => {
-      const existing = prev.find(
-        (b) => b.optionId === optionId && !b.personalization
-      );
-      if (existing) {
-        return prev.map((b) =>
-          b === existing ? { ...b, qty: b.qty + 1 } : b
-        );
+      if (mode === "simple") {
+        const ex = prev.find((b) => b.optionId === optionId && !b.personalization);
+        if (ex) return prev.map((b) => (b === ex ? { ...b, qty: b.qty + 1 } : b));
       }
+      // custom mode: every box is its own customizable unit
       return [...prev, { uid: newUid(), optionId, qty: 1, personalization: null }];
     });
   }
   function setQty(uid: string, delta: number) {
     setBucket((prev) =>
-      prev.map((b) =>
-        b.uid === uid ? { ...b, qty: Math.max(1, b.qty + delta) } : b
-      )
+      prev.map((b) => (b.uid === uid ? { ...b, qty: Math.max(1, b.qty + delta) } : b))
     );
   }
   function removeItem(uid: string) {
     setBucket((prev) => prev.filter((b) => b.uid !== uid));
   }
   function savePersonalization(uid: string, p: Personalization) {
-    setBucket((prev) =>
-      prev.map((b) => (b.uid === uid ? { ...b, personalization: p } : b))
-    );
+    setBucket((prev) => prev.map((b) => (b.uid === uid ? { ...b, personalization: p } : b)));
     setCustomizingUid(null);
+  }
+  function clearPersonalization(uid: string) {
+    setBucket((prev) => prev.map((b) => (b.uid === uid ? { ...b, personalization: null } : b)));
+  }
+  // Switch a simple order into a personalizable one: split every multi-qty line
+  // into individual units so each box can carry its own message.
+  function upgradeToCustom() {
+    setBucket((prev) =>
+      prev.flatMap((b) =>
+        Array.from({ length: b.qty }, () => ({
+          uid: newUid(),
+          optionId: b.optionId,
+          qty: 1,
+          personalization: b.personalization,
+        }))
+      )
+    );
+    setMode("custom");
+  }
+
+  // Continue from the cart — softly invite personalization if anything is plain.
+  function onCartContinue() {
+    if (plainUnits.length > 0) setGateOpen(true);
+    else setStep("review");
   }
 
   // ---- order message ----
@@ -120,28 +145,18 @@ export default function TiramisuWizard() {
       const label = `${f.category.labels[locale]} · ${f.option.shapeLabel[locale]}`;
       const line =
         b.qty > 1
-          ? `${b.qty}× ${label} — ${formatDA(f.option.price)} = ${formatDA(
-              f.option.price * b.qty
-            )}`
+          ? `${b.qty}× ${label} — ${formatDA(f.option.price)} = ${formatDA(f.option.price * b.qty)}`
           : `1× ${label} — ${formatDA(f.option.price)}`;
       rows.push(`• ${line}`);
       if (b.personalization) {
         const txt = personalizationText(b.personalization).replace(/\n/g, " / ");
-        if (txt) {
-          rows.push(
-            `   ✍️ ${STYLE_META[b.personalization.style].labels[locale]}: "${txt}"`
-          );
-        }
+        if (txt) rows.push(`   ✍️ ${STYLE_META[b.personalization.style].labels[locale]}: "${txt}"`);
       }
     });
     rows.push("", `${t("Total", "المجموع", "Total")}: ${formatDA(total)}`);
     return {
       message: rows.join("\n"),
-      cakeTitle: `${t("Tiramisu", "تيراميسو", "Tiramisu")} — ${count} ${t(
-        "article(s)",
-        "عنصر",
-        "item(s)"
-      )}`,
+      cakeTitle: `${t("Tiramisu", "تيراميسو", "Tiramisu")} — ${count} ${t("article(s)", "عنصر", "item(s)")}`,
     };
   }
 
@@ -181,21 +196,16 @@ export default function TiramisuWizard() {
     setPhone("");
     setDoneId(null);
     setError(null);
+    setGateOpen(false);
     setStep("mode");
   }
-
   function goBack() {
     const i = STEP_ORDER.indexOf(step);
     if (i > 0) setStep(STEP_ORDER[i - 1]);
   }
 
-  const customizingItem = customizingUid
-    ? bucket.find((b) => b.uid === customizingUid)
-    : null;
-  const customizingOption = customizingItem
-    ? findOption(customizingItem.optionId)
-    : null;
-
+  const customizingItem = customizingUid ? bucket.find((b) => b.uid === customizingUid) : null;
+  const customizingOption = customizingItem ? findOption(customizingItem.optionId) : null;
   const stepIndex = STEP_ORDER.indexOf(step);
 
   // ============ SUCCESS ============
@@ -224,10 +234,7 @@ export default function TiramisuWizard() {
           <span className="mt-4 rounded-full bg-white px-4 py-1.5 text-xs font-medium text-charcoal-light ring-1 ring-border">
             {t("Référence", "المرجع", "Reference")}: {doneId.slice(0, 8).toUpperCase()}
           </span>
-          <button
-            onClick={reset}
-            className="btn-gold mt-8"
-          >
+          <button onClick={reset} className="btn-gold mt-8">
             {t("Nouvelle commande", "طلب جديد", "New order")}
           </button>
           <Link href={homeHref} className="mt-4 text-sm text-charcoal-light hover:text-rose">
@@ -260,7 +267,6 @@ export default function TiramisuWizard() {
           </button>
         )}
 
-        {/* progress dots */}
         <div className="flex items-center gap-1.5">
           {STEP_ORDER.map((s, i) => (
             <span
@@ -298,11 +304,11 @@ export default function TiramisuWizard() {
                 }}
               />
             )}
-
             {step === "boxes" && (
               <BoxesStep
                 t={t}
                 locale={locale}
+                mode={mode}
                 activeCat={activeCat}
                 setActiveCat={setActiveCat}
                 onAdd={addToBucket}
@@ -311,7 +317,6 @@ export default function TiramisuWizard() {
                 onContinue={() => setStep("bucket")}
               />
             )}
-
             {step === "bucket" && (
               <BucketStep
                 t={t}
@@ -322,21 +327,14 @@ export default function TiramisuWizard() {
                 setQty={setQty}
                 removeItem={removeItem}
                 onPersonalize={(uid) => setCustomizingUid(uid)}
+                onClearPersonalization={clearPersonalization}
                 onAddMore={() => setStep("boxes")}
-                onContinue={() => setStep("review")}
+                onContinue={onCartContinue}
               />
             )}
-
             {step === "review" && (
-              <ReviewStep
-                t={t}
-                locale={locale}
-                bucket={bucket}
-                total={total}
-                onConfirm={() => setStep("confirm")}
-              />
+              <ReviewStep t={t} locale={locale} bucket={bucket} total={total} onConfirm={() => setStep("confirm")} />
             )}
-
             {step === "confirm" && (
               <ConfirmStep
                 t={t}
@@ -356,7 +354,32 @@ export default function TiramisuWizard() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Customizer overlay */}
+        {/* Personalize gate (soft invitation on Continue) */}
+        <AnimatePresence>
+          {gateOpen && (
+            <GateModal
+              t={t}
+              locale={locale}
+              mode={mode}
+              plainUnits={plainUnits}
+              onClose={() => setGateOpen(false)}
+              onUpgrade={() => {
+                upgradeToCustom();
+                setGateOpen(false);
+              }}
+              onPersonalize={(uid) => {
+                setGateOpen(false);
+                setCustomizingUid(uid);
+              }}
+              onSkip={() => {
+                setGateOpen(false);
+                setStep("review");
+              }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Customizer overlay (the loop: cart → customize → cart) */}
         <AnimatePresence>
           {customizingItem && customizingOption && (
             <motion.div
@@ -364,7 +387,7 @@ export default function TiramisuWizard() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 24 }}
               transition={{ duration: 0.28, ease: EASE }}
-              className="absolute inset-0 z-30 flex flex-col bg-background"
+              className="absolute inset-0 z-40 flex flex-col bg-background"
             >
               <ItemCustomizer
                 initial={customizingItem.personalization}
@@ -398,7 +421,6 @@ function Shell({ children, isRTL }: { children: React.ReactNode; isRTL: boolean 
   );
 }
 
-// ============ Footer bar ============
 function FooterBar({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative z-10 shrink-0 border-t border-border/70 bg-white/80 px-4 py-3 backdrop-blur-sm">
@@ -407,22 +429,36 @@ function FooterBar({ children }: { children: React.ReactNode }) {
   );
 }
 
+function PrimaryButton({
+  onClick,
+  disabled,
+  children,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-semibold text-white transition-all",
+        disabled
+          ? "cursor-not-allowed bg-charcoal/25"
+          : "bg-gradient-to-br from-rose to-[#B05161] shadow-cake hover:shadow-cake-hover active:scale-[0.99]"
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
 type TFn = (fr: string, ar: string, en: string) => string;
 
 // ============ Step: Mode ============
 function ModeStep({ t, onPick }: { t: TFn; onPick: (m: Mode) => void }) {
   const cards: { mode: Mode; emoji: string; title: string; desc: string; img: string }[] = [
-    {
-      mode: "simple",
-      emoji: "🥄",
-      title: t("Tiramisu simple", "تيراميسو بسيط", "Simple tiramisu"),
-      desc: t(
-        "Nos boîtes gourmandes, prêtes à savourer.",
-        "علبنا اللذيذة، جاهزة للتذوّق.",
-        "Our gourmet boxes, ready to enjoy."
-      ),
-      img: "/images/tiramisu/boxes/ind-trio.jpg",
-    },
     {
       mode: "custom",
       emoji: "✍️",
@@ -433,6 +469,17 @@ function ModeStep({ t, onPick }: { t: TFn; onPick: (m: Mode) => void }) {
         "Write your message and see it live."
       ),
       img: "/images/tiramisu/hero/hero-1.png",
+    },
+    {
+      mode: "simple",
+      emoji: "🥄",
+      title: t("Tiramisu simple", "تيراميسو بسيط", "Simple tiramisu"),
+      desc: t(
+        "Nos boîtes gourmandes, prêtes à savourer.",
+        "علبنا اللذيذة، جاهزة للتذوّق.",
+        "Our gourmet boxes, ready to enjoy."
+      ),
+      img: "/images/tiramisu/boxes/box-square.png",
     },
   ];
   return (
@@ -445,11 +492,7 @@ function ModeStep({ t, onPick }: { t: TFn; onPick: (m: Mode) => void }) {
         {t("Que désirez-vous ?", "ماذا تريد؟", "What would you like?")}
       </h1>
       <p className="mt-2 max-w-xs text-center text-sm text-charcoal-light">
-        {t(
-          "Choisissez par où commencer.",
-          "اختر من أين تبدأ.",
-          "Choose where to begin."
-        )}
+        {t("Choisissez par où commencer.", "اختر من أين تبدأ.", "Choose where to begin.")}
       </p>
 
       <div className="mt-7 grid w-full max-w-md gap-4">
@@ -481,6 +524,7 @@ function ModeStep({ t, onPick }: { t: TFn; onPick: (m: Mode) => void }) {
 function BoxesStep({
   t,
   locale,
+  mode,
   activeCat,
   setActiveCat,
   onAdd,
@@ -490,6 +534,7 @@ function BoxesStep({
 }: {
   t: TFn;
   locale: Locale;
+  mode: Mode;
   activeCat: string;
   setActiveCat: (id: string) => void;
   onAdd: (optionId: string) => void;
@@ -505,15 +550,17 @@ function BoxesStep({
           {t("Choisissez vos boîtes", "اختر علبك", "Choose your boxes")}
         </h2>
         <p className="text-xs text-charcoal-light">
-          {t(
-            "Ajoutez-en autant que vous voulez.",
-            "أضف ما شئت منها.",
-            "Add as many as you like."
-          )}
+          {mode === "custom"
+            ? t(
+                "Ajoutez chaque boîte — vous personnaliserez ensuite.",
+                "أضف كل علبة — ستخصّصها لاحقًا.",
+                "Add each box — you'll personalize them next."
+              )
+            : t("Ajoutez-en autant que vous voulez.", "أضف ما شئت منها.", "Add as many as you like.")}
         </p>
       </div>
 
-      {/* Category tabs */}
+      {/* Size tabs */}
       <div className="mt-3 flex shrink-0 gap-2 overflow-x-auto px-5 pb-1">
         {TIRAMISU_CATALOG.map((c) => {
           const active = c.id === activeCat;
@@ -523,9 +570,7 @@ function BoxesStep({
               onClick={() => setActiveCat(c.id)}
               className={cn(
                 "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-all",
-                active
-                  ? "border-rose bg-rose text-white shadow-cake"
-                  : "border-border bg-white text-charcoal-light"
+                active ? "border-rose bg-rose text-white shadow-cake" : "border-border bg-white text-charcoal-light"
               )}
             >
               {c.labels[locale]}
@@ -545,16 +590,11 @@ function BoxesStep({
               key={o.id}
               className="flex w-[62vw] max-w-[260px] shrink-0 snap-center flex-col overflow-hidden rounded-3xl border border-border bg-white shadow-cake"
             >
-              <div className="relative aspect-square w-full">
+              <div className="relative aspect-square w-full bg-[#F6ECE0]">
                 <Image src={o.image} alt={o.shapeLabel[locale]} fill sizes="260px" className="object-cover" />
                 <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-charcoal shadow">
                   {o.shapeLabel[locale]}
                 </span>
-                {o.customizable && (
-                  <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-rose/90 px-2 py-0.5 text-[10px] font-medium text-white">
-                    <Pencil size={10} /> {t("Perso.", "تخصيص", "Custom")}
-                  </span>
-                )}
               </div>
               <div className="flex items-center justify-between gap-2 p-3">
                 <span className="font-playfair text-base font-bold text-charcoal">{formatDA(o.price)}</span>
@@ -571,22 +611,13 @@ function BoxesStep({
       </div>
 
       <FooterBar>
-        <button
-          onClick={onContinue}
-          disabled={count === 0}
-          className={cn(
-            "flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-semibold text-white transition-all",
-            count === 0
-              ? "cursor-not-allowed bg-charcoal/25"
-              : "bg-gradient-to-br from-rose to-[#B05161] shadow-cake hover:shadow-cake-hover active:scale-[0.99]"
-          )}
-        >
+        <PrimaryButton onClick={onContinue} disabled={count === 0}>
           <ShoppingBag size={18} />
           {count === 0
             ? t("Ajoutez une boîte", "أضف علبة", "Add a box")
             : `${t("Voir le panier", "عرض السلة", "View bucket")} · ${count} · ${formatDA(total)}`}
           {count > 0 && <ArrowRight size={16} className="rtl:rotate-180" />}
-        </button>
+        </PrimaryButton>
       </FooterBar>
     </div>
   );
@@ -602,6 +633,7 @@ function BucketStep({
   setQty,
   removeItem,
   onPersonalize,
+  onClearPersonalization,
   onAddMore,
   onContinue,
 }: {
@@ -613,6 +645,7 @@ function BucketStep({
   setQty: (uid: string, d: number) => void;
   removeItem: (uid: string) => void;
   onPersonalize: (uid: string) => void;
+  onClearPersonalization: (uid: string) => void;
   onAddMore: () => void;
   onContinue: () => void;
 }) {
@@ -625,11 +658,7 @@ function BucketStep({
           </h2>
           <p className="text-xs text-charcoal-light">
             {mode === "custom"
-              ? t(
-                  "Touchez « Personnaliser » sur les boîtes à écrire.",
-                  "اضغط «تخصيص» على العلب القابلة للكتابة.",
-                  "Tap “Customize” on the writable boxes."
-                )
+              ? t("Personnalisez chaque boîte, ou laissez-la simple.", "خصّص كل علبة أو اتركها بسيطة.", "Personalize each box, or leave it plain.")
               : t("Ajustez les quantités.", "عدّل الكميات.", "Adjust quantities.")}
           </p>
         </div>
@@ -650,10 +679,11 @@ function BucketStep({
           if (!f) return null;
           const { category, option } = f;
           const ptext = b.personalization ? personalizationText(b.personalization) : "";
+          const canCustomize = mode === "custom" && option.customizable;
           return (
             <div key={b.uid} className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
               <div className="flex gap-3 p-2.5">
-                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl">
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#F6ECE0]">
                   <Image src={option.image} alt={option.shapeLabel[locale]} fill sizes="64px" className="object-cover" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -668,8 +698,9 @@ function BucketStep({
                       <Trash2 size={15} />
                     </button>
                   </div>
-                  <div className="mt-1.5 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                  {/* qty only in simple mode (custom = one unit per box) */}
+                  {mode === "simple" && (
+                    <div className="mt-1.5 flex items-center gap-2">
                       <button onClick={() => setQty(b.uid, -1)} className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-charcoal hover:border-rose hover:text-rose" aria-label="-">
                         <Minus size={13} />
                       </button>
@@ -678,31 +709,45 @@ function BucketStep({
                         <Plus size={13} />
                       </button>
                     </div>
-                    {mode === "custom" && option.customizable && (
-                      <button
-                        onClick={() => onPersonalize(b.uid)}
-                        className={cn(
-                          "inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
-                          b.personalization
-                            ? "bg-rose/10 text-rose"
-                            : "bg-rose text-white hover:bg-rose-dark"
-                        )}
-                      >
-                        <Pencil size={12} />
-                        {b.personalization
-                          ? t("Modifier", "تعديل", "Edit")
-                          : t("Personnaliser", "تخصيص", "Customize")}
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
-              {b.personalization && ptext && (
-                <div className="border-t border-border/70 bg-rose/[0.04] px-3 py-1.5">
-                  <p className="truncate text-xs text-charcoal-light">
-                    <span className="me-1">{STYLE_META[b.personalization.style].emoji}</span>
-                    “{ptext.replace(/\n/g, " · ")}”
-                  </p>
+
+              {/* Prominent, discoverable customization zone (custom mode) */}
+              {canCustomize && (
+                <div className="border-t border-border/70 px-2.5 py-2.5">
+                  {b.personalization && ptext ? (
+                    <div className="flex items-center gap-2">
+                      <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl bg-rose/[0.06] px-3 py-2">
+                        <span className="text-base">{STYLE_META[b.personalization.style].emoji}</span>
+                        <span className="truncate font-playfair text-sm font-semibold text-charcoal">
+                          “{ptext.replace(/\n/g, " · ")}”
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => onPersonalize(b.uid)}
+                        className="shrink-0 rounded-full bg-rose/10 px-3 py-2 text-xs font-semibold text-rose hover:bg-rose/15"
+                      >
+                        {t("Modifier", "تعديل", "Edit")}
+                      </button>
+                      <button
+                        onClick={() => onClearPersonalization(b.uid)}
+                        className="shrink-0 rounded-full p-2 text-charcoal-lighter hover:text-charcoal"
+                        aria-label={t("Retirer", "إزالة", "Remove")}
+                        title={t("Laisser simple", "اتركها بسيطة", "Leave plain")}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => onPersonalize(b.uid)}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-rose/50 bg-rose/[0.04] py-2.5 text-sm font-semibold text-rose transition-colors hover:bg-rose/10"
+                    >
+                      <WandSparkles size={16} />
+                      {t("Personnaliser ce tiramisu", "خصّص هذا التيراميسو", "Personalize this tiramisu")}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -715,19 +760,120 @@ function BucketStep({
           <span className="text-charcoal-light">{t("Total", "المجموع", "Total")}</span>
           <span className="font-playfair text-lg font-bold text-charcoal">{formatDA(total)}</span>
         </div>
-        <button
-          onClick={onContinue}
-          disabled={bucket.length === 0}
-          className={cn(
-            "flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-semibold text-white transition-all",
-            bucket.length === 0 ? "cursor-not-allowed bg-charcoal/25" : "bg-gradient-to-br from-rose to-[#B05161] shadow-cake hover:shadow-cake-hover active:scale-[0.99]"
-          )}
-        >
+        <PrimaryButton onClick={onContinue} disabled={bucket.length === 0}>
           {t("Continuer", "متابعة", "Continue")}
           <ArrowRight size={16} className="rtl:rotate-180" />
-        </button>
+        </PrimaryButton>
       </FooterBar>
     </div>
+  );
+}
+
+// ============ Gate: soft personalize invitation ============
+function GateModal({
+  t,
+  locale,
+  mode,
+  plainUnits,
+  onClose,
+  onUpgrade,
+  onPersonalize,
+  onSkip,
+}: {
+  t: TFn;
+  locale: Locale;
+  mode: Mode;
+  plainUnits: BucketItem[];
+  onClose: () => void;
+  onUpgrade: () => void;
+  onPersonalize: (uid: string) => void;
+  onSkip: () => void;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="absolute inset-0 z-30 flex items-end justify-center sm:items-center"
+    >
+      <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
+      <motion.div
+        initial={{ y: 40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 40, opacity: 0 }}
+        transition={{ duration: 0.3, ease: EASE }}
+        className="relative w-full max-w-md rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl"
+      >
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-charcoal/10 sm:hidden" />
+        <div className="flex flex-col items-center text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-rose/10 text-rose">
+            <WandSparkles size={26} />
+          </div>
+          <h3 className="mt-3 font-playfair text-xl font-bold text-charcoal">
+            {t("Envie de personnaliser ?", "هل ترغب في التخصيص؟", "Add a personal touch?")}
+          </h3>
+          <p className="mt-1 max-w-xs text-sm text-charcoal-light">
+            {mode === "simple"
+              ? t(
+                  "Écrivez un prénom, un âge ou un petit mot sur vos tiramisus — gratuitement.",
+                  "اكتب اسمًا أو عمرًا أو كلمة على تيراميسوك — مجانًا.",
+                  "Write a name, an age or a little note on your tiramisus — for free."
+                )
+              : t(
+                  `Il reste ${plainUnits.length} boîte(s) sans message. Touchez-en une pour l'écrire.`,
+                  `بقيت ${plainUnits.length} علبة بلا رسالة. اضغط عليها لكتابتها.`,
+                  `${plainUnits.length} box(es) still have no message. Tap one to write it.`
+                )}
+          </p>
+        </div>
+
+        {/* Custom mode: list the plain boxes for quick access */}
+        {mode === "custom" && (
+          <div className="mt-4 max-h-48 space-y-2 overflow-y-auto">
+            {plainUnits.map((b) => {
+              const f = findOption(b.optionId);
+              if (!f) return null;
+              return (
+                <button
+                  key={b.uid}
+                  onClick={() => onPersonalize(b.uid)}
+                  className="flex w-full items-center gap-3 rounded-2xl border border-border bg-white p-2 text-start transition-colors hover:border-rose/50"
+                >
+                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-[#F6ECE0]">
+                    <Image src={f.option.image} alt="" fill sizes="48px" className="object-cover" />
+                  </div>
+                  <span className="flex-1 text-sm font-medium text-charcoal">
+                    {f.category.labels[locale]} · {f.option.shapeLabel[locale]}
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-rose px-3 py-1.5 text-xs font-semibold text-white">
+                    <Pencil size={12} /> {t("Écrire", "اكتب", "Write")}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="mt-5 flex flex-col gap-2">
+          {mode === "simple" && (
+            <button
+              onClick={onUpgrade}
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-br from-rose to-[#B05161] py-3.5 font-semibold text-white shadow-cake transition-all hover:shadow-cake-hover active:scale-[0.99]"
+            >
+              <WandSparkles size={18} />
+              {t("Oui, je personnalise", "نعم، أريد التخصيص", "Yes, personalize")}
+            </button>
+          )}
+          <button
+            onClick={onSkip}
+            className="w-full rounded-full py-3 text-sm font-medium text-charcoal-light transition-colors hover:text-charcoal"
+          >
+            {t("Non merci, continuer", "لا شكرًا، تابع", "No thanks, continue")}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -785,19 +931,16 @@ function ReviewStep({
           <span className="text-sm text-charcoal-light">{t("Total", "المجموع", "Total")}</span>
           <span className="font-playfair text-xl font-bold text-rose">{formatDA(total)}</span>
         </div>
-        <button
-          onClick={onConfirm}
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-br from-rose to-[#B05161] py-3.5 font-semibold text-white shadow-cake transition-all hover:shadow-cake-hover active:scale-[0.99]"
-        >
+        <PrimaryButton onClick={onConfirm}>
           <Check size={18} />
           {t("Confirmer la commande", "تأكيد الطلب", "Confirm order")}
-        </button>
+        </PrimaryButton>
       </FooterBar>
     </div>
   );
 }
 
-// ============ Step: Confirm (name + phone) ============
+// ============ Step: Confirm ============
 function ConfirmStep({
   t,
   isRTL,
@@ -832,11 +975,7 @@ function ConfirmStep({
           {t("Vos coordonnées", "معلوماتك", "Your details")}
         </h2>
         <p className="text-xs text-charcoal-light">
-          {t(
-            "Pour confirmer votre commande avec vous.",
-            "لتأكيد طلبك معك.",
-            "So we can confirm your order with you."
-          )}
+          {t("Pour confirmer votre commande avec vous.", "لتأكيد طلبك معك.", "So we can confirm your order with you.")}
         </p>
       </div>
 
@@ -885,20 +1024,11 @@ function ConfirmStep({
           </p>
         </div>
 
-        {error && (
-          <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
-        )}
+        {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
       </div>
 
       <FooterBar>
-        <button
-          onClick={onSubmit}
-          disabled={!canSubmit}
-          className={cn(
-            "flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-semibold text-white transition-all",
-            !canSubmit ? "cursor-not-allowed bg-charcoal/25" : "bg-gradient-to-br from-rose to-[#B05161] shadow-cake hover:shadow-cake-hover active:scale-[0.99]"
-          )}
-        >
+        <PrimaryButton onClick={onSubmit} disabled={!canSubmit}>
           {submitting ? (
             <>
               <Loader2 size={18} className="animate-spin" />
@@ -910,7 +1040,7 @@ function ConfirmStep({
               {t("Enregistrer ma commande", "تسجيل طلبي", "Register my order")}
             </>
           )}
-        </button>
+        </PrimaryButton>
       </FooterBar>
     </div>
   );

@@ -1,27 +1,44 @@
 // Catalog for the tiramisu box picker.
 //
 // ▶▶ EDIT ME: prices below are PLACEHOLDERS (Algerian dinar, DA). Replace each
-//    `price` with your real price. You can also add/remove shapes inside a
-//    category's `options`, or swap any image by dropping a same-named file in
-//    /public/images/tiramisu/boxes/.
+//    `price` with your real price.
 //
-// Each category is a section in the picker; its `options` are the shapes shown
-// in the horizontal shape-scroller. `customizable: true` means that box has a
-// flat cocoa top a customer can personalise (write on); glasses/verrines are
-// false — they can be ordered but not written on.
+// Menu rules (per the shop's moulds):
+//   • Small  → square only
+//   • Medium → square or heart
+//   • Large  → square, heart or oval
+// Every box has a flat cocoa top, so all are customizable. Shape thumbnails are
+// rendered from the real cocoa surface (see boxes/CREDITS.md) and match the
+// customizer preview exactly.
 
 import type { Locale } from "./tiramisu-config";
 
-export type BoxShape = "round" | "square" | "rectangle" | "heart" | "glass";
+export type BoxShape = "square" | "heart" | "oval";
+
+const SHAPE_META: Record<
+  BoxShape,
+  { image: string; label: Record<Locale, string> }
+> = {
+  square: {
+    image: "/images/tiramisu/boxes/box-square.png",
+    label: { fr: "Carré", ar: "مربّع", en: "Square" },
+  },
+  heart: {
+    image: "/images/tiramisu/boxes/box-heart.png",
+    label: { fr: "Cœur", ar: "قلب", en: "Heart" },
+  },
+  oval: {
+    image: "/images/tiramisu/boxes/box-oval.png",
+    label: { fr: "Ovale", ar: "بيضوي", en: "Oval" },
+  },
+};
 
 export interface TiramisuBoxOption {
   id: string;
   shape: BoxShape;
-  /** Image under /public/images/tiramisu/boxes/ */
   image: string;
   /** Price in DA — PLACEHOLDER, edit me. */
   price: number;
-  /** Can this box be personalised (has a flat cocoa top)? */
   customizable: boolean;
   shapeLabel: Record<Locale, string>;
 }
@@ -33,107 +50,45 @@ export interface TiramisuBoxCategory {
   options: TiramisuBoxOption[];
 }
 
-const BOX = "/images/tiramisu/boxes";
+function opt(sizeId: string, shape: BoxShape, price: number): TiramisuBoxOption {
+  return {
+    id: `${sizeId}-${shape}`,
+    shape,
+    image: SHAPE_META[shape].image,
+    price,
+    customizable: true,
+    shapeLabel: SHAPE_META[shape].label,
+  };
+}
 
 export const TIRAMISU_CATALOG: TiramisuBoxCategory[] = [
   {
-    id: "individuel",
-    labels: { fr: "Individuel", ar: "فردي", en: "Individual" },
-    portions: { fr: "1 personne", ar: "شخص واحد", en: "1 person" },
-    options: [
-      {
-        id: "ind-coupe",
-        shape: "glass",
-        image: `${BOX}/ind-coupe.jpg`,
-        price: 250,
-        customizable: false,
-        shapeLabel: { fr: "Coupe", ar: "كأس", en: "Cup" },
-      },
-      {
-        id: "ind-verrine",
-        shape: "glass",
-        image: `${BOX}/ind-verrine.jpg`,
-        price: 250,
-        customizable: false,
-        shapeLabel: { fr: "Verrine", ar: "كأس صغير", en: "Verrine" },
-      },
-      {
-        id: "ind-trio",
-        shape: "glass",
-        image: `${BOX}/ind-trio.jpg`,
-        price: 650,
-        customizable: false,
-        shapeLabel: { fr: "Trio", ar: "ثلاثية", en: "Trio" },
-      },
-    ],
+    id: "small",
+    labels: { fr: "Petite boîte", ar: "علبة صغيرة", en: "Small box" },
+    portions: { fr: "2 à 3 personnes", ar: "2 إلى 3 أشخاص", en: "2 to 3 people" },
+    options: [opt("small", "square", 1200)],
   },
   {
-    id: "petit",
-    labels: { fr: "À partager", ar: "للمشاركة", en: "To share" },
+    id: "medium",
+    labels: { fr: "Boîte moyenne", ar: "علبة متوسطة", en: "Medium box" },
     portions: { fr: "4 à 6 personnes", ar: "4 إلى 6 أشخاص", en: "4 to 6 people" },
-    options: [
-      {
-        id: "petit-carre",
-        shape: "square",
-        image: `${BOX}/petit-carre.jpg`,
-        price: 1500,
-        customizable: true,
-        shapeLabel: { fr: "Carré", ar: "مربّع", en: "Square" },
-      },
-      {
-        id: "petit-rond",
-        shape: "round",
-        image: `${BOX}/petit-rond.jpg`,
-        price: 1500,
-        customizable: true,
-        shapeLabel: { fr: "Rond", ar: "دائري", en: "Round" },
-      },
-      {
-        id: "petit-rectangle",
-        shape: "rectangle",
-        image: `${BOX}/petit-rectangle.jpg`,
-        price: 1700,
-        customizable: true,
-        shapeLabel: { fr: "Rectangle", ar: "مستطيل", en: "Rectangle" },
-      },
-    ],
+    options: [opt("medium", "square", 2000), opt("medium", "heart", 2400)],
   },
   {
-    id: "grand",
-    labels: { fr: "Familial", ar: "عائلي", en: "Family" },
+    id: "large",
+    labels: { fr: "Grande boîte", ar: "علبة كبيرة", en: "Large box" },
     portions: { fr: "8 à 12 personnes", ar: "8 إلى 12 شخصًا", en: "8 to 12 people" },
     options: [
-      {
-        id: "grand-rond",
-        shape: "round",
-        image: `${BOX}/grand-rond.jpg`,
-        price: 3000,
-        customizable: true,
-        shapeLabel: { fr: "Rond", ar: "دائري", en: "Round" },
-      },
-      {
-        id: "grand-rectangle",
-        shape: "rectangle",
-        image: `${BOX}/grand-rectangle.jpg`,
-        price: 3200,
-        customizable: true,
-        shapeLabel: { fr: "Rectangle", ar: "مستطيل", en: "Rectangle" },
-      },
-      {
-        id: "grand-plateau",
-        shape: "rectangle",
-        image: `${BOX}/grand-plateau.jpg`,
-        price: 3800,
-        customizable: true,
-        shapeLabel: { fr: "Grand plateau", ar: "صينية كبيرة", en: "Large tray" },
-      },
+      opt("large", "square", 3200),
+      opt("large", "heart", 3600),
+      opt("large", "oval", 3600),
     ],
   },
 ];
 
 /** Format a price in Algerian dinar, e.g. 1500 → "1 500 DA". */
 export function formatDA(amount: number): string {
-  return `${amount.toLocaleString("fr-FR").replace(/ /g, " ")} DA`;
+  return `${amount.toLocaleString("fr-FR")} DA`;
 }
 
 export interface CatalogLookup {
