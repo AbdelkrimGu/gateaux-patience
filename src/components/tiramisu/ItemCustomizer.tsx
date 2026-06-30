@@ -5,6 +5,7 @@ import { useLocale } from "next-intl";
 import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import TiramisuCanvas from "./TiramisuCanvas";
+import type { BoxShape } from "@/lib/tiramisu-catalog";
 import {
   TIRAMISU_SIZES,
   STYLE_META,
@@ -39,11 +40,16 @@ export function personalizationText(p: Personalization): string {
 export default function ItemCustomizer({
   initial,
   optionLabel,
+  shape,
+  progressLabel,
   onSave,
   onCancel,
 }: {
   initial: Personalization | null;
   optionLabel: string;
+  shape: BoxShape;
+  /** e.g. "Boîte 2 sur 3" when walking through several boxes. */
+  progressLabel?: string;
   onSave: (p: Personalization) => void;
   onCancel: () => void;
 }) {
@@ -111,10 +117,19 @@ export default function ItemCustomizer({
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} className="flex h-full flex-col">
-      {/* Preview */}
+      {/* Progress (when walking through several boxes) */}
+      {progressLabel && (
+        <div className="flex shrink-0 justify-center pt-1.5">
+          <span className="rounded-full bg-rose/10 px-3 py-1 text-[11px] font-semibold text-rose">
+            {progressLabel}
+          </span>
+        </div>
+      )}
+
+      {/* Preview — in the customer's actual box shape */}
       <div className="flex shrink-0 items-center justify-center px-4 pt-2">
         <div className="h-[32vh] w-[32vh] max-w-full">
-          <TiramisuCanvas style={style} size={size} text={text} />
+          <TiramisuCanvas style={style} size={size} text={text} shape={shape} />
         </div>
       </div>
 

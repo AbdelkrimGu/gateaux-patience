@@ -18,6 +18,7 @@ import {
   PartyPopper,
   Loader2,
   WandSparkles,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TIRAMISU_CATALOG, formatDA, findOption } from "@/lib/tiramisu-catalog";
@@ -33,12 +34,23 @@ type Step = "mode" | "boxes" | "bucket" | "review" | "confirm";
 type Mode = "simple" | "custom";
 const STEP_ORDER: Step[] = ["mode", "boxes", "bucket", "review", "confirm"];
 
-interface BucketItem {
+// One cart line = a group of identical boxes. Some of its `qty` units may carry
+// a personalization; the rest are plain. So "2 ovals, 1 written" = one line,
+// qty 2, personalizations.length 1.
+interface CartLine {
   uid: string;
   optionId: string;
-  qty: number; // always 1 in custom mode (each box is its own unit)
-  personalization: Personalization | null;
+  qty: number;
+  personalizations: Personalization[]; // length 0..qty
 }
+
+const plainOf = (l: CartLine) => l.qty - l.personalizations.length;
+
+// A guided personalization session (the loop): either edit one unit, or add
+// several in a row, walking through them one by one.
+type Session =
+  | { lineUid: string; kind: "edit"; index: number }
+  | { lineUid: string; kind: "add"; total: number; doneInSession: number };
 
 export default function TiramisuWizard() {
   const locale = useLocale() as Locale;
@@ -49,10 +61,13 @@ export default function TiramisuWizard() {
 
   const [step, setStep] = useState<Step>("mode");
   const [mode, setMode] = useState<Mode>("custom");
-  const [bucket, setBucket] = useState<BucketItem[]>([]);
+  const [bucket, setBucket] = useState<CartLine[]>([]);
   const [activeCat, setActiveCat] = useState(TIRAMISU_CATALOG[0].id);
-  const [customizingUid, setCustomizingUid] = useState<string | null>(null);
+
   const [gateOpen, setGateOpen] = useState(false);
+  const [howMany, setHowMany] = useState<{ lineUid: string; max: number } | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [custKey, setCustKey] = useState(0); // remounts the customizer between units
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -72,62 +87,88 @@ export default function TiramisuWizard() {
       }, 0),
     [bucket]
   );
-
-  // Customizable boxes that still have no message.
-  const plainUnits = useMemo(
-    () =>
-      bucket.filter((b) => {
-        const f = findOption(b.optionId);
-        return f?.option.customizable && !b.personalization;
-      }),
-    [bucket]
-  );
+  const plainLines = useMemo(() => bucket.filter((l) => plainOf(l) > 0), [bucket]);
+  const lineOf = (uid: string) => bucket.find((l) => l.uid === uid) ?? null;
 
   // ---- bucket ops ----
   function addToBucket(optionId: string) {
     setBucket((prev) => {
-      if (mode === "simple") {
-        const ex = prev.find((b) => b.optionId === optionId && !b.personalization);
-        if (ex) return prev.map((b) => (b === ex ? { ...b, qty: b.qty + 1 } : b));
-      }
-      // custom mode: every box is its own customizable unit
-      return [...prev, { uid: newUid(), optionId, qty: 1, personalization: null }];
+      const ex = prev.find((b) => b.optionId === optionId);
+      if (ex) return prev.map((b) => (b === ex ? { ...b, qty: b.qty + 1 } : b));
+      return [...prev, { uid: newUid(), optionId, qty: 1, personalizations: [] }];
     });
   }
   function setQty(uid: string, delta: number) {
     setBucket((prev) =>
-      prev.map((b) => (b.uid === uid ? { ...b, qty: Math.max(1, b.qty + delta) } : b))
+      prev.map((b) => {
+        if (b.uid !== uid) return b;
+        const qty = Math.max(1, b.qty + delta);
+        // can't have more messages than boxes — drop extras when shrinking
+        const personalizations = b.personalizations.slice(0, qty);
+        return { ...b, qty, personalizations };
+      })
     );
   }
-  function removeItem(uid: string) {
+  function removeLine(uid: string) {
     setBucket((prev) => prev.filter((b) => b.uid !== uid));
   }
-  function savePersonalization(uid: string, p: Personalization) {
-    setBucket((prev) => prev.map((b) => (b.uid === uid ? { ...b, personalization: p } : b)));
-    setCustomizingUid(null);
-  }
-  function clearPersonalization(uid: string) {
-    setBucket((prev) => prev.map((b) => (b.uid === uid ? { ...b, personalization: null } : b)));
-  }
-  // Switch a simple order into a personalizable one: split every multi-qty line
-  // into individual units so each box can carry its own message.
-  function upgradeToCustom() {
+  function removePersonalizationAt(lineUid: string, index: number) {
     setBucket((prev) =>
-      prev.flatMap((b) =>
-        Array.from({ length: b.qty }, () => ({
-          uid: newUid(),
-          optionId: b.optionId,
-          qty: 1,
-          personalization: b.personalization,
-        }))
+      prev.map((b) =>
+        b.uid === lineUid
+          ? { ...b, personalizations: b.personalizations.filter((_, i) => i !== index) }
+          : b
       )
     );
-    setMode("custom");
   }
 
-  // Continue from the cart — softly invite personalization if anything is plain.
+  // ---- personalization session (the loop) ----
+  function startPersonalize(lineUid: string) {
+    const line = lineOf(lineUid);
+    if (!line) return;
+    const plain = plainOf(line);
+    if (plain <= 0) return;
+    if (plain === 1) beginAdd(lineUid, 1);
+    else setHowMany({ lineUid, max: plain });
+  }
+  function beginAdd(lineUid: string, total: number) {
+    setHowMany(null);
+    setGateOpen(false);
+    setSession({ lineUid, kind: "add", total, doneInSession: 0 });
+    setCustKey((k) => k + 1);
+  }
+  function editPersonalization(lineUid: string, index: number) {
+    setSession({ lineUid, kind: "edit", index });
+    setCustKey((k) => k + 1);
+  }
+  function onCustomizerSave(p: Personalization) {
+    const s = session;
+    if (!s) return;
+    setBucket((prev) =>
+      prev.map((l) => {
+        if (l.uid !== s.lineUid) return l;
+        if (s.kind === "edit") {
+          const arr = [...l.personalizations];
+          arr[s.index] = p;
+          return { ...l, personalizations: arr };
+        }
+        return { ...l, personalizations: [...l.personalizations, p] };
+      })
+    );
+    if (s.kind === "add" && s.doneInSession + 1 < s.total) {
+      setSession({ ...s, doneInSession: s.doneInSession + 1 });
+      setCustKey((k) => k + 1);
+    } else {
+      setSession(null);
+    }
+  }
+
+  function upgradeToCustom() {
+    setMode("custom");
+    setGateOpen(false);
+  }
   function onCartContinue() {
-    if (plainUnits.length > 0) setGateOpen(true);
+    if (plainLines.length > 0) setGateOpen(true);
     else setStep("review");
   }
 
@@ -135,22 +176,24 @@ export default function TiramisuWizard() {
   function buildOrder() {
     const head = t("Commande Tiramisu", "طلب تيراميسو", "Tiramisu order");
     const modeLabel =
-      mode === "custom"
-        ? t("Personnalisé", "مخصّص", "Personalized")
-        : t("Simple", "بسيط", "Simple");
+      mode === "custom" ? t("Personnalisé", "مخصّص", "Personalized") : t("Simple", "بسيط", "Simple");
     const rows: string[] = [`${head} — ${modeLabel}`, ""];
     bucket.forEach((b) => {
       const f = findOption(b.optionId);
       if (!f) return;
       const label = `${f.category.labels[locale]} · ${f.option.shapeLabel[locale]}`;
-      const line =
+      rows.push(
         b.qty > 1
-          ? `${b.qty}× ${label} — ${formatDA(f.option.price)} = ${formatDA(f.option.price * b.qty)}`
-          : `1× ${label} — ${formatDA(f.option.price)}`;
-      rows.push(`• ${line}`);
-      if (b.personalization) {
-        const txt = personalizationText(b.personalization).replace(/\n/g, " / ");
-        if (txt) rows.push(`   ✍️ ${STYLE_META[b.personalization.style].labels[locale]}: "${txt}"`);
+          ? `• ${b.qty}× ${label} — ${formatDA(f.option.price)} = ${formatDA(f.option.price * b.qty)}`
+          : `• 1× ${label} — ${formatDA(f.option.price)}`
+      );
+      b.personalizations.forEach((p) => {
+        const txt = personalizationText(p).replace(/\n/g, " / ");
+        if (txt) rows.push(`   ✍️ ${STYLE_META[p.style].labels[locale]}: "${txt}"`);
+      });
+      const plain = plainOf(b);
+      if (b.personalizations.length > 0 && plain > 0) {
+        rows.push(`   • ${plain} ${t("sans message", "بدون رسالة", "plain")}`);
       }
     });
     rows.push("", `${t("Total", "المجموع", "Total")}: ${formatDA(total)}`);
@@ -197,6 +240,7 @@ export default function TiramisuWizard() {
     setDoneId(null);
     setError(null);
     setGateOpen(false);
+    setSession(null);
     setStep("mode");
   }
   function goBack() {
@@ -204,8 +248,20 @@ export default function TiramisuWizard() {
     if (i > 0) setStep(STEP_ORDER[i - 1]);
   }
 
-  const customizingItem = customizingUid ? bucket.find((b) => b.uid === customizingUid) : null;
-  const customizingOption = customizingItem ? findOption(customizingItem.optionId) : null;
+  // session-derived
+  const sessionLine = session ? lineOf(session.lineUid) : null;
+  const sessionOpt = sessionLine ? findOption(sessionLine.optionId) : null;
+  const sessionInitial =
+    session?.kind === "edit" ? sessionLine?.personalizations[session.index] ?? null : null;
+  const sessionProgress =
+    session?.kind === "add" && session.total > 1
+      ? t(
+          `Boîte ${session.doneInSession + 1} sur ${session.total}`,
+          `علبة ${session.doneInSession + 1} من ${session.total}`,
+          `Box ${session.doneInSession + 1} of ${session.total}`
+        )
+      : undefined;
+
   const stepIndex = STEP_ORDER.indexOf(step);
 
   // ============ SUCCESS ============
@@ -296,13 +352,7 @@ export default function TiramisuWizard() {
             className="flex h-full flex-col"
           >
             {step === "mode" && (
-              <ModeStep
-                t={t}
-                onPick={(m) => {
-                  setMode(m);
-                  setStep("boxes");
-                }}
-              />
+              <ModeStep t={t} onPick={(m) => { setMode(m); setStep("boxes"); }} />
             )}
             {step === "boxes" && (
               <BoxesStep
@@ -325,9 +375,10 @@ export default function TiramisuWizard() {
                 mode={mode}
                 total={total}
                 setQty={setQty}
-                removeItem={removeItem}
-                onPersonalize={(uid) => setCustomizingUid(uid)}
-                onClearPersonalization={clearPersonalization}
+                removeLine={removeLine}
+                onStartPersonalize={startPersonalize}
+                onEditPersonalization={editPersonalization}
+                onRemovePersonalization={removePersonalizationAt}
                 onAddMore={() => setStep("boxes")}
                 onContinue={onCartContinue}
               />
@@ -354,6 +405,19 @@ export default function TiramisuWizard() {
           </motion.div>
         </AnimatePresence>
 
+        {/* How-many chooser */}
+        <AnimatePresence>
+          {howMany && (
+            <HowManyModal
+              t={t}
+              locale={locale}
+              info={howMany}
+              onClose={() => setHowMany(null)}
+              onConfirm={(k) => beginAdd(howMany.lineUid, k)}
+            />
+          )}
+        </AnimatePresence>
+
         {/* Personalize gate (soft invitation on Continue) */}
         <AnimatePresence>
           {gateOpen && (
@@ -361,27 +425,18 @@ export default function TiramisuWizard() {
               t={t}
               locale={locale}
               mode={mode}
-              plainUnits={plainUnits}
+              plainLines={plainLines}
               onClose={() => setGateOpen(false)}
-              onUpgrade={() => {
-                upgradeToCustom();
-                setGateOpen(false);
-              }}
-              onPersonalize={(uid) => {
-                setGateOpen(false);
-                setCustomizingUid(uid);
-              }}
-              onSkip={() => {
-                setGateOpen(false);
-                setStep("review");
-              }}
+              onUpgrade={upgradeToCustom}
+              onPersonalize={(uid) => startPersonalize(uid)}
+              onSkip={() => { setGateOpen(false); setStep("review"); }}
             />
           )}
         </AnimatePresence>
 
-        {/* Customizer overlay (the loop: cart → customize → cart) */}
+        {/* Customizer overlay (the loop) */}
         <AnimatePresence>
-          {customizingItem && customizingOption && (
+          {session && sessionLine && sessionOpt && (
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
@@ -390,10 +445,13 @@ export default function TiramisuWizard() {
               className="absolute inset-0 z-40 flex flex-col bg-background"
             >
               <ItemCustomizer
-                initial={customizingItem.personalization}
-                optionLabel={`${customizingOption.category.labels[locale]} · ${customizingOption.option.shapeLabel[locale]}`}
-                onSave={(p) => savePersonalization(customizingItem.uid, p)}
-                onCancel={() => setCustomizingUid(null)}
+                key={custKey}
+                initial={sessionInitial}
+                optionLabel={`${sessionOpt.category.labels[locale]} · ${sessionOpt.option.shapeLabel[locale]}`}
+                shape={sessionOpt.option.shape}
+                progressLabel={sessionProgress}
+                onSave={onCustomizerSave}
+                onCancel={() => setSession(null)}
               />
             </motion.div>
           )}
@@ -403,7 +461,7 @@ export default function TiramisuWizard() {
   );
 }
 
-// ============ Shell ============
+// ============ Shell / chrome ============
 function Shell({ children, isRTL }: { children: React.ReactNode; isRTL: boolean }) {
   return (
     <div
@@ -429,24 +487,14 @@ function FooterBar({ children }: { children: React.ReactNode }) {
   );
 }
 
-function PrimaryButton({
-  onClick,
-  disabled,
-  children,
-}: {
-  onClick: () => void;
-  disabled?: boolean;
-  children: React.ReactNode;
-}) {
+function PrimaryButton({ onClick, disabled, children }: { onClick: () => void; disabled?: boolean; children: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
       className={cn(
         "flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-semibold text-white transition-all",
-        disabled
-          ? "cursor-not-allowed bg-charcoal/25"
-          : "bg-gradient-to-br from-rose to-[#B05161] shadow-cake hover:shadow-cake-hover active:scale-[0.99]"
+        disabled ? "cursor-not-allowed bg-charcoal/25" : "bg-gradient-to-br from-rose to-[#B05161] shadow-cake hover:shadow-cake-hover active:scale-[0.99]"
       )}
     >
       {children}
@@ -463,22 +511,14 @@ function ModeStep({ t, onPick }: { t: TFn; onPick: (m: Mode) => void }) {
       mode: "custom",
       emoji: "✍️",
       title: t("Tiramisu personnalisé", "تيراميسو مخصّص", "Custom tiramisu"),
-      desc: t(
-        "Écrivez votre message et voyez-le en direct.",
-        "اكتب رسالتك وشاهدها مباشرة.",
-        "Write your message and see it live."
-      ),
+      desc: t("Écrivez votre message et voyez-le en direct.", "اكتب رسالتك وشاهدها مباشرة.", "Write your message and see it live."),
       img: "/images/tiramisu/hero/hero-1.png",
     },
     {
       mode: "simple",
       emoji: "🥄",
       title: t("Tiramisu simple", "تيراميسو بسيط", "Simple tiramisu"),
-      desc: t(
-        "Nos boîtes gourmandes, prêtes à savourer.",
-        "علبنا اللذيذة، جاهزة للتذوّق.",
-        "Our gourmet boxes, ready to enjoy."
-      ),
+      desc: t("Nos boîtes gourmandes, prêtes à savourer.", "علبنا اللذيذة، جاهزة للتذوّق.", "Our gourmet boxes, ready to enjoy."),
       img: "/images/tiramisu/boxes/box-square.png",
     },
   ];
@@ -494,7 +534,6 @@ function ModeStep({ t, onPick }: { t: TFn; onPick: (m: Mode) => void }) {
       <p className="mt-2 max-w-xs text-center text-sm text-charcoal-light">
         {t("Choisissez par où commencer.", "اختر من أين تبدأ.", "Choose where to begin.")}
       </p>
-
       <div className="mt-7 grid w-full max-w-md gap-4">
         {cards.map((c) => (
           <button
@@ -522,25 +561,10 @@ function ModeStep({ t, onPick }: { t: TFn; onPick: (m: Mode) => void }) {
 
 // ============ Step: Boxes ============
 function BoxesStep({
-  t,
-  locale,
-  mode,
-  activeCat,
-  setActiveCat,
-  onAdd,
-  count,
-  total,
-  onContinue,
+  t, locale, mode, activeCat, setActiveCat, onAdd, count, total, onContinue,
 }: {
-  t: TFn;
-  locale: Locale;
-  mode: Mode;
-  activeCat: string;
-  setActiveCat: (id: string) => void;
-  onAdd: (optionId: string) => void;
-  count: number;
-  total: number;
-  onContinue: () => void;
+  t: TFn; locale: Locale; mode: Mode; activeCat: string; setActiveCat: (id: string) => void;
+  onAdd: (optionId: string) => void; count: number; total: number; onContinue: () => void;
 }) {
   const category = TIRAMISU_CATALOG.find((c) => c.id === activeCat)!;
   return (
@@ -551,16 +575,11 @@ function BoxesStep({
         </h2>
         <p className="text-xs text-charcoal-light">
           {mode === "custom"
-            ? t(
-                "Ajoutez chaque boîte — vous personnaliserez ensuite.",
-                "أضف كل علبة — ستخصّصها لاحقًا.",
-                "Add each box — you'll personalize them next."
-              )
+            ? t("Ajoutez chaque boîte — vous personnaliserez ensuite.", "أضف كل علبة — ستخصّصها لاحقًا.", "Add each box — you'll personalize them next.")
             : t("Ajoutez-en autant que vous voulez.", "أضف ما شئت منها.", "Add as many as you like.")}
         </p>
       </div>
 
-      {/* Size tabs */}
       <div className="mt-3 flex shrink-0 gap-2 overflow-x-auto px-5 pb-1">
         {TIRAMISU_CATALOG.map((c) => {
           const active = c.id === activeCat;
@@ -582,14 +601,10 @@ function BoxesStep({
         })}
       </div>
 
-      {/* Shape scroller */}
       <div className="flex min-h-0 flex-1 items-center">
         <div className="flex w-full snap-x gap-4 overflow-x-auto px-5 py-2">
           {category.options.map((o) => (
-            <div
-              key={o.id}
-              className="flex w-[62vw] max-w-[260px] shrink-0 snap-center flex-col overflow-hidden rounded-3xl border border-border bg-white shadow-cake"
-            >
+            <div key={o.id} className="flex w-[62vw] max-w-[260px] shrink-0 snap-center flex-col overflow-hidden rounded-3xl border border-border bg-white shadow-cake">
               <div className="relative aspect-square w-full bg-[#F6ECE0]">
                 <Image src={o.image} alt={o.shapeLabel[locale]} fill sizes="260px" className="object-cover" />
                 <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-charcoal shadow">
@@ -623,42 +638,28 @@ function BoxesStep({
   );
 }
 
-// ============ Step: Bucket ============
+// ============ Step: Bucket (grouped lines, collapse/expand) ============
 function BucketStep({
-  t,
-  locale,
-  bucket,
-  mode,
-  total,
-  setQty,
-  removeItem,
-  onPersonalize,
-  onClearPersonalization,
-  onAddMore,
-  onContinue,
+  t, locale, bucket, mode, total, setQty, removeLine,
+  onStartPersonalize, onEditPersonalization, onRemovePersonalization, onAddMore, onContinue,
 }: {
-  t: TFn;
-  locale: Locale;
-  bucket: BucketItem[];
-  mode: Mode;
-  total: number;
-  setQty: (uid: string, d: number) => void;
-  removeItem: (uid: string) => void;
-  onPersonalize: (uid: string) => void;
-  onClearPersonalization: (uid: string) => void;
-  onAddMore: () => void;
-  onContinue: () => void;
+  t: TFn; locale: Locale; bucket: CartLine[]; mode: Mode; total: number;
+  setQty: (uid: string, d: number) => void; removeLine: (uid: string) => void;
+  onStartPersonalize: (uid: string) => void;
+  onEditPersonalization: (uid: string, index: number) => void;
+  onRemovePersonalization: (uid: string, index: number) => void;
+  onAddMore: () => void; onContinue: () => void;
 }) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between px-5 pt-1">
         <div>
-          <h2 className="font-playfair text-xl font-bold text-charcoal">
-            {t("Votre panier", "سلتك", "Your bucket")}
-          </h2>
+          <h2 className="font-playfair text-xl font-bold text-charcoal">{t("Votre panier", "سلتك", "Your bucket")}</h2>
           <p className="text-xs text-charcoal-light">
             {mode === "custom"
-              ? t("Personnalisez chaque boîte, ou laissez-la simple.", "خصّص كل علبة أو اتركها بسيطة.", "Personalize each box, or leave it plain.")
+              ? t("Personnalisez vos boîtes, ou laissez-les simples.", "خصّص علبك أو اتركها بسيطة.", "Personalize your boxes, or leave them plain.")
               : t("Ajustez les quantités.", "عدّل الكميات.", "Adjust quantities.")}
           </p>
         </div>
@@ -678,10 +679,20 @@ function BucketStep({
           const f = findOption(b.optionId);
           if (!f) return null;
           const { category, option } = f;
-          const ptext = b.personalization ? personalizationText(b.personalization) : "";
-          const canCustomize = mode === "custom" && option.customizable;
+          const nCustom = b.personalizations.length;
+          const plain = plainOf(b);
+          const isOpen = expanded === b.uid;
+          const summary =
+            nCustom === 0
+              ? null
+              : [
+                  `${nCustom} ${t("personnalisé", "مخصّص", "custom")}${nCustom > 1 ? "s" : ""}`,
+                  plain > 0 ? `${plain} ${t("simple", "بسيط", "plain")}${plain > 1 ? "s" : ""}` : null,
+                ].filter(Boolean).join(" · ");
+
           return (
             <div key={b.uid} className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+              {/* main row */}
               <div className="flex gap-3 p-2.5">
                 <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#F6ECE0]">
                   <Image src={option.image} alt={option.shapeLabel[locale]} fill sizes="64px" className="object-cover" />
@@ -692,61 +703,97 @@ function BucketStep({
                       <p className="truncate font-playfair text-sm font-semibold text-charcoal">
                         {category.labels[locale]} · {option.shapeLabel[locale]}
                       </p>
-                      <p className="text-xs text-charcoal-light">{formatDA(option.price)}</p>
+                      <p className="text-xs text-charcoal-light">
+                        {b.qty > 1 ? `${b.qty} × ${formatDA(option.price)}` : formatDA(option.price)}
+                      </p>
                     </div>
-                    <button onClick={() => removeItem(b.uid)} className="shrink-0 rounded-lg p-1.5 text-charcoal-lighter hover:bg-red-50 hover:text-red-500" aria-label="Remove">
+                    <button onClick={() => removeLine(b.uid)} className="shrink-0 rounded-lg p-1.5 text-charcoal-lighter hover:bg-red-50 hover:text-red-500" aria-label="Remove">
                       <Trash2 size={15} />
                     </button>
                   </div>
-                  {/* qty only in simple mode (custom = one unit per box) */}
-                  {mode === "simple" && (
-                    <div className="mt-1.5 flex items-center gap-2">
-                      <button onClick={() => setQty(b.uid, -1)} className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-charcoal hover:border-rose hover:text-rose" aria-label="-">
-                        <Minus size={13} />
-                      </button>
-                      <span className="w-5 text-center text-sm font-semibold tabular-nums">{b.qty}</span>
-                      <button onClick={() => setQty(b.uid, 1)} className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-charcoal hover:border-rose hover:text-rose" aria-label="+">
-                        <Plus size={13} />
-                      </button>
-                    </div>
-                  )}
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <button onClick={() => setQty(b.uid, -1)} className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-charcoal hover:border-rose hover:text-rose" aria-label="-">
+                      <Minus size={13} />
+                    </button>
+                    <span className="w-5 text-center text-sm font-semibold tabular-nums">{b.qty}</span>
+                    <button onClick={() => setQty(b.uid, 1)} className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-charcoal hover:border-rose hover:text-rose" aria-label="+">
+                      <Plus size={13} />
+                    </button>
+                    <span className="ms-auto text-sm font-semibold text-charcoal">{formatDA(option.price * b.qty)}</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Prominent, discoverable customization zone (custom mode) */}
-              {canCustomize && (
-                <div className="border-t border-border/70 px-2.5 py-2.5">
-                  {b.personalization && ptext ? (
-                    <div className="flex items-center gap-2">
-                      <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl bg-rose/[0.06] px-3 py-2">
-                        <span className="text-base">{STYLE_META[b.personalization.style].emoji}</span>
-                        <span className="truncate font-playfair text-sm font-semibold text-charcoal">
-                          “{ptext.replace(/\n/g, " · ")}”
-                        </span>
-                      </div>
+              {/* customization zone (custom mode) */}
+              {mode === "custom" && (
+                <div className="border-t border-border/70">
+                  {nCustom === 0 ? (
+                    <div className="p-2.5">
                       <button
-                        onClick={() => onPersonalize(b.uid)}
-                        className="shrink-0 rounded-full bg-rose/10 px-3 py-2 text-xs font-semibold text-rose hover:bg-rose/15"
+                        onClick={() => onStartPersonalize(b.uid)}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-rose/50 bg-rose/[0.04] py-2.5 text-sm font-semibold text-rose transition-colors hover:bg-rose/10"
                       >
-                        {t("Modifier", "تعديل", "Edit")}
-                      </button>
-                      <button
-                        onClick={() => onClearPersonalization(b.uid)}
-                        className="shrink-0 rounded-full p-2 text-charcoal-lighter hover:text-charcoal"
-                        aria-label={t("Retirer", "إزالة", "Remove")}
-                        title={t("Laisser simple", "اتركها بسيطة", "Leave plain")}
-                      >
-                        <Trash2 size={14} />
+                        <WandSparkles size={16} />
+                        {b.qty > 1
+                          ? t(`Personnaliser (${plain})`, `تخصيص (${plain})`, `Personalize (${plain})`)
+                          : t("Personnaliser ce tiramisu", "خصّص هذا التيراميسو", "Personalize this tiramisu")}
                       </button>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => onPersonalize(b.uid)}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-rose/50 bg-rose/[0.04] py-2.5 text-sm font-semibold text-rose transition-colors hover:bg-rose/10"
-                    >
-                      <WandSparkles size={16} />
-                      {t("Personnaliser ce tiramisu", "خصّص هذا التيراميسو", "Personalize this tiramisu")}
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setExpanded(isOpen ? null : b.uid)}
+                        className="flex w-full items-center justify-between px-3 py-2.5 text-start"
+                      >
+                        <span className="flex items-center gap-1.5 text-xs font-medium text-charcoal">
+                          <WandSparkles size={13} className="text-rose" />
+                          {summary}
+                        </span>
+                        <ChevronDown size={16} className={cn("text-charcoal-light transition-transform", isOpen && "rotate-180")} />
+                      </button>
+
+                      <AnimatePresence initial={false}>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.22, ease: EASE }}
+                            className="overflow-hidden"
+                          >
+                            <div className="space-y-1.5 px-3 pb-3">
+                              {b.personalizations.map((p, i) => (
+                                <div key={i} className="flex items-center gap-2 rounded-xl bg-rose/[0.05] px-2.5 py-1.5">
+                                  <span className="text-sm">{STYLE_META[p.style].emoji}</span>
+                                  <span className="min-w-0 flex-1 truncate font-playfair text-sm font-semibold text-charcoal">
+                                    “{personalizationText(p).replace(/\n/g, " · ") || "…"}”
+                                  </span>
+                                  <button onClick={() => onEditPersonalization(b.uid, i)} className="shrink-0 rounded-full px-2 py-1 text-xs font-semibold text-rose hover:bg-rose/10">
+                                    {t("Modifier", "تعديل", "Edit")}
+                                  </button>
+                                  <button onClick={() => onRemovePersonalization(b.uid, i)} className="shrink-0 rounded-full p-1 text-charcoal-lighter hover:text-charcoal" aria-label="Remove message">
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              ))}
+                              {plain > 0 && (
+                                <div className="flex items-center justify-between gap-2 rounded-xl px-2.5 py-1">
+                                  <span className="text-xs text-charcoal-light">
+                                    {plain} {t("sans message", "بدون رسالة", "plain")}
+                                  </span>
+                                  <button
+                                    onClick={() => onStartPersonalize(b.uid)}
+                                    className="inline-flex items-center gap-1 rounded-full bg-rose px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-dark"
+                                  >
+                                    <Plus size={12} /> {t("Personnaliser", "تخصيص", "Personalize")}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </>
                   )}
                 </div>
               )}
@@ -769,33 +816,133 @@ function BucketStep({
   );
 }
 
+// ============ How-many chooser ============
+function HowManyModal({
+  t, locale, info, onClose, onConfirm,
+}: {
+  t: TFn; locale: Locale; info: { lineUid: string; max: number }; onClose: () => void; onConfirm: (k: number) => void;
+}) {
+  return (
+    <Sheet onClose={onClose}>
+      <div className="flex flex-col items-center text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-rose/10 text-rose">
+          <WandSparkles size={26} />
+        </div>
+        <h3 className="mt-3 font-playfair text-xl font-bold text-charcoal">
+          {t("Combien en personnaliser ?", "كم واحدة تخصّص؟", "How many to personalize?")}
+        </h3>
+        <p className="mt-1 max-w-xs text-sm text-charcoal-light">
+          {t(
+            `Vous pouvez en écrire jusqu'à ${info.max}. On vous guide une par une.`,
+            `يمكنك كتابة حتى ${info.max}. سنرشدك واحدة تلو الأخرى.`,
+            `You can write up to ${info.max}. We'll guide you one by one.`
+          )}
+        </p>
+      </div>
+      <div className="mt-5 flex flex-wrap justify-center gap-2">
+        {Array.from({ length: info.max }, (_, i) => i + 1).map((k) => (
+          <button
+            key={k}
+            onClick={() => onConfirm(k)}
+            className="flex h-12 min-w-[3rem] items-center justify-center rounded-2xl border border-rose/30 bg-white px-4 text-lg font-bold text-rose shadow-sm transition-all hover:-translate-y-0.5 hover:bg-rose hover:text-white active:scale-95"
+          >
+            {k}
+          </button>
+        ))}
+      </div>
+      <button onClick={onClose} className="mt-5 w-full rounded-full py-3 text-sm font-medium text-charcoal-light hover:text-charcoal">
+        {t("Annuler", "إلغاء", "Cancel")}
+      </button>
+    </Sheet>
+  );
+}
+
 // ============ Gate: soft personalize invitation ============
 function GateModal({
-  t,
-  locale,
-  mode,
-  plainUnits,
-  onClose,
-  onUpgrade,
-  onPersonalize,
-  onSkip,
+  t, locale, mode, plainLines, onClose, onUpgrade, onPersonalize, onSkip,
 }: {
-  t: TFn;
-  locale: Locale;
-  mode: Mode;
-  plainUnits: BucketItem[];
-  onClose: () => void;
-  onUpgrade: () => void;
-  onPersonalize: (uid: string) => void;
-  onSkip: () => void;
+  t: TFn; locale: Locale; mode: Mode; plainLines: CartLine[];
+  onClose: () => void; onUpgrade: () => void; onPersonalize: (uid: string) => void; onSkip: () => void;
 }) {
+  return (
+    <Sheet onClose={onClose}>
+      <div className="flex flex-col items-center text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-rose/10 text-rose">
+          <WandSparkles size={26} />
+        </div>
+        <h3 className="mt-3 font-playfair text-xl font-bold text-charcoal">
+          {t("Envie de personnaliser ?", "هل ترغب في التخصيص؟", "Add a personal touch?")}
+        </h3>
+        <p className="mt-1 max-w-xs text-sm text-charcoal-light">
+          {mode === "simple"
+            ? t(
+                "Écrivez un prénom, un âge ou un petit mot sur vos tiramisus — gratuitement.",
+                "اكتب اسمًا أو عمرًا أو كلمة على تيراميسوك — مجانًا.",
+                "Write a name, an age or a little note on your tiramisus — for free."
+              )
+            : t(
+                "Touchez une boîte pour y écrire un message.",
+                "اضغط على علبة لكتابة رسالة عليها.",
+                "Tap a box to write a message on it."
+              )}
+        </p>
+      </div>
+
+      {mode === "custom" && (
+        <div className="mt-4 max-h-48 space-y-2 overflow-y-auto">
+          {plainLines.map((b) => {
+            const f = findOption(b.optionId);
+            if (!f) return null;
+            const plain = plainOf(b);
+            return (
+              <button
+                key={b.uid}
+                onClick={() => onPersonalize(b.uid)}
+                className="flex w-full items-center gap-3 rounded-2xl border border-border bg-white p-2 text-start transition-colors hover:border-rose/50"
+              >
+                <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-[#F6ECE0]">
+                  <Image src={f.option.image} alt="" fill sizes="48px" className="object-cover" />
+                </div>
+                <span className="flex-1 text-sm font-medium text-charcoal">
+                  {f.category.labels[locale]} · {f.option.shapeLabel[locale]}
+                  {plain > 1 && <span className="text-charcoal-light"> · {plain} {t("simples", "بسيطة", "plain")}</span>}
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-rose px-3 py-1.5 text-xs font-semibold text-white">
+                  <Pencil size={12} /> {t("Écrire", "اكتب", "Write")}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="mt-5 flex flex-col gap-2">
+        {mode === "simple" && (
+          <button
+            onClick={onUpgrade}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-br from-rose to-[#B05161] py-3.5 font-semibold text-white shadow-cake transition-all hover:shadow-cake-hover active:scale-[0.99]"
+          >
+            <WandSparkles size={18} />
+            {t("Oui, je personnalise", "نعم، أريد التخصيص", "Yes, personalize")}
+          </button>
+        )}
+        <button onClick={onSkip} className="w-full rounded-full py-3 text-sm font-medium text-charcoal-light transition-colors hover:text-charcoal">
+          {t("Non merci, continuer", "لا شكرًا، تابع", "No thanks, continue")}
+        </button>
+      </div>
+    </Sheet>
+  );
+}
+
+// shared bottom-sheet
+function Sheet({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="absolute inset-0 z-30 flex items-end justify-center sm:items-center"
+      className="absolute inset-0 z-50 flex items-end justify-center sm:items-center"
     >
       <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
       <motion.div
@@ -803,75 +950,10 @@ function GateModal({
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 40, opacity: 0 }}
         transition={{ duration: 0.3, ease: EASE }}
-        className="relative w-full max-w-md rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl"
+        className="relative max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl"
       >
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-charcoal/10 sm:hidden" />
-        <div className="flex flex-col items-center text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-rose/10 text-rose">
-            <WandSparkles size={26} />
-          </div>
-          <h3 className="mt-3 font-playfair text-xl font-bold text-charcoal">
-            {t("Envie de personnaliser ?", "هل ترغب في التخصيص؟", "Add a personal touch?")}
-          </h3>
-          <p className="mt-1 max-w-xs text-sm text-charcoal-light">
-            {mode === "simple"
-              ? t(
-                  "Écrivez un prénom, un âge ou un petit mot sur vos tiramisus — gratuitement.",
-                  "اكتب اسمًا أو عمرًا أو كلمة على تيراميسوك — مجانًا.",
-                  "Write a name, an age or a little note on your tiramisus — for free."
-                )
-              : t(
-                  `Il reste ${plainUnits.length} boîte(s) sans message. Touchez-en une pour l'écrire.`,
-                  `بقيت ${plainUnits.length} علبة بلا رسالة. اضغط عليها لكتابتها.`,
-                  `${plainUnits.length} box(es) still have no message. Tap one to write it.`
-                )}
-          </p>
-        </div>
-
-        {/* Custom mode: list the plain boxes for quick access */}
-        {mode === "custom" && (
-          <div className="mt-4 max-h-48 space-y-2 overflow-y-auto">
-            {plainUnits.map((b) => {
-              const f = findOption(b.optionId);
-              if (!f) return null;
-              return (
-                <button
-                  key={b.uid}
-                  onClick={() => onPersonalize(b.uid)}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-border bg-white p-2 text-start transition-colors hover:border-rose/50"
-                >
-                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-[#F6ECE0]">
-                    <Image src={f.option.image} alt="" fill sizes="48px" className="object-cover" />
-                  </div>
-                  <span className="flex-1 text-sm font-medium text-charcoal">
-                    {f.category.labels[locale]} · {f.option.shapeLabel[locale]}
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-rose px-3 py-1.5 text-xs font-semibold text-white">
-                    <Pencil size={12} /> {t("Écrire", "اكتب", "Write")}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        <div className="mt-5 flex flex-col gap-2">
-          {mode === "simple" && (
-            <button
-              onClick={onUpgrade}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-br from-rose to-[#B05161] py-3.5 font-semibold text-white shadow-cake transition-all hover:shadow-cake-hover active:scale-[0.99]"
-            >
-              <WandSparkles size={18} />
-              {t("Oui, je personnalise", "نعم، أريد التخصيص", "Yes, personalize")}
-            </button>
-          )}
-          <button
-            onClick={onSkip}
-            className="w-full rounded-full py-3 text-sm font-medium text-charcoal-light transition-colors hover:text-charcoal"
-          >
-            {t("Non merci, continuer", "لا شكرًا، تابع", "No thanks, continue")}
-          </button>
-        </div>
+        {children}
       </motion.div>
     </motion.div>
   );
@@ -879,27 +961,15 @@ function GateModal({
 
 // ============ Step: Review ============
 function ReviewStep({
-  t,
-  locale,
-  bucket,
-  total,
-  onConfirm,
+  t, locale, bucket, total, onConfirm,
 }: {
-  t: TFn;
-  locale: Locale;
-  bucket: BucketItem[];
-  total: number;
-  onConfirm: () => void;
+  t: TFn; locale: Locale; bucket: CartLine[]; total: number; onConfirm: () => void;
 }) {
   return (
     <div className="flex h-full flex-col">
       <div className="px-5 pt-1">
-        <h2 className="font-playfair text-xl font-bold text-charcoal">
-          {t("Votre commande", "طلبك", "Your order")}
-        </h2>
-        <p className="text-xs text-charcoal-light">
-          {t("Vérifiez avant de confirmer.", "تحقق قبل التأكيد.", "Check before confirming.")}
-        </p>
+        <h2 className="font-playfair text-xl font-bold text-charcoal">{t("Votre commande", "طلبك", "Your order")}</h2>
+        <p className="text-xs text-charcoal-light">{t("Vérifiez avant de confirmer.", "تحقق قبل التأكيد.", "Check before confirming.")}</p>
       </div>
 
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-5 py-3">
@@ -907,7 +977,7 @@ function ReviewStep({
           const f = findOption(b.optionId);
           if (!f) return null;
           const { category, option } = f;
-          const ptext = b.personalization ? personalizationText(b.personalization) : "";
+          const plain = plainOf(b);
           return (
             <div key={b.uid} className="rounded-2xl border border-border bg-white p-3">
               <div className="flex items-center justify-between gap-2">
@@ -916,10 +986,13 @@ function ReviewStep({
                 </p>
                 <span className="text-sm font-semibold text-charcoal">{formatDA(option.price * b.qty)}</span>
               </div>
-              {b.personalization && ptext && (
-                <p className="mt-1 text-xs text-charcoal-light">
-                  {STYLE_META[b.personalization.style].emoji} {STYLE_META[b.personalization.style].labels[locale]}: “{ptext.replace(/\n/g, " · ")}”
+              {b.personalizations.map((p, i) => (
+                <p key={i} className="mt-1 text-xs text-charcoal-light">
+                  {STYLE_META[p.style].emoji} {STYLE_META[p.style].labels[locale]}: “{personalizationText(p).replace(/\n/g, " · ") || "…"}”
                 </p>
+              ))}
+              {b.personalizations.length > 0 && plain > 0 && (
+                <p className="mt-1 text-xs text-charcoal-lighter">+ {plain} {t("sans message", "بدون رسالة", "plain")}</p>
               )}
             </div>
           );
@@ -942,48 +1015,21 @@ function ReviewStep({
 
 // ============ Step: Confirm ============
 function ConfirmStep({
-  t,
-  isRTL,
-  name,
-  phone,
-  setName,
-  setPhone,
-  total,
-  count,
-  canSubmit,
-  submitting,
-  error,
-  onSubmit,
+  t, isRTL, name, phone, setName, setPhone, total, count, canSubmit, submitting, error, onSubmit,
 }: {
-  t: TFn;
-  isRTL: boolean;
-  name: string;
-  phone: string;
-  setName: (v: string) => void;
-  setPhone: (v: string) => void;
-  total: number;
-  count: number;
-  canSubmit: boolean;
-  submitting: boolean;
-  error: string | null;
-  onSubmit: () => void;
+  t: TFn; isRTL: boolean; name: string; phone: string; setName: (v: string) => void; setPhone: (v: string) => void;
+  total: number; count: number; canSubmit: boolean; submitting: boolean; error: string | null; onSubmit: () => void;
 }) {
   return (
     <div className="flex h-full flex-col">
       <div className="px-5 pt-1">
-        <h2 className="font-playfair text-xl font-bold text-charcoal">
-          {t("Vos coordonnées", "معلوماتك", "Your details")}
-        </h2>
-        <p className="text-xs text-charcoal-light">
-          {t("Pour confirmer votre commande avec vous.", "لتأكيد طلبك معك.", "So we can confirm your order with you.")}
-        </p>
+        <h2 className="font-playfair text-xl font-bold text-charcoal">{t("Vos coordonnées", "معلوماتك", "Your details")}</h2>
+        <p className="text-xs text-charcoal-light">{t("Pour confirmer votre commande avec vous.", "لتأكيد طلبك معك.", "So we can confirm your order with you.")}</p>
       </div>
 
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-charcoal-light">
-            {t("Votre nom", "اسمك", "Your name")}
-          </label>
+          <label className="mb-1.5 block text-xs font-medium text-charcoal-light">{t("Votre nom", "اسمك", "Your name")}</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -993,9 +1039,7 @@ function ConfirmStep({
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-charcoal-light">
-            {t("Votre téléphone", "هاتفك", "Your phone")}
-          </label>
+          <label className="mb-1.5 block text-xs font-medium text-charcoal-light">{t("Votre téléphone", "هاتفك", "Your phone")}</label>
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -1016,11 +1060,7 @@ function ConfirmStep({
           </div>
           <p className="mt-2 flex items-center gap-1.5 text-[11px] text-charcoal-light">
             <Sparkles size={12} className="text-gold" />
-            {t(
-              "Aucun paiement maintenant — nous vous rappelons pour confirmer.",
-              "لا دفع الآن — سنتصل بك للتأكيد.",
-              "No payment now — we call you back to confirm."
-            )}
+            {t("Aucun paiement maintenant — nous vous rappelons pour confirmer.", "لا دفع الآن — سنتصل بك للتأكيد.", "No payment now — we call you back to confirm.")}
           </p>
         </div>
 

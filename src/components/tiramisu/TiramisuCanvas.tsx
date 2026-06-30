@@ -47,6 +47,19 @@ const SETS: Record<TiramisuStyle, GlyphSet> = {
   cacao: { glyphs: cacaoGlyphs, folder: "letters-cacao", track: 0.12, rot: 0.045, shadowAlpha: 0.24, blurK: 0.045, offYK: 0.022 },
 };
 
+// The cocoa surface the customer is actually buying. Each box shape has its own
+// top-down base image plus the writable area (centre + half-extents, as a
+// fraction of S) where text fits inside that silhouette. Tuned with
+// scripts/mock-shapes.mjs. `round` is the default fallback (the original dish).
+export type ShapeKey = "round" | "square" | "heart" | "oval";
+interface ShapeCfg { base: string; cx: number; cy: number; hw: number; hh: number }
+const SHAPES_CFG: Record<ShapeKey, ShapeCfg> = {
+  round: { base: `${BASE}/base/cacao.png`, cx: disc.cx, cy: disc.cy, hw: disc.r * SAFE * 0.92, hh: disc.r * SAFE * 0.8 },
+  square: { base: `${BASE}/boxes/cust-square.png`, cx: 0.5, cy: 0.5, hw: 0.38, hh: 0.36 },
+  heart: { base: `${BASE}/boxes/cust-heart.png`, cx: 0.5, cy: 0.5, hw: 0.25, hh: 0.18 },
+  oval: { base: `${BASE}/boxes/cust-oval.png`, cx: 0.5, cy: 0.5, hw: 0.33, hh: 0.235 },
+};
+
 const imgCache = new Map<string, Promise<HTMLImageElement>>();
 function loadImage(src: string): Promise<HTMLImageElement> {
   let p = imgCache.get(src);
@@ -96,19 +109,20 @@ async function loadSprites(
 // preloaded via loadSprites first; any missing glyph is simply skipped.
 function paint(
   ctx: CanvasRenderingContext2D,
-  cacao: HTMLImageElement,
+  base: HTMLImageElement,
   imgs: Record<string, HTMLImageElement>,
   text: string,
   fontScale: number,
-  set: GlyphSet
+  set: GlyphSet,
+  cfg: ShapeCfg
 ) {
   ctx.clearRect(0, 0, S, S);
-  ctx.drawImage(cacao, 0, 0, S, S);
+  ctx.drawImage(base, 0, 0, S, S);
 
   const lines = text.toUpperCase().split("\n");
 
-  const safe = disc.r * S * SAFE;
-  const D = 2 * safe;
+  const Wt = 2 * cfg.hw * S; // writable width
+  const Ht = 2 * cfg.hh * S; // writable height
   const units = lines.map((l) => lineUnits(l, set));
   const maxU = Math.max(...units, 0.001);
   let cap: number;
@@ -118,20 +132,20 @@ function paint(
     const refUnits =
       set.fixedChars * (avgAspectHr(set.glyphs) + set.track) - set.track;
     cap = Math.min(
-      (D * 0.92) / refUnits,
-      (D * 0.8) / (SMALL.maxLines * LINEGAP),
+      Wt / refUnits,
+      Ht / (SMALL.maxLines * LINEGAP),
       S * 0.4 * SMALL.fontScale
     );
   } else {
     cap = Math.min(
-      (D * 0.92) / maxU,
-      (D * 0.8) / (lines.length * LINEGAP),
+      Wt / maxU,
+      Ht / (lines.length * LINEGAP),
       S * 0.4 * fontScale
     );
   }
 
-  const cx = disc.cx * S;
-  const cy = disc.cy * S;
+  const cx = cfg.cx * S;
+  const cy = cfg.cy * S;
   const startCY = cy - ((lines.length - 1) * cap * LINEGAP) / 2;
 
   lines.forEach((line, li) => {
@@ -169,16 +183,19 @@ interface Props {
   style: TiramisuStyle;
   size: TiramisuSize;
   text: string;
+  /** Box shape being previewed; picks the base image + writable area. */
+  shape?: ShapeKey;
 }
 
-export default function TiramisuCanvas({ style, size, text }: Props) {
+export default function TiramisuCanvas({ style, size, text, shape = "round" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
   const token = useRef(0);
+  const cfg = SHAPES_CFG[shape];
 
   useEffect(() => {
-    loadImage(`${BASE}/base/cacao.png`).then(() => setReady(true));
-  }, []);
+    loadImage(cfg.base).then(() => setReady(true));
+  }, [cfg.base]);
 
   useEffect(() => {
     if (!ready) return;
@@ -186,8 +203,8 @@ export default function TiramisuCanvas({ style, size, text }: Props) {
     const set = SETS[style];
     (async () => {
       // Do all the async work (image loads) first…
-      const [cacao, imgs] = await Promise.all([
-        loadImage(`${BASE}/base/cacao.png`),
+      const [base, imgs] = await Promise.all([
+        loadImage(cfg.base),
         loadSprites(text, set),
       ]);
       // …then bail if a newer render superseded us, and paint synchronously so
@@ -195,9 +212,9 @@ export default function TiramisuCanvas({ style, size, text }: Props) {
       if (id !== token.current) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
-      paint(canvas.getContext("2d")!, cacao, imgs, text, size.fontScale, set);
+      paint(canvas.getContext("2d")!, base, imgs, text, size.fontScale, set, cfg);
     })();
-  }, [ready, style, size, text]);
+  }, [ready, style, size, text, cfg]);
 
   return (
     <div className="relative aspect-square w-full overflow-hidden rounded-[2rem] shadow-[0_24px_70px_rgba(40,20,8,0.4)] ring-1 ring-black/5">

@@ -82,10 +82,15 @@ export const STYLE_META: Record<
   },
 };
 
-/** Allowed characters on the cake: latin letters, digits, spaces, basic accents. */
-export const ALLOWED_TEXT = /[^A-Za-z0-9À-ÿ '&!?.,\-]/g;
+/** Allowed characters on the cake (after accents are stripped): A–Z, digits, basic punctuation. */
+export const ALLOWED_TEXT = /[^A-Za-z0-9 '&!?.,\-]/g;
 
-/** Sanitize a single line: strip disallowed chars/newlines, cap to its limit. */
+/**
+ * Sanitize a single line: strip newlines, fold accents to their base letter
+ * (é→e, ç→c …) because the cake's cream/mould letters are A–Z only, drop any
+ * remaining disallowed chars, and cap to the per-style limit. Folding accents
+ * here keeps the input field, the live preview and the real cake identical.
+ */
 export function sanitizeTiramisuLine(
   raw: string,
   style: TiramisuStyle,
@@ -93,6 +98,8 @@ export function sanitizeTiramisuLine(
 ): string {
   return raw
     .replace(/\n/g, "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "") // strip combining diacritics
     .replace(ALLOWED_TEXT, "")
     .slice(0, size.charsPerLine[style]);
 }
