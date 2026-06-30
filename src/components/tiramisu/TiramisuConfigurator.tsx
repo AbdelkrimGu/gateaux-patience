@@ -35,6 +35,11 @@ const T = {
   },
   step1: { fr: "1 · Le style", ar: "1 · النمط", en: "1 · The style" },
   step2: { fr: "2 · La taille", ar: "2 · الحجم", en: "2 · The size" },
+  piecesNote: {
+    fr: "Lettres en chocolat blanc : une seule taille (notre moule). Jusqu'à 4 lignes.",
+    ar: "حروف الشوكولاتة البيضاء: حجم واحد فقط (قالبنا). حتى 4 أسطر.",
+    en: "White-chocolate letters come in one size (our mould). Up to 4 lines.",
+  },
   step3: { fr: "3 · Votre texte", ar: "3 · نصّك", en: "3 · Your text" },
   placeholder: { fr: "Tapez ici…", ar: "اكتب هنا…", en: "Type here…" },
   lineWord: { fr: "Ligne", ar: "سطر", en: "Line" },
@@ -101,7 +106,10 @@ export default function TiramisuConfigurator() {
   // one entry per possible line; only the first `size.maxLines` are shown
   const [lines, setLines] = useState<string[]>(Array(MAX_LINES).fill(""));
 
-  const size = TIRAMISU_SIZES.find((s) => s.id === sizeId)!;
+  // White-chocolate pieces come from a single-size mould, so that style is
+  // always locked to the smallest character size; the size selector is hidden.
+  const effectiveSizeId: TiramisuSizeId = style === "pieces" ? "small" : sizeId;
+  const size = TIRAMISU_SIZES.find((s) => s.id === effectiveSizeId)!;
   const perLine = size.charsPerLine[style];
 
   // the lines actually rendered: visible, non-empty, in order
@@ -152,7 +160,11 @@ export default function TiramisuConfigurator() {
   }
   function changeStyle(s: TiramisuStyle) {
     setStyle(s);
-    reclamp(s, size);
+    const eff =
+      s === "pieces"
+        ? TIRAMISU_SIZES.find((x) => x.id === "small")!
+        : TIRAMISU_SIZES.find((x) => x.id === sizeId)!;
+    reclamp(s, eff);
   }
   function changeSize(id: TiramisuSizeId) {
     const next = TIRAMISU_SIZES.find((s) => s.id === id)!;
@@ -162,14 +174,16 @@ export default function TiramisuConfigurator() {
 
   const orderText = useMemo(() => {
     const styleLabel = STYLE_META[style].labels[locale];
-    const sizeLabel = size.labels[locale];
-    return [
+    const parts = [
       greeting(locale),
       "",
       `• ${STYLE_META[style].emoji} ${styleLabel}`,
-      `• ${sizeLabel}`,
-      `• "${text.replace(/\n/g, " / ") || "…"}"`,
-    ].join("\n");
+    ];
+    // The "size" is the character size; it's meaningless for the fixed-mould
+    // white-chocolate letters, so only include it for cacao writing.
+    if (style !== "pieces") parts.push(`• ${size.labels[locale]}`);
+    parts.push(`• "${text.replace(/\n/g, " / ") || "…"}"`);
+    return parts.join("\n");
   }, [style, size, text, locale]);
 
   return (
@@ -233,30 +247,37 @@ export default function TiramisuConfigurator() {
             <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-rose">
               {T.step2[locale]}
             </p>
-            <div className="grid grid-cols-3 gap-3">
-              {TIRAMISU_SIZES.map((s) => {
-                const active = sizeId === s.id;
-                return (
-                  <button
-                    key={s.id}
-                    onClick={() => changeSize(s.id)}
-                    className={cn(
-                      "rounded-2xl border px-3 py-4 text-center transition-all duration-300",
-                      active
-                        ? "border-gold bg-gold/10 shadow-gold -translate-y-0.5"
-                        : "border-border bg-white hover:border-gold/50"
-                    )}
-                  >
-                    <span className="block font-playfair font-bold text-charcoal">
-                      {s.labels[locale]}
-                    </span>
-                    <span className="mt-1 block text-[11px] text-charcoal-light">
-                      {s.hint[locale]}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            {style === "pieces" ? (
+              <div className="flex items-start gap-2.5 rounded-2xl border border-border bg-white px-4 py-3.5 text-sm leading-snug text-charcoal-light">
+                <span className="text-base leading-none">🍫</span>
+                <span>{T.piecesNote[locale]}</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-3">
+                {TIRAMISU_SIZES.map((s) => {
+                  const active = sizeId === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => changeSize(s.id)}
+                      className={cn(
+                        "rounded-2xl border px-3 py-4 text-center transition-all duration-300",
+                        active
+                          ? "border-gold bg-gold/10 shadow-gold -translate-y-0.5"
+                          : "border-border bg-white hover:border-gold/50"
+                      )}
+                    >
+                      <span className="block font-playfair font-bold text-charcoal">
+                        {s.labels[locale]}
+                      </span>
+                      <span className="mt-1 block text-[11px] text-charcoal-light">
+                        {s.hint[locale]}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Text */}

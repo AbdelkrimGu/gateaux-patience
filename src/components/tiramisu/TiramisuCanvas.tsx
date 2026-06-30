@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import manifest from "@/lib/tiramisu-glyphs.json";
-import type { TiramisuStyle, TiramisuSize } from "@/lib/tiramisu-config";
+import { TIRAMISU_SIZES, type TiramisuStyle, type TiramisuSize } from "@/lib/tiramisu-config";
 
 type GlyphMap = Record<string, { file: string; aspect: number; hr: number }>;
 const { disc, glyphs, cacaoGlyphs } = manifest as {
@@ -26,9 +26,24 @@ interface GlyphSet {
   shadowAlpha: number;
   blurK: number;
   offYK: number;
+  /**
+   * When set, glyphs render at one FIXED size regardless of how little text is
+   * typed — the size of a fully-packed line of this many characters at the
+   * smallest size. White-chocolate pieces use this because they come from a
+   * single physical mould; we can't make the letters any bigger.
+   */
+  fixedChars?: number;
 }
+
+// Smallest size config (the minimal character size the engine ever produces).
+const SMALL = TIRAMISU_SIZES.reduce((a, b) => (b.fontScale < a.fontScale ? b : a));
+const avgAspectHr = (m: GlyphMap) => {
+  const v = Object.values(m);
+  return v.reduce((s, g) => s + g.aspect * g.hr, 0) / (v.length || 1);
+};
+
 const SETS: Record<TiramisuStyle, GlyphSet> = {
-  pieces: { glyphs, folder: "letters", track: 0.16, rot: 0.06, shadowAlpha: 0.5, blurK: 0.07, offYK: 0.06 },
+  pieces: { glyphs, folder: "letters", track: 0.16, rot: 0.06, shadowAlpha: 0.5, blurK: 0.07, offYK: 0.06, fixedChars: SMALL.charsPerLine.pieces },
   cacao: { glyphs: cacaoGlyphs, folder: "letters-cacao", track: 0.12, rot: 0.045, shadowAlpha: 0.24, blurK: 0.045, offYK: 0.022 },
 };
 
@@ -84,11 +99,24 @@ async function drawGlyphs(
   const D = 2 * safe;
   const units = lines.map((l) => lineUnits(l, set));
   const maxU = Math.max(...units, 0.001);
-  const cap = Math.min(
-    (D * 0.92) / maxU,
-    (D * 0.8) / (lines.length * LINEGAP),
-    S * 0.4 * fontScale
-  );
+  let cap: number;
+  if (set.fixedChars) {
+    // Fixed single-mould size: cap of a fully-packed smallest line, never
+    // scaled up for short text.
+    const refUnits =
+      set.fixedChars * (avgAspectHr(set.glyphs) + set.track) - set.track;
+    cap = Math.min(
+      (D * 0.92) / refUnits,
+      (D * 0.8) / (SMALL.maxLines * LINEGAP),
+      S * 0.4 * SMALL.fontScale
+    );
+  } else {
+    cap = Math.min(
+      (D * 0.92) / maxU,
+      (D * 0.8) / (lines.length * LINEGAP),
+      S * 0.4 * fontScale
+    );
+  }
 
   const cx = disc.cx * S;
   const cy = disc.cy * S;
