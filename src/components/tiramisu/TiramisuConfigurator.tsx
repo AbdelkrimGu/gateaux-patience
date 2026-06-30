@@ -17,7 +17,7 @@ import {
   type TiramisuSizeId,
 } from "@/lib/tiramisu-config";
 
-const MAX_LINES = 3;
+const MAX_LINES = 4;
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 

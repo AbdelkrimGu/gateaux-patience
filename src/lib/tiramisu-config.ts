@@ -38,11 +38,11 @@ export const TIRAMISU_SIZES: TiramisuSize[] = [
   },
   {
     id: "small",
-    maxLines: 3,
+    maxLines: 4,
     charsPerLine: { cacao: 14, pieces: 14 },
     fontScale: 0.56,
     labels: { fr: "Petit", ar: "صغير", en: "Small" },
-    hint: { fr: "jusqu'à 3 lignes", ar: "حتى 3 أسطر", en: "up to 3 lines" },
+    hint: { fr: "jusqu'à 4 lignes", ar: "حتى 4 أسطر", en: "up to 4 lines" },
   },
 ];
 
