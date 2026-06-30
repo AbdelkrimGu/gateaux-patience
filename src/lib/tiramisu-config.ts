@@ -85,15 +85,16 @@ export const STYLE_META: Record<
 /** Allowed characters on the cake: latin letters, digits, spaces, basic accents. */
 export const ALLOWED_TEXT = /[^A-Za-z0-9À-ÿ '&!?.,\-]/g;
 
-export function sanitizeTiramisuText(
+/** Sanitize a single line: strip disallowed chars/newlines, cap to its limit. */
+export function sanitizeTiramisuLine(
   raw: string,
   style: TiramisuStyle,
   size: TiramisuSize
 ): string {
-  const cleaned = raw.replace(ALLOWED_TEXT, "");
-  const perLine = size.charsPerLine[style];
-  const lines = cleaned.split("\n").slice(0, size.maxLines);
-  return lines.map((l) => l.slice(0, perLine)).join("\n");
+  return raw
+    .replace(/\n/g, "")
+    .replace(ALLOWED_TEXT, "")
+    .slice(0, size.charsPerLine[style]);
 }
 
 // ---- Casual (non-personalized) boxes ----

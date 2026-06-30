@@ -14,7 +14,7 @@ const S = 900; // internal canvas resolution
 const SAFE = 0.84; // usable fraction of the cocoa radius
 const TRACK = 0.16; // letter spacing, in cap units
 const LINEGAP = 1.42;
-const ROUGH = 0.55; // how irregularly the cocoa overloads the written edges
+const ROUGH = 0.38; // how irregularly the cocoa overloads the written edges
 
 // ---- shared asset cache ----
 const imgCache = new Map<string, Promise<HTMLImageElement>>();
@@ -33,33 +33,30 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   return p;
 }
 
-let noiseCache: ImageData | null = null;
-function getNoise(): ImageData {
-  if (noiseCache) return noiseCache;
+// Isotropic value-noise (2-D random upscaled smoothly — no directional banding).
+function octave(div: number): Uint8ClampedArray {
+  const res = Math.ceil(S / div);
+  const small = document.createElement("canvas");
+  small.width = small.height = res;
+  const sx = small.getContext("2d")!;
+  const id = sx.createImageData(res, res);
+  for (let i = 0; i < res * res; i++) {
+    const v = Math.random() * 255;
+    id.data[i * 4] = id.data[i * 4 + 1] = id.data[i * 4 + 2] = v;
+    id.data[i * 4 + 3] = 255;
+  }
+  sx.putImageData(id, 0, 0);
   const c = document.createElement("canvas");
   c.width = c.height = S;
   const x = c.getContext("2d")!;
-  // two octaves of value noise, upscaled smoothly => isotropic cocoa grain
-  for (const [res, alpha] of [
-    [Math.ceil(S / 4), 1],
-    [Math.ceil(S / 13), 0.6],
-  ] as const) {
-    const small = document.createElement("canvas");
-    small.width = small.height = res;
-    const sx = small.getContext("2d")!;
-    const id = sx.createImageData(res, res);
-    for (let i = 0; i < res * res; i++) {
-      const v = Math.random() * 255;
-      id.data[i * 4] = id.data[i * 4 + 1] = id.data[i * 4 + 2] = v;
-      id.data[i * 4 + 3] = 255;
-    }
-    sx.putImageData(id, 0, 0);
-    x.globalAlpha = alpha;
-    x.imageSmoothingEnabled = true;
-    x.drawImage(small, 0, 0, res, res, 0, 0, S, S);
-  }
-  x.globalAlpha = 1;
-  noiseCache = x.getImageData(0, 0, S, S);
+  x.imageSmoothingEnabled = true;
+  x.drawImage(small, 0, 0, res, res, 0, 0, S, S);
+  return x.getImageData(0, 0, S, S).data;
+}
+
+let noiseCache: { coarse: Uint8ClampedArray; fine: Uint8ClampedArray } | null = null;
+function getNoise() {
+  if (!noiseCache) noiseCache = { coarse: octave(4), fine: octave(2) };
   return noiseCache;
 }
 
@@ -152,11 +149,10 @@ async function drawPieces(
   });
 }
 
-// ---- cacao writing (cream revealed through a feathered, over-dusted mask) ----
+// ---- cacao writing (raised piped cream, dusted with cocoa — KIKIM style) ----
 function drawWriting(
   ctx: CanvasRenderingContext2D,
   cacao: HTMLImageElement,
-  cream: HTMLImageElement,
   text: string,
   family: string,
   fontScale: number
@@ -173,7 +169,7 @@ function drawWriting(
   const probe = 100;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = `800 ${probe}px ${family}`;
+  ctx.font = `700 ${probe}px ${family}`;
   let maxW = 1;
   for (const ln of lines) maxW = Math.max(maxW, ctx.measureText(ln || " ").width);
   const fs = Math.max(
@@ -185,57 +181,89 @@ function drawWriting(
     )
   );
 
-  // text mask
+  // text mask (with a little tracking, like hand piping)
   const { c: mc, x: m } = oc();
   m.textAlign = "center";
   m.textBaseline = "middle";
-  m.font = `800 ${fs}px ${family}`;
   m.fillStyle = "#fff";
-  const lh = fs * 1.12;
+  m.font = `700 ${fs}px ${family}`;
+  try {
+    (m as unknown as { letterSpacing: string }).letterSpacing = `${fs * 0.04}px`;
+  } catch {
+    /* letterSpacing unsupported — fine */
+  }
+  const lh = fs * 1.16;
   const startY = cy - ((lines.length - 1) * lh) / 2;
   lines.forEach((ln, i) => ln && m.fillText(ln, cx, startY + i * lh));
 
-  // soft edge band
-  const { c: bc, x: b } = oc(true);
-  b.filter = `blur(${Math.max(1.5, fs * 0.05)}px)`;
-  b.drawImage(mc, 0, 0);
-  b.filter = "none";
+  // body edge map (slightly blurred) and a softer, wider shadow map
+  const { x: eX } = oc(true);
+  eX.filter = `blur(${Math.max(1, fs * 0.03)}px)`;
+  eX.drawImage(mc, 0, 0);
+  eX.filter = "none";
+  const { x: sX } = oc(true);
+  sX.filter = `blur(${Math.max(2, fs * 0.06)}px)`;
+  sX.drawImage(mc, 0, 0);
+  sX.filter = "none";
 
-  // cream source
-  const { x: c } = oc(true);
-  c.drawImage(cream, 0, 0, S, S);
-
-  const noise = getNoise().data;
-  const x0 = Math.max(0, Math.floor(cx - safe - 10));
-  const y0 = Math.max(0, Math.floor(cy - safe - 10));
-  const x1 = Math.min(S, Math.ceil(cx + safe + 10));
-  const y1 = Math.min(S, Math.ceil(cy + safe + 10));
+  const { coarse, fine } = getNoise();
+  const pad = Math.ceil(fs * 0.12) + 12;
+  const x0 = Math.max(0, Math.floor(cx - safe - pad));
+  const y0 = Math.max(0, Math.floor(cy - safe - pad));
+  const x1 = Math.min(S, Math.ceil(cx + safe + pad));
+  const y1 = Math.min(S, Math.ceil(cy + safe + pad));
   const bw = x1 - x0;
   const bh = y1 - y0;
   if (bw <= 0 || bh <= 0) return;
 
-  const out = ctx.getImageData(x0, y0, bw, bh); // currently the cocoa
-  const edge = b.getImageData(x0, y0, bw, bh);
-  const creamD = c.getImageData(x0, y0, bw, bh);
+  const out = ctx.getImageData(x0, y0, bw, bh); // currently the cocoa surface
+  const edge = eX.getImageData(x0, y0, bw, bh);
+  const shadow = sX.getImageData(x0, y0, bw, bh);
+  const dx = Math.round(fs * 0.02);
+  const dy = Math.round(fs * 0.04);
+  const cream = [226, 214, 184];
+  const speck = [92, 54, 30];
+  const sh = [26, 14, 7];
 
   for (let py = 0; py < bh; py++) {
     for (let px = 0; px < bw; px++) {
-      const i = (py * bw + px) * 4;
-      const e = edge.data[i + 3] / 255;
-      if (e <= 0.004) continue;
-      const nf = noise[((y0 + py) * S + (x0 + px)) * 4] / 255;
-      const cutoff = 0.5 + (nf - 0.5) * ROUGH;
-      const a = smooth(cutoff - 0.07, cutoff + 0.07, e);
-      if (a <= 0) continue;
-      const rim = a * (1 - a) * 4; // peaks at the edge -> cocoa piled on the rim
-      const dust = nf * 0.22;
-      const shade = 1 - rim * 0.45;
-      const cr = creamD.data[i] * (1 - dust);
-      const cg = creamD.data[i + 1] * (1 - dust * 1.15);
-      const cb = creamD.data[i + 2] * (1 - dust * 1.35);
-      out.data[i] = (out.data[i] * (1 - a) + cr * a) * shade;
-      out.data[i + 1] = (out.data[i + 1] * (1 - a) + cg * a) * shade;
-      out.data[i + 2] = (out.data[i + 2] * (1 - a) + cb * a) * shade;
+      const li = (py * bw + px) * 4;
+      // raised-piping shadow: sample the body offset up-left of this pixel
+      let shA = 0;
+      const spx = px - dx;
+      const spy = py - dy;
+      if (spx >= 0 && spy >= 0 && spx < bw && spy < bh)
+        shA = (shadow.data[(spy * bw + spx) * 4 + 3] / 255) * 0.5;
+      const e = edge.data[li + 3] / 255;
+      const gi = ((y0 + py) * S + (x0 + px)) * 4;
+      let a = 0;
+      if (e > 0.004) {
+        const nf = coarse[gi] / 255;
+        const cutoff = 0.5 + (nf - 0.5) * ROUGH; // irregular, hand-piped edge
+        a = smooth(cutoff - 0.055, cutoff + 0.055, e);
+      }
+      if (shA <= 0 && a <= 0) continue;
+      let r = out.data[li];
+      let g = out.data[li + 1];
+      let b = out.data[li + 2];
+      if (shA > 0) {
+        r = r * (1 - shA) + sh[0] * shA;
+        g = g * (1 - shA) + sh[1] * shA;
+        b = b * (1 - shA) + sh[2] * shA;
+      }
+      if (a > 0) {
+        const rim = a * (1 - a) * 4; // cocoa overloads the edges
+        const dust = Math.min(0.85, (fine[gi] / 255) * 0.5 + rim * 0.55);
+        const fr = cream[0] * (1 - dust) + speck[0] * dust;
+        const fg = cream[1] * (1 - dust) + speck[1] * dust;
+        const fb = cream[2] * (1 - dust) + speck[2] * dust;
+        r = r * (1 - a) + fr * a;
+        g = g * (1 - a) + fg * a;
+        b = b * (1 - a) + fb * a;
+      }
+      out.data[li] = r;
+      out.data[li + 1] = g;
+      out.data[li + 2] = b;
     }
   }
   ctx.putImageData(out, x0, y0);
@@ -254,20 +282,14 @@ export default function TiramisuCanvas({ style, size, text, writingFont }: Props
   const token = useRef(0);
 
   useEffect(() => {
-    Promise.all([
-      loadImage(`${BASE}/base/cacao.png`),
-      loadImage(`${BASE}/base/cream.png`),
-    ]).then(() => setReady(true));
+    loadImage(`${BASE}/base/cacao.png`).then(() => setReady(true));
   }, []);
 
   useEffect(() => {
     if (!ready) return;
     const id = ++token.current;
     (async () => {
-      const [cacao, cream] = await Promise.all([
-        loadImage(`${BASE}/base/cacao.png`),
-        loadImage(`${BASE}/base/cream.png`),
-      ]);
+      const cacao = await loadImage(`${BASE}/base/cacao.png`);
       if (style === "pieces") {
         const canvas = canvasRef.current;
         if (!canvas || id !== token.current) return;
@@ -276,14 +298,14 @@ export default function TiramisuCanvas({ style, size, text, writingFont }: Props
       } else {
         // a next/font used only in canvas isn't fetched by the DOM, so load it
         try {
-          await document.fonts.load(`800 120px ${writingFont.split(",")[0].trim()}`);
+          await document.fonts.load(`700 120px ${writingFont.split(",")[0].trim()}`);
         } catch {
           /* fall back to default font */
         }
         const canvas = canvasRef.current;
         if (!canvas || id !== token.current) return;
         const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
-        drawWriting(ctx, cacao, cream, text, writingFont, size.fontScale);
+        drawWriting(ctx, cacao, text, writingFont, size.fontScale);
       }
     })();
   }, [ready, style, size, text, writingFont]);

@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Montserrat } from "next/font/google";
+import { Oswald } from "next/font/google";
 import TiramisuConfigurator from "@/components/tiramisu/TiramisuConfigurator";
 
-// Font used to render the cacao writing inside the live preview.
-const writing = Montserrat({
+// Condensed font used to render the cacao writing inside the live preview
+// (close to the hand-piped KIKIM lettering).
+const writing = Oswald({
   subsets: ["latin"],
-  weight: ["700", "800"],
+  weight: ["600", "700"],
   display: "swap",
 });
 

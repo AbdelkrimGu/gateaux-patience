@@ -145,30 +145,35 @@ async function detectDisc() {
   const file = join(ROOT, "public/images/tiramisu/base/cacao.png");
   const { data, info } = await sharp(file).raw().toBuffer({ resolveWithObject: true });
   const { width: W, height: H, channels: C } = info;
-  let minX = W, minY = H, maxX = 0, maxY = 0, n = 0;
+  // The cake's dark collar ring is the only near-black region (marble bg is
+  // bright). Its bounding box gives a robust, centred cake circle. Count dark
+  // pixels per row/col and keep only rows/cols with enough to ignore specks.
+  const rowDark = new Int32Array(H);
+  const colDark = new Int32Array(W);
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const o = (y * W + x) * C;
-      const r = data[o], g = data[o + 1], b = data[o + 2];
-      // cocoa brown: warm, mid-dark, r>g>b, not bright marble, not near-black ring
-      if (r > 70 && r < 205 && g > 35 && g < 150 && b < 120 && r > g + 15 && g > b) {
-        if (x < minX) minX = x;
-        if (y < minY) minY = y;
-        if (x > maxX) maxX = x;
-        if (y > maxY) maxY = y;
-        n++;
-      }
+      const lum = luma(data[o], data[o + 1], data[o + 2]);
+      if (lum < 70) { rowDark[y]++; colDark[x]++; }
     }
   }
+  const span = (arr, len) => {
+    const thr = Math.max(8, len * 0.02);
+    let lo = 0, hi = len - 1;
+    while (lo < len && arr[lo] < thr) lo++;
+    while (hi > 0 && arr[hi] < thr) hi--;
+    return [lo, hi];
+  };
+  const [minX, maxX] = span(colDark, W);
+  const [minY, maxY] = span(rowDark, H);
   const cx = (minX + maxX) / 2 / W;
   const cy = (minY + maxY) / 2 / H;
-  const rx = (maxX - minX) / 2 / W;
-  const ry = (maxY - minY) / 2 / H;
+  const R = Math.min(maxX - minX, maxY - minY) / 2 / W;
   return {
     cx: +cx.toFixed(4),
     cy: +cy.toFixed(4),
-    r: +Math.min(rx, ry).toFixed(4),
-    px: { minX, minY, maxX, maxY, n },
+    r: +(R * 0.9).toFixed(4), // cocoa surface sits just inside the collar
+    px: { minX, minY, maxX, maxY },
   };
 }
 

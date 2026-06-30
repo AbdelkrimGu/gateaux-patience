@@ -11,11 +11,13 @@ import {
   TIRAMISU_SIZES,
   TIRAMISU_BOXES,
   STYLE_META,
-  sanitizeTiramisuText,
+  sanitizeTiramisuLine,
   type Locale,
   type TiramisuStyle,
   type TiramisuSizeId,
 } from "@/lib/tiramisu-config";
+
+const MAX_LINES = 3;
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -35,12 +37,17 @@ const T = {
   step2: { fr: "2 · La taille", ar: "2 · الحجم", en: "2 · The size" },
   step3: { fr: "3 · Votre texte", ar: "3 · نصّك", en: "3 · Your text" },
   placeholder: { fr: "Tapez ici…", ar: "اكتب هنا…", en: "Type here…" },
-  sample: { fr: "KIKIM", ar: "KIKIM", en: "KIKIM" },
-  charsLeft: { fr: "caractères restants", ar: "حرفًا متبقيًا", en: "characters left" },
-  lineLimit: {
-    fr: "Appuyez sur Entrée pour une nouvelle ligne",
-    ar: "اضغط Enter لسطر جديد",
-    en: "Press Enter for a new line",
+  lineWord: { fr: "Ligne", ar: "سطر", en: "Line" },
+  oneLineHint: {
+    fr: "1 ligne · majuscules, chiffres",
+    ar: "سطر واحد · أحرف وأرقام",
+    en: "1 line · letters & numbers",
+  },
+  linesHint: { fr: "lignes max", ar: "أسطر كحد أقصى", en: "lines max" },
+  perLineHint: {
+    fr: "caractères par ligne",
+    ar: "حرفًا لكل سطر",
+    en: "characters per line",
   },
   order: {
     fr: "Commander ce tiramisu",
@@ -91,44 +98,55 @@ export default function TiramisuConfigurator({ writingFont }: { writingFont: str
 
   const [style, setStyle] = useState<TiramisuStyle>("cacao");
   const [sizeId, setSizeId] = useState<TiramisuSizeId>("large");
-  const [raw, setRaw] = useState("");
+  // one entry per possible line; only the first `size.maxLines` are shown
+  const [lines, setLines] = useState<string[]>(Array(MAX_LINES).fill(""));
 
   const size = TIRAMISU_SIZES.find((s) => s.id === sizeId)!;
+  const perLine = size.charsPerLine[style];
+
+  // the lines actually rendered: visible, non-empty, in order
   const text = useMemo(
-    () => sanitizeTiramisuText(raw, style, size),
-    [raw, style, size]
+    () =>
+      lines
+        .slice(0, size.maxLines)
+        .map((l) => l.trimEnd())
+        .filter((l) => l.length > 0)
+        .join("\n"),
+    [lines, size.maxLines]
   );
 
-  const maxTotal = size.charsPerLine[style] * size.maxLines;
-  const used = text.replace(/\n/g, "").length;
-  const remaining = Math.max(0, maxTotal - used);
-
-  function onTextChange(v: string) {
-    setRaw(sanitizeTiramisuText(v, style, size));
+  function setLine(i: number, v: string) {
+    setLines((prev) => {
+      const next = [...prev];
+      next[i] = sanitizeTiramisuLine(v, style, size);
+      return next;
+    });
   }
 
-  // Re-clamp text when style/size shrink the limits.
+  // Re-clamp every line when the style/size shrinks the per-line limit.
+  function reclamp(s: TiramisuStyle, sz: typeof size) {
+    setLines((prev) => prev.map((l) => sanitizeTiramisuLine(l, s, sz)));
+  }
   function changeStyle(s: TiramisuStyle) {
     setStyle(s);
-    setRaw((r) => sanitizeTiramisuText(r, s, size));
+    reclamp(s, size);
   }
   function changeSize(id: TiramisuSizeId) {
     const next = TIRAMISU_SIZES.find((s) => s.id === id)!;
     setSizeId(id);
-    setRaw((r) => sanitizeTiramisuText(r, style, next));
+    reclamp(style, next);
   }
 
   const orderText = useMemo(() => {
     const styleLabel = STYLE_META[style].labels[locale];
     const sizeLabel = size.labels[locale];
-    const lines = [
+    return [
       greeting(locale),
       "",
       `• ${STYLE_META[style].emoji} ${styleLabel}`,
       `• ${sizeLabel}`,
       `• "${text.replace(/\n/g, " / ") || "…"}"`,
-    ];
-    return lines.join("\n");
+    ].join("\n");
   }, [style, size, text, locale]);
 
   return (
@@ -228,27 +246,39 @@ export default function TiramisuConfigurator({ writingFont }: { writingFont: str
             <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-rose">
               {T.step3[locale]}
             </p>
-            <textarea
-              value={raw}
-              onChange={(e) => onTextChange(e.target.value)}
-              rows={size.maxLines}
-              placeholder={T.placeholder[locale]}
-              dir={isRTL ? "rtl" : "ltr"}
-              className="w-full resize-none rounded-2xl border border-border bg-white px-4 py-3 font-playfair text-lg text-charcoal outline-none transition-colors focus:border-rose focus:ring-2 focus:ring-rose/20"
-            />
-            <div className="mt-2 flex items-center justify-between text-xs text-charcoal-light">
-              <span>
-                {size.maxLines > 1 ? T.lineLimit[locale] : " "}
-              </span>
-              <span
-                className={cn(
-                  "font-medium tabular-nums",
-                  remaining === 0 && "text-rose"
-                )}
-              >
-                {remaining} {T.charsLeft[locale]}
-              </span>
+            <div className="space-y-2.5">
+              {Array.from({ length: size.maxLines }).map((_, i) => {
+                const val = lines[i] ?? "";
+                return (
+                  <div key={i} className="relative">
+                    <input
+                      type="text"
+                      value={val}
+                      maxLength={perLine}
+                      onChange={(e) => setLine(i, e.target.value)}
+                      placeholder={
+                        size.maxLines > 1
+                          ? `${T.lineWord[locale]} ${i + 1}`
+                          : T.placeholder[locale]
+                      }
+                      dir={isRTL ? "rtl" : "ltr"}
+                      className={cn(
+                        "w-full rounded-2xl border border-border bg-white px-4 py-3 pe-14 font-playfair text-lg text-charcoal outline-none transition-colors focus:border-rose focus:ring-2 focus:ring-rose/20",
+                        style === "pieces" && "uppercase"
+                      )}
+                    />
+                    <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-[11px] tabular-nums text-charcoal-lighter">
+                      {val.length}/{perLine}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
+            <p className="mt-2 text-xs text-charcoal-light">
+              {size.maxLines === 1
+                ? T.oneLineHint[locale]
+                : `${size.maxLines} ${T.linesHint[locale]} · ${perLine} ${T.perLineHint[locale]}`}
+            </p>
           </div>
 
           {/* Order */}
