@@ -1,21 +1,18 @@
 import type { Metadata } from "next";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import TiramisuHero from "@/components/tiramisu/TiramisuHero";
-import TiramisuConfigurator from "@/components/tiramisu/TiramisuConfigurator";
+import TiramisuWizard from "@/components/tiramisu/TiramisuWizard";
 
 const META: Record<string, { title: string; desc: string }> = {
   fr: {
     title: "Tiramisu Personnalisé | Gateaux Patience",
-    desc: "Composez votre tiramisu : écrivez votre message au cacao ou en lettres de chocolat blanc, et visualisez le résultat en direct. Sidi Bel Abbès.",
+    desc: "Commandez votre tiramisu : boîtes gourmandes ou personnalisées, écrivez votre message et visualisez le résultat en direct. Sidi Bel Abbès.",
   },
   ar: {
     title: "تيراميسو مخصّص | Gateaux Patience",
-    desc: "صمّم تيراميسو الخاص بك: اكتب رسالتك بالكاكاو أو بحروف الشوكولاتة البيضاء، وشاهد النتيجة مباشرة.",
+    desc: "اطلب تيراميسو الخاص بك: علب لذيذة أو مخصّصة، اكتب رسالتك وشاهد النتيجة مباشرة.",
   },
   en: {
     title: "Custom Tiramisu | Gateaux Patience",
-    desc: "Build your tiramisu: write your message in cacao or white-chocolate letters and preview it live. Sidi Bel Abbès.",
+    desc: "Order your tiramisu: gourmet or personalized boxes, write your message and preview it live. Sidi Bel Abbès.",
   },
 };
 
@@ -29,21 +26,6 @@ export async function generateMetadata({
   return { title: m.title, description: m.desc };
 }
 
-export default async function TiramisuPage() {
-  return (
-    <main>
-      <Header />
-
-      <TiramisuHero />
-
-      {/* ---- Configurator ---- */}
-      <section id="composer" className="section-padding bg-background">
-        <div className="container-custom">
-          <TiramisuConfigurator />
-        </div>
-      </section>
-
-      <Footer />
-    </main>
-  );
+export default function TiramisuPage() {
+  return <TiramisuWizard />;
 }
