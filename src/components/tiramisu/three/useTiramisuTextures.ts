@@ -139,16 +139,12 @@ export function useLetterTextures(
             }
             t.colorSpace = THREE.SRGBColorSpace;
             t.anisotropy = 8;
-            // Match the cocoa CanvasTexture (flipY:false) so sprites sit in the
-            // same S-space (y-down) as the baked top.
+            // flipY:false puts each glyph in the SAME S-space (y-down) frame the
+            // scene uses to place characters and stack lines, so a glyph's own
+            // orientation matches its placement — the whole message reads exactly
+            // like the flat 2D canvas laid on the table (upright, not mirrored).
+            // Do NOT add a horizontal flip here: it double-mirrors the letters.
             t.flipY = false;
-            // The letter planes live in the top cap's left-handed frame (same
-            // reason the base flips U in geometry.ts). Without this, each glyph
-            // reads MIRRORED from above. repeat.x = -1 mirrors the sprite in
-            // place — no negative geometry scale, so plane normals (and lighting)
-            // stay correct.
-            t.wrapS = THREE.RepeatWrapping;
-            t.repeat.x = -1;
             cache.current.set(key, t);
             next[ch] = t;
           })
