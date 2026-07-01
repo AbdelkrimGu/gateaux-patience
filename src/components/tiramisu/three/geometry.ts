@@ -45,18 +45,32 @@ export function buildShape(shape: ShapeKey): THREE.Shape {
       break;
     }
     case "heart": {
-      // Parametric heart, sampled to a polyline, scaled into ~[-1, 1] and
-      // centred. Cusp (dimple) at top, point at bottom.
-      const pts: THREE.Vector2[] = [];
+      // Parametric heart, sampled to a polyline, scaled into ~[-1, 1] and then
+      // RECENTRED on its own bbox so the mesh sits on the origin (the camera and
+      // OrbitControls target aim at the origin — an off-origin heart framed the
+      // cake off-centre). Cusp (dimple) at top, point at bottom.
+      const raw: THREE.Vector2[] = [];
       const N = 72;
+      let minX = Infinity,
+        maxX = -Infinity,
+        minY = Infinity,
+        maxY = -Infinity;
       for (let i = 0; i <= N; i++) {
         const t = (i / N) * Math.PI * 2;
-        const x = 16 * Math.pow(Math.sin(t), 3);
+        const x = (16 * Math.pow(Math.sin(t), 3)) / 16;
         const y =
-          13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
-        pts.push(new THREE.Vector2(x / 16, y / 15));
+          (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) / 15;
+        raw.push(new THREE.Vector2(x, y));
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
       }
-      s.setFromPoints(pts);
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      // Letter placement reuses shapeBBox(outline), which is recomputed from
+      // these same recentred points, so proud letters follow automatically.
+      s.setFromPoints(raw.map((p) => new THREE.Vector2(p.x - cx, p.y - cy)));
       break;
     }
     case "round":

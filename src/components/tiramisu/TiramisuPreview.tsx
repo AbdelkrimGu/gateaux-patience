@@ -59,6 +59,12 @@ export default function TiramisuPreview({ style, size, text, shape = "round" }: 
   const [ready, setReady] = useState(false);
   const [mode, setMode] = useState<"2d" | "3d">("2d");
   const [view, setView] = useState<{ key: ViewKey; nonce: number }>({ key: "hero", nonce: 0 });
+  const [activePreset, setActivePreset] = useState<ViewKey>("hero");
+
+  function goView(key: ViewKey) {
+    setActivePreset(key);
+    setView({ key, nonce: Date.now() });
+  }
 
   // Capability detection (client only).
   useEffect(() => {
@@ -86,23 +92,27 @@ export default function TiramisuPreview({ style, size, text, shape = "round" }: 
     setReady(true);
   }, []);
 
-  // Pause the render loop when hidden / off-screen.
+  // Pause the render loop when hidden / off-screen. Track visibility (tab) and
+  // intersection (scroll) SEPARATELY so one flip can't clobber the other.
   const wrapRef = useRef<HTMLDivElement>(null);
-  const [onScreen, setOnScreen] = useState(true);
+  const [intersecting, setIntersecting] = useState(true);
+  const [visible, setVisible] = useState(true);
   useEffect(() => {
     const el = wrapRef.current;
     if (!el || mode !== "3d") return;
-    const io = new IntersectionObserver(([e]) => setOnScreen(e.isIntersecting), {
+    const io = new IntersectionObserver(([e]) => setIntersecting(e.isIntersecting), {
       threshold: 0.05,
     });
     io.observe(el);
-    const onVis = () => setOnScreen(!document.hidden && document.visibilityState !== "hidden");
+    const onVis = () => setVisible(!document.hidden && document.visibilityState !== "hidden");
     document.addEventListener("visibilitychange", onVis);
+    onVis();
     return () => {
       io.disconnect();
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [mode]);
+  const onScreen = visible && intersecting;
 
   function choose(next: "2d" | "3d") {
     setMode(next);
@@ -124,22 +134,39 @@ export default function TiramisuPreview({ style, size, text, shape = "round" }: 
 
   const show3D = ready && webgl && mode === "3d";
 
+  const shapeName = t(
+    shape === "heart" ? "cœur" : shape === "square" ? "carrée" : shape === "oval" ? "ovale" : "ronde",
+    shape === "heart" ? "قلب" : shape === "square" ? "مربّع" : shape === "oval" ? "بيضاوي" : "دائري",
+    shape === "heart" ? "heart" : shape === "square" ? "square" : shape === "oval" ? "oval" : "round"
+  );
+  const msg = text.trim().replace(/\s+/g, " ");
+  const sceneLabel = t(
+    `Aperçu 3D de votre boîte ${shapeName}${msg ? ` avec le message « ${msg} »` : ""}`,
+    `معاينة ثلاثية الأبعاد لعلبتك ${shapeName}${msg ? ` مع الرسالة « ${msg} »` : ""}`,
+    `3D preview of your ${shapeName} box${msg ? ` with the message “${msg}”` : ""}`
+  );
+
   return (
     <div
       ref={wrapRef}
       className="relative aspect-square w-full overflow-hidden rounded-[2rem] shadow-[0_24px_70px_rgba(40,20,8,0.4)] ring-1 ring-black/5"
+      style={{
+        background: "radial-gradient(120% 120% at 50% 20%, #FBF1E6 0%, #F3E2D2 55%, #E9D2BE 100%)",
+      }}
     >
       {show3D ? (
-        <TiramisuScene3D
-          style={style}
-          fontScale={size.fontScale}
-          text={text}
-          shape={shape}
-          reducedMotion={reduced}
-          view={view}
-          frameloop={onScreen ? "always" : "never"}
-          lowPower={lowPower}
-        />
+        <div role="img" aria-label={sceneLabel} className="absolute inset-0">
+          <TiramisuScene3D
+            style={style}
+            fontScale={size.fontScale}
+            text={text}
+            shape={shape}
+            reducedMotion={reduced}
+            view={view}
+            frameloop={onScreen ? (reduced ? "demand" : "always") : "never"}
+            lowPower={lowPower}
+          />
+        </div>
       ) : (
         <div className="absolute inset-0">
           <TiramisuCanvas style={style} size={size} text={text} shape={shape} />
@@ -154,7 +181,8 @@ export default function TiramisuPreview({ style, size, text, shape = "round" }: 
             aria-label={t("Aperçu 2D", "معاينة 2D", "2D preview")}
             aria-pressed={mode === "2d"}
             className={cn(
-              "flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors",
+              "flex min-h-[40px] min-w-[44px] items-center justify-center gap-1 rounded-full px-3 py-2 text-[11px] font-semibold transition-colors",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-1",
               mode === "2d" ? "bg-rose text-white shadow" : "text-charcoal-light"
             )}
           >
@@ -165,7 +193,8 @@ export default function TiramisuPreview({ style, size, text, shape = "round" }: 
             aria-label={t("Aperçu 3D", "معاينة 3D", "3D preview")}
             aria-pressed={mode === "3d"}
             className={cn(
-              "flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors",
+              "flex min-h-[40px] min-w-[44px] items-center justify-center gap-1 rounded-full px-3 py-2 text-[11px] font-semibold transition-colors",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-1",
               mode === "3d" ? "bg-rose text-white shadow" : "text-charcoal-light"
             )}
           >
@@ -181,16 +210,26 @@ export default function TiramisuPreview({ style, size, text, shape = "round" }: 
             {presets.map((p) => (
               <button
                 key={p.key}
-                onClick={() => setView({ key: p.key, nonce: Date.now() })}
-                className="rounded-full px-2.5 py-1 text-[11px] font-semibold text-charcoal-light transition-colors hover:bg-rose/10 hover:text-rose"
+                onClick={() => goView(p.key)}
+                aria-pressed={activePreset === p.key}
+                className={cn(
+                  "flex min-h-[40px] min-w-[44px] items-center justify-center rounded-full px-3 py-2 text-[11px] font-semibold transition-colors",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-1",
+                  activePreset === p.key
+                    ? "bg-rose text-white shadow"
+                    : "text-charcoal-light hover:bg-rose/10 hover:text-rose"
+                )}
               >
                 {p.label}
               </button>
             ))}
             <button
-              onClick={() => setView({ key: "hero", nonce: Date.now() })}
+              onClick={() => goView("hero")}
               aria-label={t("Réinitialiser la vue", "إعادة الضبط", "Reset view")}
-              className="flex items-center justify-center rounded-full px-2 py-1 text-charcoal-light transition-colors hover:bg-rose/10 hover:text-rose"
+              className={cn(
+                "flex min-h-[40px] min-w-[44px] items-center justify-center rounded-full px-3 py-2 text-charcoal-light transition-colors hover:bg-rose/10 hover:text-rose",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-1"
+              )}
             >
               <RotateCcw size={12} />
             </button>

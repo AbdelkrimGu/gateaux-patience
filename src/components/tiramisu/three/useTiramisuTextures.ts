@@ -11,6 +11,7 @@
 // Both reuse the shared layout module so 2D and 3D agree exactly.
 
 import { useEffect, useRef, useState } from "react";
+import { invalidate } from "@react-three/fiber";
 import * as THREE from "three";
 import {
   S,
@@ -42,36 +43,53 @@ export function useTopTexture(
 
   useEffect(() => {
     const id = ++token.current;
+    let cancelled = false;
     const set = SETS[style];
     const cfg = SHAPES_CFG[shape];
     const onlyBase = style === "pieces"; // pieces letters are real geometry
     const timer = setTimeout(async () => {
-      const [base, imgs] = await Promise.all([
-        loadImage(cfg.base),
-        onlyBase ? Promise.resolve({}) : loadSprites(text, set),
-      ]);
-      if (id !== token.current) return;
-      if (!canvasRef.current) {
-        canvasRef.current = document.createElement("canvas");
-        canvasRef.current.width = S;
-        canvasRef.current.height = S;
+      let t: THREE.CanvasTexture | null = null;
+      try {
+        const [base, imgs] = await Promise.all([
+          loadImage(cfg.base),
+          onlyBase ? Promise.resolve({}) : loadSprites(text, set),
+        ]);
+        // Bail if unmounted or superseded — dispose any texture built below.
+        if (cancelled || id !== token.current) return;
+        if (!canvasRef.current) {
+          canvasRef.current = document.createElement("canvas");
+          canvasRef.current.width = S;
+          canvasRef.current.height = S;
+        }
+        const ctx = canvasRef.current.getContext("2d")!;
+        paintPreview(ctx, base, imgs, text, fontScale, set, cfg, onlyBase);
+
+        t = new THREE.CanvasTexture(canvasRef.current);
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.anisotropy = 8;
+        t.flipY = false; // keep S-space (y-down) aligned with letter placement
+        t.needsUpdate = true;
+
+        if (cancelled || id !== token.current) {
+          t.dispose();
+          return;
+        }
+        const prev = texRef.current;
+        texRef.current = t;
+        setTex(t);
+        if (prev) prev.dispose();
+        invalidate(); // demand/reduced-motion: render the freshly baked top
+      } catch {
+        // A missing base/sprite must never blank the cake or throw an
+        // unhandled rejection — keep the previously baked texture.
+        t?.dispose?.();
       }
-      const ctx = canvasRef.current.getContext("2d")!;
-      paintPreview(ctx, base, imgs, text, fontScale, set, cfg, onlyBase);
-
-      const t = new THREE.CanvasTexture(canvasRef.current);
-      t.colorSpace = THREE.SRGBColorSpace;
-      t.anisotropy = 8;
-      t.flipY = false; // keep S-space (y-down) aligned with letter placement
-      t.needsUpdate = true;
-
-      const prev = texRef.current;
-      texRef.current = t;
-      setTex(t);
-      if (prev) prev.dispose();
     }, debounceMs);
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [style, fontScale, text, shape, debounceMs]);
 
   // Final unmount cleanup.
@@ -99,6 +117,9 @@ export function useLetterTextures(
 
   useEffect(() => {
     if (style !== "pieces") {
+      // Dispose the cached glyph textures before dropping the map.
+      Array.from(cache.current.values()).forEach((t) => t.dispose());
+      cache.current.clear();
       setMap({});
       return;
     }
@@ -118,16 +139,27 @@ export function useLetterTextures(
       const url = spriteUrl(set, ch);
       if (!url) return;
       pending.push(
-        loader.loadAsync(url).then((t) => {
-          if (cancelled) {
-            t.dispose();
-            return;
-          }
-          t.colorSpace = THREE.SRGBColorSpace;
-          t.anisotropy = 8;
-          cache.current.set(ch, t);
-          next[ch] = t;
-        })
+        loader
+          .loadAsync(url)
+          .then((t) => {
+            if (cancelled) {
+              t.dispose();
+              return;
+            }
+            t.colorSpace = THREE.SRGBColorSpace;
+            t.anisotropy = 8;
+            // Match the cocoa CanvasTexture (which is flipY:false) so the glyph
+            // sprites sit in the same S-space (y-down) as the baked top.
+            // VISUAL-CHECK: confirm white-chocolate letters read upright & not
+            // mirrored from the hero angle; if they come out mirrored rather
+            // than flipped, negate the plane's vertical scale instead.
+            t.flipY = false;
+            cache.current.set(ch, t);
+            next[ch] = t;
+          })
+          .catch(() => {
+            // A 404 / decode failure on one glyph must never blank the rest.
+          })
       );
     });
 
@@ -140,10 +172,14 @@ export function useLetterTextures(
     });
 
     Promise.all(pending).then(() => {
-      if (!cancelled) setMap({ ...next });
+      if (!cancelled) {
+        setMap({ ...next });
+        invalidate(); // demand/reduced-motion: render once the sprites land
+      }
     });
     // Show what's already cached immediately.
     setMap({ ...next });
+    invalidate();
 
     return () => {
       cancelled = true;

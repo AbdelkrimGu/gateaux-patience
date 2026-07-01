@@ -14,7 +14,7 @@
 // Rendered only through TiramisuPreview via next/dynamic({ ssr:false }).
 
 import { useEffect, useMemo, useRef } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree, invalidate } from "@react-three/fiber";
 import { OrbitControls, ContactShadows, Environment, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
 import {
@@ -34,11 +34,14 @@ export type ViewKey = "hero" | "top" | "side";
 const VIEWS: Record<ViewKey, { theta: number; phi: number; radius: number }> = {
   hero: { theta: 0.55, phi: 0.92, radius: 4.4 },
   top: { theta: 0.0, phi: 0.22, radius: 4.1 },
-  side: { theta: 0.0, phi: 1.4, radius: 4.7 },
+  // VISUAL-CHECK: proud white-chocolate letters must never go fully edge-on at
+  // the side preset; polar kept below MAX_POLAR (1.32) so the top still reads.
+  side: { theta: 0.0, phi: 1.28, radius: 4.7 },
 };
 
-const CAKE_H = 0.34; // cake thickness
-const LETTER_LIFT = 0.03; // white-chocolate letters stand proud of the cocoa
+const MAX_POLAR = 1.32; // keep the top face (and proud letters) always readable
+const CAKE_H = 0.5; // cake thickness (raised from 0.34 so the box has presence)
+const LETTER_LIFT = 0.045; // white-chocolate letters stand proud of the cocoa
 
 interface SceneProps {
   style: TiramisuStyle;
@@ -48,7 +51,7 @@ interface SceneProps {
   reducedMotion: boolean;
   /** Preset request from the toolbar: bump nonce to (re)trigger. */
   view: { key: ViewKey; nonce: number };
-  frameloop: "always" | "never";
+  frameloop: "always" | "demand" | "never";
   lowPower: boolean;
 }
 
@@ -95,7 +98,8 @@ function Cake({ style, fontScale, text, shape, reducedMotion }: {
   }, [style, text, fontScale, shape]);
   const letterTex = useLetterTextures(glyphs, style);
 
-  // Gentle cinematic settle/lift-in.
+  // Cinematic reveal: rise + wider scale-up + a settle-spin, then a tiny idle
+  // bob so the cake never feels frozen. Guarded off for reduced-motion.
   const group = useRef<THREE.Group>(null);
   const t0 = useRef<number | null>(null);
   useFrame((state) => {
@@ -104,13 +108,17 @@ function Cake({ style, fontScale, text, shape, reducedMotion }: {
     if (reducedMotion) {
       g.scale.setScalar(1);
       g.position.y = 0;
+      g.rotation.y = 0;
       return;
     }
-    if (t0.current === null) t0.current = state.clock.elapsedTime;
-    const p = Math.min(1, (state.clock.elapsedTime - t0.current) / 1.1);
+    const now = state.clock.elapsedTime;
+    if (t0.current === null) t0.current = now;
+    const p = Math.min(1, (now - t0.current) / 1.25);
     const e = 1 - Math.pow(1 - p, 3); // easeOutCubic
-    g.scale.setScalar(0.92 + 0.08 * e);
-    g.position.y = (1 - e) * 0.14;
+    g.scale.setScalar(0.78 + 0.22 * e); // wider reveal range
+    const bob = Math.sin(now * 0.9) * 0.025 * e; // idle float once settled
+    g.position.y = (1 - e) * -0.28 + bob;
+    g.rotation.y = (1 - e) * -0.6; // settle-spin into place
   });
 
   return (
@@ -124,8 +132,10 @@ function Cake({ style, fontScale, text, shape, reducedMotion }: {
         receiveShadow
       />
 
-      {/* White-chocolate letters — raised, glossy, casting real shadows. */}
-      {glyphs.map((gl, i) => {
+      {/* White-chocolate letters — raised, lightly glossy. They lean on the
+          ContactShadows + LETTER_LIFT for grounding rather than casting their
+          own shadow maps (the biggest steady-state GPU win). */}
+      {glyphs.map((gl) => {
         const tex = letterTex[gl.ch];
         if (!tex) return null;
         const wx = (gl.w / S) * bb.w;
@@ -133,16 +143,18 @@ function Cake({ style, fontScale, text, shape, reducedMotion }: {
         const x = bb.minX + (gl.x / S) * bb.w;
         const z = -(bb.minY + (gl.y / S) * bb.h);
         return (
-          <group key={i} position={[x, topZ + LETTER_LIFT, z]} rotation={[-Math.PI / 2, 0, 0]}>
-            <mesh rotation={[0, 0, gl.angle]} scale={[wx, hz, 1]} castShadow>
+          <group
+            key={`${gl.ch}-${gl.x.toFixed(2)}-${gl.y.toFixed(2)}`}
+            position={[x, topZ + LETTER_LIFT, z]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <mesh rotation={[0, 0, gl.angle]} scale={[wx, hz, 1]}>
               <planeGeometry args={[1, 1]} />
-              <meshPhysicalMaterial
+              <meshStandardMaterial
                 map={tex}
                 color="#fff6e8"
-                roughness={0.34}
+                roughness={0.4}
                 metalness={0}
-                clearcoat={0.7}
-                clearcoatRoughness={0.28}
                 transparent
                 alphaTest={0.5}
               />
@@ -158,9 +170,11 @@ function Cake({ style, fontScale, text, shape, reducedMotion }: {
 function Rig({
   view,
   animating,
+  reducedMotion,
 }: {
   view: { key: ViewKey; nonce: number };
   animating: React.MutableRefObject<boolean>;
+  reducedMotion: boolean;
 }) {
   const controls = useThree((s) => s.controls) as any;
   const camera = useThree((s) => s.camera);
@@ -168,10 +182,22 @@ function Rig({
   const tmp = useMemo(() => new THREE.Vector3(), []);
 
   useEffect(() => {
-    if (view.nonce > 0) {
-      target.current = VIEWS[view.key];
-      animating.current = true;
+    if (view.nonce <= 0) return;
+    const t = VIEWS[view.key];
+    if (reducedMotion && controls) {
+      // No per-frame tween for reduced-motion users — snap in one shot.
+      controls.setAzimuthalAngle(t.theta);
+      controls.setPolarAngle(t.phi);
+      tmp.copy(camera.position).sub(controls.target).setLength(t.radius);
+      camera.position.copy(controls.target).add(tmp);
+      controls.update();
+      target.current = null;
+      animating.current = false;
+      invalidate(); // demand mode: render the snapped view
+      return;
     }
+    target.current = t;
+    animating.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view.nonce]);
 
@@ -223,7 +249,8 @@ function Controls({
     if (idleTimer.current) clearTimeout(idleTimer.current);
     idleTimer.current = setTimeout(() => {
       spinRef.current = true;
-    }, 2500);
+      invalidate();
+    }, 3500);
   };
 
   useEffect(() => {
@@ -248,13 +275,70 @@ function Controls({
       minDistance={2.8}
       maxDistance={7}
       minPolarAngle={0.18}
-      maxPolarAngle={1.45}
+      maxPolarAngle={MAX_POLAR}
       autoRotateSpeed={0.7}
       target={[0, CAKE_H * 0.5, 0]}
       onStart={onStart}
       onEnd={onEnd}
     />
   );
+}
+
+// ------- key light: shadow-caster with a slow live drift (delight) -------
+function KeyLight({ animate, shadowSize }: { animate: boolean; shadowSize: number }) {
+  const ref = useRef<THREE.DirectionalLight>(null);
+  useFrame((state) => {
+    const l = ref.current;
+    if (!l || !animate) return;
+    const t = state.clock.elapsedTime;
+    l.position.x = 3.2 + Math.sin(t * 0.35) * 0.9;
+    l.position.z = 3.4 + Math.cos(t * 0.28) * 0.6;
+  });
+  return (
+    <directionalLight
+      ref={ref}
+      position={[3.2, 6, 3.4]}
+      intensity={2.3}
+      castShadow
+      shadow-mapSize-width={shadowSize}
+      shadow-mapSize-height={shadowSize}
+      shadow-bias={-0.0004}
+      shadow-normalBias={0.02}
+      shadow-radius={5}
+      shadow-camera-near={1}
+      shadow-camera-far={20}
+      shadow-camera-left={-3}
+      shadow-camera-right={3}
+      shadow-camera-top={3}
+      shadow-camera-bottom={-3}
+    />
+  );
+}
+
+// Shallow ceramic dish (lathe about Y) with a lifted rim, sized to cradle the
+// cake footprint (silhouettes live roughly within [-1, 1]).
+function plateProfile(): THREE.Vector2[] {
+  const R = 1.25;
+  return [
+    new THREE.Vector2(0.0, 0.0),
+    new THREE.Vector2(R * 0.95, 0.0),
+    new THREE.Vector2(R * 1.28, 0.02),
+    new THREE.Vector2(R * 1.5, 0.14),
+    new THREE.Vector2(R * 1.56, 0.2),
+    new THREE.Vector2(R * 1.55, 0.205),
+    new THREE.Vector2(R * 1.46, 0.12),
+    new THREE.Vector2(R * 1.24, 0.012),
+    new THREE.Vector2(0.0, 0.006),
+  ];
+}
+
+// ------- invalidates the demand-mode loop on any relevant scene change -------
+function Invalidator({ keys }: { keys: unknown[] }) {
+  useEffect(() => {
+    invalidate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, keys);
+  return null;
 }
 
 export default function TiramisuScene3D({
@@ -269,6 +353,12 @@ export default function TiramisuScene3D({
 }: SceneProps) {
   const animating = useRef(false);
   const shadowSize = lowPower ? 512 : 1024;
+  const plateGeo = useMemo(() => {
+    const g = new THREE.LatheGeometry(plateProfile(), 96);
+    g.computeVertexNormals();
+    return g;
+  }, []);
+  useEffect(() => () => plateGeo.dispose(), [plateGeo]);
 
   return (
     <Canvas
@@ -285,21 +375,7 @@ export default function TiramisuScene3D({
       camera={{ fov: 35, position: [2.4, 2.9, 3.0], near: 0.1, far: 50 }}
     >
       <ambientLight intensity={0.35} />
-      <directionalLight
-        position={[3.2, 6, 3.4]}
-        intensity={2.3}
-        castShadow
-        shadow-mapSize-width={shadowSize}
-        shadow-mapSize-height={shadowSize}
-        shadow-bias={-0.0004}
-        shadow-radius={5}
-        shadow-camera-near={1}
-        shadow-camera-far={20}
-        shadow-camera-left={-3}
-        shadow-camera-right={3}
-        shadow-camera-top={3}
-        shadow-camera-bottom={-3}
-      />
+      <KeyLight animate={!reducedMotion} shadowSize={shadowSize} />
 
       {/* Image-based lighting — built in-scene, no external HDRI fetch. */}
       <Environment resolution={256} frames={1}>
@@ -324,10 +400,16 @@ export default function TiramisuScene3D({
         reducedMotion={reducedMotion}
       />
 
-      {/* Ceramic plate grounding the cake. */}
-      <mesh position={[0, -0.02, 0]} receiveShadow>
-        <cylinderGeometry args={[2.0, 2.05, 0.08, 64]} />
-        <meshPhysicalMaterial color="#f2ece3" roughness={0.3} clearcoat={0.4} clearcoatRoughness={0.4} />
+      {/* Ceramic dish cradling the cake — shallow lathe with a lifted rim. */}
+      <mesh geometry={plateGeo} position={[0, -0.02, 0]} receiveShadow>
+        <meshPhysicalMaterial
+          color="#f4eee4"
+          roughness={0.18}
+          metalness={0.02}
+          clearcoat={0.5}
+          clearcoatRoughness={0.35}
+          envMapIntensity={1.2}
+        />
       </mesh>
 
       <ContactShadows
@@ -336,12 +418,13 @@ export default function TiramisuScene3D({
         blur={2.6}
         far={4}
         scale={6}
-        resolution={512}
+        resolution={lowPower ? 256 : 512}
         color="#2a160a"
       />
 
       <Controls reducedMotion={reducedMotion} animating={animating} />
-      <Rig view={view} animating={animating} />
+      <Rig view={view} animating={animating} reducedMotion={reducedMotion} />
+      <Invalidator keys={[view.nonce, frameloop, style, fontScale, text, shape]} />
     </Canvas>
   );
 }
