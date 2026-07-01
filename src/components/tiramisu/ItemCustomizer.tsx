@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { useLocale } from "next-intl";
 import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import TiramisuCanvas from "./TiramisuCanvas";
+import TiramisuPreview from "./TiramisuPreview";
 import type { BoxShape } from "@/lib/tiramisu-catalog";
 import {
   TIRAMISU_SIZES,
@@ -129,7 +129,7 @@ export default function ItemCustomizer({
       {/* Preview — in the customer's actual box shape */}
       <div className="flex shrink-0 items-center justify-center px-4 pt-2">
         <div className="h-[32vh] w-[32vh] max-w-full">
-          <TiramisuCanvas style={style} size={size} text={text} shape={shape} />
+          <TiramisuPreview style={style} size={size} text={text} shape={shape} />
         </div>
       </div>
 
