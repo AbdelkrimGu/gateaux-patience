@@ -150,10 +150,14 @@ export function useLetterTextures(
             t.anisotropy = 8;
             // Match the cocoa CanvasTexture (which is flipY:false) so the glyph
             // sprites sit in the same S-space (y-down) as the baked top.
-            // VISUAL-CHECK: confirm white-chocolate letters read upright & not
-            // mirrored from the hero angle; if they come out mirrored rather
-            // than flipped, negate the plane's vertical scale instead.
             t.flipY = false;
+            // The letter planes live in the top cap's left-handed frame (same
+            // reason the baked cocoa flips U in geometry.ts). Without this, each
+            // glyph reads MIRRORED from above. repeat.x = -1 mirrors the sprite
+            // horizontally in place — no negative geometry scale, so plane normals
+            // (and lighting) stay correct.
+            t.wrapS = THREE.RepeatWrapping;
+            t.repeat.x = -1;
             cache.current.set(ch, t);
             next[ch] = t;
           })

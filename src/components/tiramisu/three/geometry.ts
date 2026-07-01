@@ -100,8 +100,13 @@ export function shapeBBox(shape: THREE.Shape): ShapeBBox {
 
 /** UV generator that maps the top cap to [0,1]² over the silhouette bbox. */
 function makeUVGenerator(bb: ShapeBBox) {
+  // The extruded top cap's UV basis is LEFT-handed relative to its +Y outward
+  // normal (cross(∂world/∂U, image-up) points to -Y), so a straight mapping bakes
+  // the cocoa writing MIRRORED when viewed from above. Flip U to restore readable,
+  // non-mirrored text. The white-chocolate letter planes get the matching flip on
+  // their sprite texture (see useTiramisuTextures) so both styles agree.
   const uv = (x: number, y: number) =>
-    new THREE.Vector2((x - bb.minX) / bb.w, (y - bb.minY) / bb.h);
+    new THREE.Vector2((bb.minX + bb.w - x) / bb.w, (y - bb.minY) / bb.h);
   return {
     generateTopUV(_g: THREE.ExtrudeGeometry, v: number[], a: number, b: number, c: number) {
       return [
