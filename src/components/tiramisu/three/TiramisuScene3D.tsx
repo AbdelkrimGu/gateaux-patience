@@ -41,7 +41,10 @@ const VIEWS: Record<ViewKey, { theta: number; phi: number; radius: number }> = {
 
 const MAX_POLAR = 1.32; // keep the top face (and proud letters) always readable
 const CAKE_H = 0.5; // cake thickness (raised from 0.34 so the box has presence)
-const LETTER_LIFT = 0.045; // white-chocolate letters stand proud of the cocoa
+// How far each style's letters stand proud of the cocoa. White chocolate is a
+// thick moulded piece; cacao writing is piped cream dusted with cocoa — lower,
+// but still REAL relief (never painted flat onto the surface).
+const LETTER_LIFT: Record<TiramisuStyle, number> = { pieces: 0.045, cacao: 0.028 };
 
 interface SceneProps {
   style: TiramisuStyle;
@@ -66,7 +69,7 @@ function Cake({ style, fontScale, text, shape, reducedMotion }: {
   const { geo, bb, topZ } = useMemo(() => buildCakeGeometry(shape, CAKE_H), [shape]);
   useEffect(() => () => geo.dispose(), [geo]);
 
-  const topTex = useTopTexture(style, fontScale, text, shape);
+  const topTex = useTopTexture(shape);
 
   // Materials (created once; disposed on unmount).
   const cocoaMat = useMemo(
@@ -91,12 +94,15 @@ function Cake({ style, fontScale, text, shape, reducedMotion }: {
     cocoaMat.needsUpdate = true;
   }, [cocoaMat, topTex]);
 
-  // White-chocolate letters: real geometry, shared layout.
+  // Letters for BOTH styles are real geometry now, from the real letter photos:
+  // cacao = cream piped & dusted with cocoa (low, matte); white chocolate =
+  // glossy moulded pieces (raised). Nothing is painted onto the cocoa top.
   const glyphs = useMemo(() => {
-    if (style !== "pieces" || !text) return [];
-    return computeLayout(text, SETS.pieces, fontScale, SHAPES_CFG[shape]).glyphs;
+    if (!text) return [];
+    return computeLayout(text, SETS[style], fontScale, SHAPES_CFG[shape]).glyphs;
   }, [style, text, fontScale, shape]);
   const letterTex = useLetterTextures(glyphs, style);
+  const isPieces = style === "pieces";
 
   // Cinematic reveal: rise + wider scale-up + a settle-spin, then a tiny idle
   // bob so the cake never feels frozen. Guarded off for reduced-motion.
@@ -132,9 +138,10 @@ function Cake({ style, fontScale, text, shape, reducedMotion }: {
         receiveShadow
       />
 
-      {/* White-chocolate letters — raised, lightly glossy. They lean on the
-          ContactShadows + LETTER_LIFT for grounding rather than casting their
-          own shadow maps (the biggest steady-state GPU win). */}
+      {/* Real letter geometry — the actual letter photos, raised proud of the
+          cocoa (cacao lower & matte, white chocolate higher & glossy). They lean
+          on the ContactShadows + LETTER_LIFT for grounding rather than casting
+          their own shadow maps (the biggest steady-state GPU win). */}
       {glyphs.map((gl) => {
         const tex = letterTex[gl.ch];
         if (!tex) return null;
@@ -145,15 +152,15 @@ function Cake({ style, fontScale, text, shape, reducedMotion }: {
         return (
           <group
             key={`${gl.ch}-${gl.x.toFixed(2)}-${gl.y.toFixed(2)}`}
-            position={[x, topZ + LETTER_LIFT, z]}
+            position={[x, topZ + LETTER_LIFT[style], z]}
             rotation={[-Math.PI / 2, 0, 0]}
           >
             <mesh rotation={[0, 0, gl.angle]} scale={[wx, hz, 1]}>
               <planeGeometry args={[1, 1]} />
               <meshStandardMaterial
                 map={tex}
-                color="#fff6e8"
-                roughness={0.4}
+                color={isPieces ? "#fff6e8" : "#ffffff"}
+                roughness={isPieces ? 0.4 : 0.72}
                 metalness={0}
                 transparent
                 alphaTest={0.5}
