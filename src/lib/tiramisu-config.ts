@@ -19,6 +19,11 @@ export interface TiramisuSize {
   hint: Record<Locale, string>;
 }
 
+/**
+ * @deprecated Legacy size table. Text capacity + letter sizing now live per
+ * product in `tiramisu-templates.ts` (TiramisuTemplate.lineRules / letterRender).
+ * Kept only for reference; not consumed by the previewer anymore.
+ */
 export const TIRAMISU_SIZES: TiramisuSize[] = [
   {
     id: "large",
@@ -102,6 +107,19 @@ export function sanitizeTiramisuLine(
     .replace(/[̀-ͯ]/g, "") // strip combining diacritics
     .replace(ALLOWED_TEXT, "")
     .slice(0, size.charsPerLine[style]);
+}
+
+/**
+ * Fold accents + strip disallowed chars + uppercase, WITHOUT truncating. Length
+ * is capped by the caller against the active template's per-line limit.
+ */
+export function cleanTiramisuLine(raw: string): string {
+  return raw
+    .replace(/\n/g, "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(ALLOWED_TEXT, "")
+    .toUpperCase();
 }
 
 // ---- Casual (non-personalized) boxes ----

@@ -17,21 +17,19 @@ import * as THREE from "three";
 import {
   S,
   SETS,
-  SHAPES_CFG,
   loadImage,
   spriteUrl,
-  type ShapeKey,
   type LayoutGlyph,
 } from "@/lib/tiramisu-layout";
 import type { TiramisuStyle } from "@/lib/tiramisu-config";
 
 /**
  * Bake the bare cocoa top to a CanvasTexture. Debounced; disposes the prior
- * texture. Depends only on the shape (which picks the base photo) — the writing
- * is never baked in; it lives as real geometry in the scene.
+ * texture. Depends only on the base image (per template) — the writing is never
+ * baked in; it lives as real geometry in the scene.
  */
 export function useTopTexture(
-  shape: ShapeKey,
+  baseImage: string,
   debounceMs = 120
 ): THREE.CanvasTexture | null {
   const [tex, setTex] = useState<THREE.CanvasTexture | null>(null);
@@ -42,11 +40,10 @@ export function useTopTexture(
   useEffect(() => {
     const id = ++token.current;
     let cancelled = false;
-    const cfg = SHAPES_CFG[shape];
     const timer = setTimeout(async () => {
       let t: THREE.CanvasTexture | null = null;
       try {
-        const base = await loadImage(cfg.base);
+        const base = await loadImage(baseImage);
         // Bail if unmounted or superseded.
         if (cancelled || id !== token.current) return;
         if (!canvasRef.current) {
@@ -85,7 +82,7 @@ export function useTopTexture(
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [shape, debounceMs]);
+  }, [baseImage, debounceMs]);
 
   // Final unmount cleanup.
   useEffect(() => {

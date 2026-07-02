@@ -17,14 +17,9 @@ import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree, invalidate } from "@react-three/fiber";
 import { OrbitControls, ContactShadows, Environment, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
-import {
-  computeLayout,
-  SETS,
-  SHAPES_CFG,
-  S,
-  type ShapeKey,
-} from "@/lib/tiramisu-layout";
+import { computeLayout } from "@/lib/tiramisu-layout";
 import type { TiramisuStyle } from "@/lib/tiramisu-config";
+import type { TiramisuTemplate } from "@/lib/tiramisu-templates";
 import { buildCakeGeometry } from "./geometry";
 import { useTopTexture, useLetterTextures } from "./useTiramisuTextures";
 
@@ -48,9 +43,8 @@ const LETTER_LIFT: Record<TiramisuStyle, number> = { pieces: 0.045, cacao: 0.028
 
 interface SceneProps {
   style: TiramisuStyle;
-  fontScale: number;
+  template: TiramisuTemplate;
   text: string;
-  shape: ShapeKey;
   reducedMotion: boolean;
   /** Preset request from the toolbar: bump nonce to (re)trigger. */
   view: { key: ViewKey; nonce: number };
@@ -59,17 +53,16 @@ interface SceneProps {
 }
 
 // ------- the cake itself -------
-function Cake({ style, fontScale, text, shape, reducedMotion }: {
+function Cake({ style, template, text, reducedMotion }: {
   style: TiramisuStyle;
-  fontScale: number;
+  template: TiramisuTemplate;
   text: string;
-  shape: ShapeKey;
   reducedMotion: boolean;
 }) {
-  const { geo, bb, topZ } = useMemo(() => buildCakeGeometry(shape, CAKE_H), [shape]);
+  const { geo, bb, topZ } = useMemo(() => buildCakeGeometry(template.shape, CAKE_H), [template.shape]);
   useEffect(() => () => geo.dispose(), [geo]);
 
-  const topTex = useTopTexture(shape);
+  const topTex = useTopTexture(template.baseImage);
 
   // Materials (created once; disposed on unmount).
   const cocoaMat = useMemo(
@@ -99,8 +92,8 @@ function Cake({ style, fontScale, text, shape, reducedMotion }: {
   // glossy moulded pieces (raised). Nothing is painted onto the cocoa top.
   const glyphs = useMemo(() => {
     if (!text) return [];
-    return computeLayout(text, SETS[style], fontScale, SHAPES_CFG[shape]).glyphs;
-  }, [style, text, fontScale, shape]);
+    return computeLayout(template, text, style).glyphs;
+  }, [style, text, template]);
   const letterTex = useLetterTextures(glyphs, style);
   const isPieces = style === "pieces";
 
@@ -145,10 +138,11 @@ function Cake({ style, fontScale, text, shape, reducedMotion }: {
       {glyphs.map((gl) => {
         const tex = letterTex[gl.ch];
         if (!tex) return null;
-        const wx = (gl.w / S) * bb.w;
-        const hz = (gl.h / S) * bb.h;
-        const x = bb.minX + (gl.x / S) * bb.w;
-        const z = -(bb.minY + (gl.y / S) * bb.h);
+        const CS = template.canvasSize;
+        const wx = (gl.w / CS) * bb.w;
+        const hz = (gl.h / CS) * bb.h;
+        const x = bb.minX + (gl.x / CS) * bb.w;
+        const z = -(bb.minY + (gl.y / CS) * bb.h);
         return (
           <group
             key={`${gl.ch}-${gl.x.toFixed(2)}-${gl.y.toFixed(2)}`}
@@ -350,9 +344,8 @@ function Invalidator({ keys }: { keys: unknown[] }) {
 
 export default function TiramisuScene3D({
   style,
-  fontScale,
+  template,
   text,
-  shape,
   reducedMotion,
   view,
   frameloop,
@@ -401,9 +394,8 @@ export default function TiramisuScene3D({
 
       <Cake
         style={style}
-        fontScale={fontScale}
+        template={template}
         text={text}
-        shape={shape}
         reducedMotion={reducedMotion}
       />
 
@@ -431,7 +423,7 @@ export default function TiramisuScene3D({
 
       <Controls reducedMotion={reducedMotion} animating={animating} />
       <Rig view={view} animating={animating} reducedMotion={reducedMotion} />
-      <Invalidator keys={[view.nonce, frameloop, style, fontScale, text, shape]} />
+      <Invalidator keys={[view.nonce, frameloop, style, text, template.id]} />
     </Canvas>
   );
 }

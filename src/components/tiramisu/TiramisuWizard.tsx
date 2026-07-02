@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { TIRAMISU_CATALOG, formatDA, findOption } from "@/lib/tiramisu-catalog";
 import { STYLE_META, type Locale } from "@/lib/tiramisu-config";
+import type { TiramisuSizeId } from "@/lib/tiramisu-templates";
 import ItemCustomizer, {
   personalizationText,
   type Personalization,
@@ -449,6 +450,7 @@ export default function TiramisuWizard() {
                 initial={sessionInitial}
                 optionLabel={`${sessionOpt.category.labels[locale]} · ${sessionOpt.option.shapeLabel[locale]}`}
                 shape={sessionOpt.option.shape}
+                sizeId={sessionOpt.category.id as TiramisuSizeId}
                 progressLabel={sessionProgress}
                 onSave={onCustomizerSave}
                 onCancel={() => setSession(null)}

@@ -2,36 +2,35 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useLocale } from "next-intl";
-import { Check, X } from "lucide-react";
+import { Check, X, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import TiramisuPreview from "./TiramisuPreview";
-import type { BoxShape } from "@/lib/tiramisu-catalog";
+import { computeLayout } from "@/lib/tiramisu-layout";
 import {
-  TIRAMISU_SIZES,
+  resolveTemplate,
+  type BoxShape,
+  type TiramisuSizeId,
+} from "@/lib/tiramisu-templates";
+import {
   STYLE_META,
-  sanitizeTiramisuLine,
+  cleanTiramisuLine,
   type Locale,
   type TiramisuStyle,
-  type TiramisuSizeId,
 } from "@/lib/tiramisu-config";
-
-const MAX_LINES = 4;
 
 export interface Personalization {
   style: TiramisuStyle;
   sizeId: TiramisuSizeId;
-  lines: string[]; // length MAX_LINES
+  lines: string[];
 }
 
-export function emptyPersonalization(): Personalization {
-  return { style: "cacao", sizeId: "large", lines: Array(MAX_LINES).fill("") };
+export function emptyPersonalization(sizeId: TiramisuSizeId = "large"): Personalization {
+  return { style: "cacao", sizeId, lines: [] };
 }
 
+/** The message as text (non-empty lines only). Decoupled from any size config. */
 export function personalizationText(p: Personalization): string {
-  const eff = p.style === "pieces" ? "small" : p.sizeId;
-  const size = TIRAMISU_SIZES.find((s) => s.id === eff)!;
   return p.lines
-    .slice(0, size.maxLines)
     .map((l) => l.trimEnd())
     .filter((l) => l.length > 0)
     .join("\n");
@@ -41,6 +40,7 @@ export default function ItemCustomizer({
   initial,
   optionLabel,
   shape,
+  sizeId,
   progressLabel,
   onSave,
   onCancel,
@@ -48,6 +48,8 @@ export default function ItemCustomizer({
   initial: Personalization | null;
   optionLabel: string;
   shape: BoxShape;
+  /** The box's size (its catalog category) — fixes the product template. */
+  sizeId: TiramisuSizeId;
   /** e.g. "Boîte 2 sur 3" when walking through several boxes. */
   progressLabel?: string;
   onSave: (p: Personalization) => void;
@@ -58,27 +60,32 @@ export default function ItemCustomizer({
   const t = (fr: string, ar: string, en: string) =>
     locale === "ar" ? ar : locale === "en" ? en : fr;
 
-  const seed = initial ?? emptyPersonalization();
-  const [style, setStyle] = useState<TiramisuStyle>(seed.style);
-  const [sizeId, setSizeId] = useState<TiramisuSizeId>(seed.sizeId);
-  const [lines, setLines] = useState<string[]>(() => {
-    const a = [...seed.lines];
-    while (a.length < MAX_LINES) a.push("");
-    return a.slice(0, MAX_LINES);
-  });
+  // The product template is fully determined by the box (shape × size).
+  const template = useMemo(() => resolveTemplate(shape, sizeId), [shape, sizeId]);
+  const maxLines = template.lineRules.maxLines;
+  const perLine = template.lineRules.maxCharsPerLine;
 
-  const effId: TiramisuSizeId = style === "pieces" ? "small" : sizeId;
-  const size = TIRAMISU_SIZES.find((s) => s.id === effId)!;
-  const perLine = size.charsPerLine[style];
+  const seed = initial ?? emptyPersonalization(sizeId);
+  const [style, setStyle] = useState<TiramisuStyle>(seed.style);
+  const [lines, setLines] = useState<string[]>(() => {
+    const a = seed.lines.map((l) => cleanTiramisuLine(l).slice(0, perLine));
+    while (a.length < maxLines) a.push("");
+    return a.slice(0, maxLines);
+  });
 
   const text = useMemo(
     () =>
       lines
-        .slice(0, size.maxLines)
         .map((l) => l.trimEnd())
         .filter((l) => l.length > 0)
         .join("\n"),
-    [lines, size.maxLines]
+    [lines]
+  );
+
+  // Live fit feedback straight from the layout engine (never silently drops).
+  const layout = useMemo(
+    () => computeLayout(template, text, style),
+    [template, text, style]
   );
 
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
@@ -86,34 +93,29 @@ export default function ItemCustomizer({
 
   function handleChange(i: number, v: string) {
     const prevLen = (lines[i] ?? "").length;
-    const clean = sanitizeTiramisuLine(v, style, size).toUpperCase();
+    const clean = cleanTiramisuLine(v).slice(0, perLine);
     setLines((prev) => {
       const next = [...prev];
       next[i] = clean;
       return next;
     });
-    if (clean.length >= perLine && clean.length > prevLen && i < size.maxLines - 1) {
+    if (clean.length >= perLine && clean.length > prevLen && i < maxLines - 1) {
       requestAnimationFrame(() => focusLine(i + 1));
     }
   }
   function handleKeyDown(i: number, e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       e.preventDefault();
-      if (i < size.maxLines - 1) focusLine(i + 1);
+      if (i < maxLines - 1) focusLine(i + 1);
       else e.currentTarget.blur();
     }
   }
-  function changeStyle(s: TiramisuStyle) {
-    setStyle(s);
-    const eff = s === "pieces" ? "small" : sizeId;
-    const sz = TIRAMISU_SIZES.find((x) => x.id === eff)!;
-    setLines((prev) => prev.map((l) => sanitizeTiramisuLine(l, s, sz).toUpperCase()));
-  }
-  function changeSize(id: TiramisuSizeId) {
-    setSizeId(id);
-    const sz = TIRAMISU_SIZES.find((x) => x.id === id)!;
-    setLines((prev) => prev.map((l) => sanitizeTiramisuLine(l, style, sz).toUpperCase()));
-  }
+
+  const styleLabel = t(
+    "Petit conseil : plus le texte est court, plus les lettres sont grandes et belles.",
+    "نصيحة: كلما كان النص أقصر، كانت الحروف أكبر وأجمل.",
+    "Tip: the shorter the text, the larger and more beautiful the letters."
+  );
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} className="flex h-full flex-col">
@@ -126,10 +128,10 @@ export default function ItemCustomizer({
         </div>
       )}
 
-      {/* Preview — in the customer's actual box shape */}
+      {/* Preview — in the customer's actual box shape + size */}
       <div className="flex shrink-0 items-center justify-center px-4 pt-2">
         <div className="h-[32vh] w-[32vh] max-w-full">
-          <TiramisuPreview style={style} size={size} text={text} shape={shape} />
+          <TiramisuPreview style={style} template={template} text={text} />
         </div>
       </div>
 
@@ -147,7 +149,7 @@ export default function ItemCustomizer({
             return (
               <button
                 key={s}
-                onClick={() => changeStyle(s)}
+                onClick={() => setStyle(s)}
                 className={cn(
                   "rounded-xl border px-3 py-2 text-start transition-all",
                   active ? "border-rose bg-rose/5 shadow-sm" : "border-border bg-white"
@@ -162,43 +164,13 @@ export default function ItemCustomizer({
           })}
         </div>
 
-        {/* Size (cacao only — pieces is single-mould size) */}
-        {style === "pieces" ? (
-          <div className="rounded-xl border border-border bg-white px-3 py-2 text-[11px] leading-snug text-charcoal-light">
-            🍫 {t(
-              "Lettres en chocolat blanc : une seule taille. Jusqu'à 4 lignes.",
-              "حروف الشوكولاتة البيضاء: حجم واحد. حتى 4 أسطر.",
-              "White-chocolate letters: one size. Up to 4 lines."
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-2">
-            {TIRAMISU_SIZES.map((s) => {
-              const active = sizeId === s.id;
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => changeSize(s.id)}
-                  className={cn(
-                    "rounded-xl border px-2 py-1.5 text-center transition-all",
-                    active ? "border-gold bg-gold/10 shadow-sm" : "border-border bg-white"
-                  )}
-                >
-                  <span className="block text-xs font-bold text-charcoal">
-                    {s.labels[locale]}
-                  </span>
-                  <span className="block text-[10px] text-charcoal-light">
-                    {s.hint[locale]}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
+        <div className="rounded-xl border border-border bg-white px-3 py-2 text-[11px] leading-snug text-charcoal-light">
+          💡 {styleLabel}
+        </div>
 
         {/* Text lines */}
         <div className="space-y-2">
-          {Array.from({ length: size.maxLines }).map((_, i) => {
+          {Array.from({ length: maxLines }).map((_, i) => {
             const val = lines[i] ?? "";
             return (
               <div key={i} className="relative">
@@ -209,13 +181,13 @@ export default function ItemCustomizer({
                   type="text"
                   inputMode="text"
                   autoCapitalize="characters"
-                  enterKeyHint={i < size.maxLines - 1 ? "next" : "done"}
+                  enterKeyHint={i < maxLines - 1 ? "next" : "done"}
                   value={val}
                   maxLength={perLine}
                   onChange={(e) => handleChange(i, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(i, e)}
                   placeholder={
-                    size.maxLines > 1
+                    maxLines > 1
                       ? `${t("Ligne", "سطر", "Line")} ${i + 1}`
                       : t("Tapez ici…", "اكتب هنا…", "Type here…")
                   }
@@ -229,6 +201,20 @@ export default function ItemCustomizer({
             );
           })}
         </div>
+
+        {/* Gentle fit warning (does not block saving) */}
+        {!layout.fits && text.length > 0 && (
+          <div className="flex items-start gap-1.5 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-[11px] leading-snug text-charcoal">
+            <AlertTriangle size={14} className="mt-0.5 shrink-0 text-gold" />
+            <span>
+              {t(
+                "Ce message est un peu long pour cette boîte — les lettres seront plus petites.",
+                "هذه الرسالة طويلة قليلاً على هذه العلبة — ستكون الحروف أصغر.",
+                "This message is a little long for this box — the letters will be smaller."
+              )}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Footer actions */}
@@ -241,7 +227,7 @@ export default function ItemCustomizer({
           {t("Annuler", "إلغاء", "Cancel")}
         </button>
         <button
-          onClick={() => onSave({ style, sizeId: effId, lines })}
+          onClick={() => onSave({ style, sizeId, lines })}
           className="flex flex-[2] items-center justify-center gap-1.5 rounded-full bg-rose py-3 text-sm font-semibold text-white shadow-cake transition-all hover:bg-rose-dark active:scale-[0.98]"
         >
           <Check size={16} />

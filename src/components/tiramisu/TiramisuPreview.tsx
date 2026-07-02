@@ -17,9 +17,9 @@ import { useLocale } from "next-intl";
 import { Box, Square, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import TiramisuCanvas from "./TiramisuCanvas";
-import type { ShapeKey } from "@/lib/tiramisu-layout";
 import type { ViewKey } from "./three/TiramisuScene3D";
-import type { Locale, TiramisuSize, TiramisuStyle } from "@/lib/tiramisu-config";
+import type { Locale, TiramisuStyle } from "@/lib/tiramisu-config";
+import type { TiramisuTemplate } from "@/lib/tiramisu-templates";
 
 const TiramisuScene3D = dynamic(() => import("./three/TiramisuScene3D"), {
   ssr: false,
@@ -43,12 +43,13 @@ function detectWebGL(): boolean {
 
 interface Props {
   style: TiramisuStyle;
-  size: TiramisuSize;
+  /** Resolved product template (shape × size). */
+  template: TiramisuTemplate;
   text: string;
-  shape?: ShapeKey;
 }
 
-export default function TiramisuPreview({ style, size, text, shape = "round" }: Props) {
+export default function TiramisuPreview({ style, template, text }: Props) {
+  const shape = template.shape;
   const locale = useLocale() as Locale;
   const t = (fr: string, ar: string, en: string) =>
     locale === "ar" ? ar : locale === "en" ? en : fr;
@@ -158,9 +159,8 @@ export default function TiramisuPreview({ style, size, text, shape = "round" }: 
         <div role="img" aria-label={sceneLabel} className="absolute inset-0">
           <TiramisuScene3D
             style={style}
-            fontScale={size.fontScale}
+            template={template}
             text={text}
-            shape={shape}
             reducedMotion={reduced}
             view={view}
             frameloop={onScreen ? (reduced ? "demand" : "always") : "never"}
@@ -169,7 +169,7 @@ export default function TiramisuPreview({ style, size, text, shape = "round" }: 
         </div>
       ) : (
         <div className="absolute inset-0">
-          <TiramisuCanvas style={style} size={size} text={text} shape={shape} />
+          <TiramisuCanvas style={style} template={template} text={text} />
         </div>
       )}
 
