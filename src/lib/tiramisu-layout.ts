@@ -199,24 +199,54 @@ export interface LayoutResult {
 /** Width of a line in CAP UNITS (cap = 1), including tracking, minus the trailing gap. */
 function lineUnitRatio(line: string, set: GlyphSet, cfg: LetterRenderConfig): number {
   let u = 0;
-  let lastWasGlyphOrSpace = false;
+  let lastWasGlyph = false; // only a trailing GLYPH leaves a removable gap
   for (const ch of line) {
     if (ch === " ") {
       u += cfg.wordSpacing;
-      lastWasGlyphOrSpace = true;
+      lastWasGlyph = false;
       continue;
     }
     const g = set.glyphs[ch];
     if (!g) {
       u += 0.45; // unsupported placeholder (validated separately)
-      lastWasGlyphOrSpace = true;
+      lastWasGlyph = false;
       continue;
     }
     u += g.aspect * g.hr + cfg.tracking;
-    lastWasGlyphOrSpace = true;
+    lastWasGlyph = true;
   }
-  if (lastWasGlyphOrSpace) u -= cfg.tracking; // no trailing gap
+  if (lastWasGlyph) u -= cfg.tracking; // no trailing tracking after the last glyph
   return Math.max(0, u);
+}
+
+/**
+ * The y (px) to centre text on: the middle of the writable BELT — the widest
+ * band of the polygon. For a rectangle every row is equally wide, so this is
+ * the bbox mid; for heart/oval it is the visual sweet spot (avoids the point/
+ * taper), which stops tapered shapes from pushing lines into their narrow ends.
+ */
+function beltCenterY(poly: Px[], b: Bounds): number {
+  const N = 48;
+  const ys: number[] = [];
+  const ws: number[] = [];
+  let best = 0;
+  for (let k = 0; k <= N; k++) {
+    const y = b.minY + (k / N) * b.h;
+    const w = getHorizontalSpanAtY(poly, y).width;
+    ys.push(y);
+    ws.push(w);
+    if (w > best) best = w;
+  }
+  // Average the y of all near-widest rows → belt centre (bbox mid for rects).
+  let sum = 0;
+  let cnt = 0;
+  for (let k = 0; k < ws.length; k++) {
+    if (ws[k] >= best * 0.985) {
+      sum += ys[k];
+      cnt++;
+    }
+  }
+  return cnt ? sum / cnt : b.minY + b.h / 2;
 }
 
 /**
@@ -236,58 +266,65 @@ export function computeLayout(
   const warnings: string[] = [];
   let fits = true;
 
-  // 1. sanitize into lines (fold accents / strip disallowed; never truncate)
-  const lines = text.split("\n").map(foldLine);
-  while (lines.length && lines[lines.length - 1].trim() === "") lines.pop();
+  // 1. sanitize — fold accents / strip disallowed (never truncate); trim ends
+  //    and drop blank/whitespace-only lines so validation and layout agree.
+  const laid = text
+    .split("\n")
+    .map((l) => foldLine(l).trim())
+    .filter((l) => l.length > 0);
 
-  // 2. capacity validation
-  if (lines.length > rules.maxLines) {
+  // 2. capacity validation (reported via warnings; text is never dropped)
+  if (laid.length > rules.maxLines) {
     fits = false;
-    warnings.push(`Too many lines (${lines.length}/${rules.maxLines})`);
+    warnings.push(`Too many lines (${laid.length}/${rules.maxLines})`);
   }
-  lines.forEach((l, i) => {
+  laid.forEach((l, i) => {
     if (l.length > rules.maxCharsPerLine) {
       fits = false;
       warnings.push(`Line ${i + 1} too long (${l.length}/${rules.maxCharsPerLine})`);
     }
   });
-  const totalChars = lines.reduce((n, l) => n + l.replace(/ /g, "").length, 0);
+  const totalChars = laid.reduce((sum, l) => sum + l.replace(/ /g, "").length, 0);
   if (totalChars > rules.maxTotalChars) {
     fits = false;
     warnings.push(`Too many characters (${totalChars}/${rules.maxTotalChars})`);
   }
   const unsupported = new Set<string>();
-  for (const l of lines) for (const ch of l) if (ch !== " " && !set.glyphs[ch]) unsupported.add(ch);
+  for (const l of laid) for (const ch of l) if (ch !== " " && !set.glyphs[ch]) unsupported.add(ch);
   if (unsupported.size) warnings.push(`Unsupported characters: ${Array.from(unsupported).join(" ")}`);
 
-  const laid = lines.filter((l) => l.length > 0);
   if (laid.length === 0) {
     return { cap: cfg.baseCapPx, glyphs: [], lines: [], fits: true, warnings: [], templateId: template.id };
   }
 
-  // 3. polygon-aware sizing
+  // 3. polygon-aware sizing — one uniform cap (mould feel), centred on the
+  //    writable BELT, solved iteratively so tapered shapes don't spuriously
+  //    fail or under-size (the line Y positions depend on the cap we're solving
+  //    for, so we converge instead of estimating once at the largest cap).
   const poly = toPixelPolygon(template.writablePolygon, size);
   const bounds = polygonBounds(poly);
   const n = laid.length;
-  const cyMid = bounds.minY + bounds.h / 2;
+  const centerY = beltCenterY(poly, bounds);
   const ratios = laid.map((l) => lineUnitRatio(l, set, cfg));
-
   const capByHeight = bounds.h / (n * LINEGAP);
-  const estCap = Math.min(cfg.baseCapPx, cfg.maxCapPx, capByHeight);
-  const estLineY = (i: number) => cyMid + (i - (n - 1) / 2) * estCap * LINEGAP;
+  const capCeil = Math.min(cfg.baseCapPx, cfg.maxCapPx, capByHeight);
 
-  // Constrain by the narrowest line's available horizontal span (uniform cap →
-  // consistent letter size = mould feel, while still fitting inside heart/oval).
-  let capByWidth = Infinity;
-  laid.forEach((_, i) => {
-    const yc = estLineY(i);
-    const span = spanForBand(poly, bounds, yc - estCap * 0.5, yc + estCap * 0.5);
-    const usable = span.width * 0.96;
-    const capW = usable / Math.max(ratios[i], 0.0001);
-    if (capW < capByWidth) capByWidth = capW;
-  });
-
-  let cap = Math.min(cfg.baseCapPx, cfg.maxCapPx, capByHeight, capByWidth);
+  let cap = capCeil;
+  for (let iter = 0; iter < 4; iter++) {
+    let capByWidth = Infinity;
+    for (let i = 0; i < n; i++) {
+      const yc = centerY + (i - (n - 1) / 2) * cap * LINEGAP;
+      const span = spanForBand(poly, bounds, yc - cap * 0.5, yc + cap * 0.5);
+      const capW = (span.width * 0.96) / Math.max(ratios[i], 0.0001);
+      if (capW < capByWidth) capByWidth = capW;
+    }
+    const next = Math.min(capCeil, capByWidth);
+    if (Math.abs(next - cap) < 0.5) {
+      cap = next;
+      break;
+    }
+    cap = next;
+  }
   if (cap < cfg.minCapPx) {
     // Controlled floor — do NOT shrink into ugliness; flag instead.
     cap = cfg.minCapPx;
@@ -300,7 +337,7 @@ export function computeLayout(
   // 4. final placement at the resolved uniform cap
   const glyphs: LayoutGlyph[] = [];
   const maxRot = (cfg.maxRotationDeg * Math.PI) / 180;
-  const lineY = (i: number) => cyMid + (i - (n - 1) / 2) * cap * LINEGAP;
+  const lineY = (i: number) => centerY + (i - (n - 1) / 2) * cap * LINEGAP;
 
   laid.forEach((line, i) => {
     const yc = lineY(i);
@@ -336,25 +373,36 @@ export function computeLayout(
 
 // ---- 2D compositing (realism) ----------------------------------------------
 
-/** Soft radial ellipse (used for cocoa contact / grounding), drawn at origin. */
-function softBlob(
+// Distance to fling the source sprite so ONLY its blurred shadow lands on the
+// cocoa. It must be well outside the canvas (and the clip) — the shadow is what
+// we keep. Bigger than any canvasSize.
+const SHADOW_FLING = 4000;
+
+/**
+ * Stamp a SHAPE-ACCURATE soft darkening under a glyph, derived from the letter's
+ * own alpha (so enclosed counters — the holes in A/B/D/O/P/Q/R — stay clean).
+ * Draws the sprite far off-canvas and reads back only its blurred canvas shadow.
+ * Must be called inside the writable-polygon clip so the flung sprite is culled.
+ * Assumes the caller has already translated/rotated to the glyph's local frame.
+ */
+function contactStamp(
   ctx: CanvasRenderingContext2D,
-  rx: number,
-  ry: number,
+  sprite: HTMLImageElement,
+  w: number,
+  h: number,
+  blur: number,
+  offX: number,
+  offY: number,
   alpha: number,
   rgb: string
 ) {
-  if (alpha <= 0 || rx <= 0 || ry <= 0) return;
+  if (alpha <= 0) return;
   ctx.save();
-  ctx.scale(rx, ry);
-  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
-  g.addColorStop(0, `rgba(${rgb},${alpha})`);
-  g.addColorStop(0.55, `rgba(${rgb},${alpha * 0.5})`);
-  g.addColorStop(1, `rgba(${rgb},0)`);
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.arc(0, 0, 1, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.shadowColor = `rgba(${rgb},${alpha})`;
+  ctx.shadowBlur = blur;
+  ctx.shadowOffsetX = SHADOW_FLING + offX;
+  ctx.shadowOffsetY = SHADOW_FLING + offY;
+  ctx.drawImage(sprite, -w / 2 - SHADOW_FLING, -h / 2 - SHADOW_FLING, w, h);
   ctx.restore();
 }
 
@@ -411,19 +459,32 @@ export function paintPreview(
   ctx.save();
   clipToPolygon(ctx, poly, 1.12); // generous: never hard-cut a letter's shadow
 
-  // Pass 1 — cocoa contact (indentation halo + soft grounding) under all letters.
+  // Pass 1 — cocoa contact, SHAPE-ACCURATE (from the glyph alpha, so counters
+  // stay clean). Two soft stamps that hug the strokes: a wide faint cocoa
+  // indentation halo, then a tighter darker grounding just under the letter.
   for (const gl of layout.glyphs) {
+    const sprite = o.imgs[gl.ch];
+    if (!sprite) continue;
     ctx.save();
     ctx.translate(gl.x, gl.y);
     ctx.rotate(gl.angle);
-    softBlob(ctx, gl.w * 0.6, gl.h * 0.58, cfg.cocoaContactAlpha, COCOA); // indentation
-    ctx.translate(0, gl.h * 0.05);
-    softBlob(ctx, gl.w * 0.52, gl.h * 0.4, cfg.contactShadowAlpha, COCOA_DARK); // grounding
+    contactStamp(ctx, sprite, gl.w, gl.h, gl.cap * 0.18, 0, gl.cap * 0.006, cfg.cocoaContactAlpha, COCOA);
+    contactStamp(
+      ctx,
+      sprite,
+      gl.w,
+      gl.h,
+      gl.cap * cfg.contactShadowBlurRatio,
+      0,
+      gl.cap * 0.02,
+      cfg.contactShadowAlpha,
+      COCOA_DARK
+    );
     ctx.restore();
   }
 
-  // Pass 2 — the letters, each with a shape-accurate cast shadow (canvas shadow
-  // uses the PNG alpha, so the shadow matches the real letter outline).
+  // Pass 2 — the letters, each with a directional, shape-accurate cast shadow
+  // (canvas shadow uses the PNG alpha, so the shadow matches the letter outline).
   for (const gl of layout.glyphs) {
     const sprite = o.imgs[gl.ch];
     if (!sprite) continue;

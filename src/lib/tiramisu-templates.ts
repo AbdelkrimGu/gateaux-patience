@@ -193,8 +193,8 @@ export const TIRAMISU_TEMPLATES: Record<TemplateId, TiramisuTemplate> = {
       p(0.40, 0.60),
       p(0.24, 0.46),
     ],
-    lineRules: { maxLines: 2, maxCharsPerLine: 8, maxTotalChars: 16 },
-    letterRender: letterRender(66, 52, 86),
+    lineRules: { maxLines: 2, maxCharsPerLine: 7, maxTotalChars: 14 },
+    letterRender: letterRender(64, 46, 84),
   },
   "heart-large": {
     id: "heart-large",
@@ -211,8 +211,8 @@ export const TIRAMISU_TEMPLATES: Record<TemplateId, TiramisuTemplate> = {
       p(0.37, 0.63),
       p(0.18, 0.46),
     ],
-    lineRules: { maxLines: 3, maxCharsPerLine: 9, maxTotalChars: 24 },
-    letterRender: letterRender(66, 52, 86),
+    lineRules: { maxLines: 3, maxCharsPerLine: 8, maxTotalChars: 21 },
+    letterRender: letterRender(64, 46, 84),
   },
   "oval-large": {
     id: "oval-large",
@@ -232,7 +232,7 @@ export const TIRAMISU_TEMPLATES: Record<TemplateId, TiramisuTemplate> = {
       p(0.18, 0.40),
     ],
     lineRules: { maxLines: 3, maxCharsPerLine: 12, maxTotalChars: 30 },
-    letterRender: letterRender(62, 50, 82),
+    letterRender: letterRender(62, 48, 82),
   },
 };
 
