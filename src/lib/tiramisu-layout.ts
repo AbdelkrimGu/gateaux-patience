@@ -462,39 +462,46 @@ export function paintPreview(
   // Pass 1 — cocoa contact, SHAPE-ACCURATE (from the glyph alpha, so counters
   // stay clean). Two soft stamps that hug the strokes: a wide faint cocoa
   // indentation halo, then a tighter darker grounding just under the letter.
-  for (const gl of layout.glyphs) {
-    const sprite = o.imgs[gl.ch];
-    if (!sprite) continue;
-    ctx.save();
-    ctx.translate(gl.x, gl.y);
-    ctx.rotate(gl.angle);
-    contactStamp(ctx, sprite, gl.w, gl.h, gl.cap * 0.18, 0, gl.cap * 0.006, cfg.cocoaContactAlpha, COCOA);
-    contactStamp(
-      ctx,
-      sprite,
-      gl.w,
-      gl.h,
-      gl.cap * cfg.contactShadowBlurRatio,
-      0,
-      gl.cap * 0.02,
-      cfg.contactShadowAlpha,
-      COCOA_DARK
-    );
-    ctx.restore();
+  // Skipped entirely when both contact alphas are 0 (shadows turned off).
+  if (cfg.cocoaContactAlpha > 0 || cfg.contactShadowAlpha > 0) {
+    for (const gl of layout.glyphs) {
+      const sprite = o.imgs[gl.ch];
+      if (!sprite) continue;
+      ctx.save();
+      ctx.translate(gl.x, gl.y);
+      ctx.rotate(gl.angle);
+      contactStamp(ctx, sprite, gl.w, gl.h, gl.cap * 0.18, 0, gl.cap * 0.006, cfg.cocoaContactAlpha, COCOA);
+      contactStamp(
+        ctx,
+        sprite,
+        gl.w,
+        gl.h,
+        gl.cap * cfg.contactShadowBlurRatio,
+        0,
+        gl.cap * 0.02,
+        cfg.contactShadowAlpha,
+        COCOA_DARK
+      );
+      ctx.restore();
+    }
   }
 
-  // Pass 2 — the letters, each with a directional, shape-accurate cast shadow
-  // (canvas shadow uses the PNG alpha, so the shadow matches the letter outline).
+  // Pass 2 — the letters. A directional, shape-accurate cast shadow (canvas
+  // shadow uses the PNG alpha) is applied ONLY when shadowAlpha > 0; with it off
+  // the letter draws with no added shadow (its own baked 3D shading remains).
+  const castShadow = cfg.shadowAlpha > 0;
   for (const gl of layout.glyphs) {
     const sprite = o.imgs[gl.ch];
     if (!sprite) continue;
     ctx.save();
     ctx.translate(gl.x, gl.y);
     ctx.rotate(gl.angle);
-    ctx.shadowColor = `rgba(28,15,7,${cfg.shadowAlpha})`;
-    ctx.shadowBlur = gl.cap * cfg.shadowBlurRatio;
-    ctx.shadowOffsetX = gl.cap * 0.012;
-    ctx.shadowOffsetY = gl.cap * cfg.shadowOffsetYRatio;
+    if (castShadow) {
+      ctx.shadowColor = `rgba(28,15,7,${cfg.shadowAlpha})`;
+      ctx.shadowBlur = gl.cap * cfg.shadowBlurRatio;
+      ctx.shadowOffsetX = gl.cap * 0.012;
+      ctx.shadowOffsetY = gl.cap * cfg.shadowOffsetYRatio;
+    }
     ctx.drawImage(sprite, -gl.w / 2, -gl.h / 2, gl.w, gl.h);
     ctx.restore();
   }

@@ -88,17 +88,22 @@ export interface TiramisuTemplate {
 // and only scale down when a line truly won't fit. Cacao is hand-traced, so it
 // may shrink further and casts a softer, shallower shadow.
 
+// 2D shadow layers are OFF. The letter PNGs already carry their own real 3D
+// shading (glossy white chocolate / cocoa-dusted cream), so the app-drawn cast +
+// contact shadows read as "weird" doubled shadows. Alphas are 0 → no shadow is
+// drawn (paintPreview skips the passes). Bump these back up to reintroduce
+// contact/cast shadows later if wanted; the ratios are kept for that.
 const PIECES_COMMON = {
   tracking: 0.16,
   wordSpacing: 0.55,
   maxRotationDeg: 3.2,
   maxJitterPx: 3.5,
-  shadowAlpha: 0.42,
+  shadowAlpha: 0,
   shadowBlurRatio: 0.08,
   shadowOffsetYRatio: 0.06,
-  contactShadowAlpha: 0.26,
+  contactShadowAlpha: 0,
   contactShadowBlurRatio: 0.16,
-  cocoaContactAlpha: 0.12,
+  cocoaContactAlpha: 0,
 } as const;
 
 const CACAO_COMMON = {
@@ -106,12 +111,12 @@ const CACAO_COMMON = {
   wordSpacing: 0.55,
   maxRotationDeg: 2.4,
   maxJitterPx: 3,
-  shadowAlpha: 0.22,
+  shadowAlpha: 0,
   shadowBlurRatio: 0.05,
   shadowOffsetYRatio: 0.025,
-  contactShadowAlpha: 0.16,
+  contactShadowAlpha: 0,
   contactShadowBlurRatio: 0.14,
-  cocoaContactAlpha: 0.06,
+  cocoaContactAlpha: 0,
 } as const;
 
 function letterRender(
