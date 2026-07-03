@@ -131,15 +131,11 @@ function letterRender(
   };
 }
 
-const BOXES = "/images/tiramisu/boxes";
-// TODO(assets): swap to per-template photos under /images/tiramisu/templates/
-// <id>/base.png when the real top-down shots exist; the structure already
-// supports it — only these strings change.
-const BASE_IMAGE: Record<BoxShape, string> = {
-  square: `${BOXES}/cust-square.png`,
-  heart: `${BOXES}/cust-heart.png`,
-  oval: `${BOXES}/cust-oval.png`,
-};
+// Active base surfaces: per-template top-down box images (currently AI-generated
+// placeholders, treated as the live assets). Drop a real photo at the same path
+// to replace one — no code change. See public/images/tiramisu/templates/README.md.
+// The old procedural cust-*.png surfaces remain as an offline fallback only.
+const templateBase = (id: TemplateId) => `/images/tiramisu/templates/${id}/base.png`;
 
 const p = (x: number, y: number): Point => ({ x, y });
 
@@ -151,85 +147,92 @@ export const TIRAMISU_TEMPLATES: Record<TemplateId, TiramisuTemplate> = {
     shape: "square",
     sizeId: "small",
     canvasSize: 900,
-    baseImage: BASE_IMAGE.square,
-    // Safe inset rectangle — small box, least usable area.
-    writablePolygon: [p(0.22, 0.34), p(0.78, 0.34), p(0.78, 0.66), p(0.22, 0.66)],
-    lineRules: { maxLines: 2, maxCharsPerLine: 7, maxTotalChars: 14 },
-    letterRender: letterRender(92, 72, 104),
+    baseImage: templateBase("square-small"),
+    // Tuned to the real cocoa (image cocoa ≈ x[0.326,0.672] y[0.318,0.649]);
+    // inset off the clear rim. Small box → short names, bigger relative letters.
+    writablePolygon: [p(0.35, 0.34), p(0.648, 0.34), p(0.648, 0.628), p(0.35, 0.628)],
+    lineRules: { maxLines: 2, maxCharsPerLine: 7, maxTotalChars: 12 },
+    letterRender: letterRender(70, 44, 92),
   },
   "square-medium": {
     id: "square-medium",
     shape: "square",
     sizeId: "medium",
     canvasSize: 900,
-    baseImage: BASE_IMAGE.square,
-    writablePolygon: [p(0.17, 0.30), p(0.83, 0.30), p(0.83, 0.70), p(0.17, 0.70)],
+    baseImage: templateBase("square-medium"),
+    // Cocoa ≈ x[0.173,0.824] y[0.167,0.822], inset off the rim.
+    writablePolygon: [p(0.21, 0.21), p(0.79, 0.21), p(0.79, 0.79), p(0.21, 0.79)],
     lineRules: { maxLines: 2, maxCharsPerLine: 10, maxTotalChars: 20 },
-    letterRender: letterRender(76, 60, 92),
+    letterRender: letterRender(88, 60, 108),
   },
   "square-large": {
     id: "square-large",
     shape: "square",
     sizeId: "large",
     canvasSize: 900,
-    baseImage: BASE_IMAGE.square,
-    writablePolygon: [p(0.14, 0.27), p(0.86, 0.27), p(0.86, 0.73), p(0.14, 0.73)],
+    baseImage: templateBase("square-large"),
+    // Cocoa ≈ x[0.112,0.89] y[0.112,0.891] (box fills frame), inset off the rim.
+    writablePolygon: [p(0.15, 0.15), p(0.855, 0.15), p(0.855, 0.855), p(0.15, 0.855)],
     lineRules: { maxLines: 3, maxCharsPerLine: 11, maxTotalChars: 28 },
-    letterRender: letterRender(76, 60, 92),
+    letterRender: letterRender(80, 58, 100),
   },
   "heart-medium": {
     id: "heart-medium",
     shape: "heart",
     sizeId: "medium",
     canvasSize: 900,
-    baseImage: BASE_IMAGE.heart,
-    // Narrow near the top cusp, widest across the middle, tapering to the point.
+    baseImage: templateBase("heart-medium"),
+    // Tuned to the real heart cocoa (belt ≈ y0.42 x[0.146,0.848]); stays below
+    // the top notch and above the bottom point, centred on the widest belt.
     writablePolygon: [
-      p(0.36, 0.32),
-      p(0.64, 0.32),
-      p(0.76, 0.46),
-      p(0.60, 0.60),
-      p(0.50, 0.70),
-      p(0.40, 0.60),
-      p(0.24, 0.46),
+      p(0.30, 0.35),
+      p(0.70, 0.35),
+      p(0.77, 0.44),
+      p(0.66, 0.56),
+      p(0.50, 0.64),
+      p(0.34, 0.56),
+      p(0.23, 0.44),
     ],
     lineRules: { maxLines: 2, maxCharsPerLine: 7, maxTotalChars: 14 },
-    letterRender: letterRender(64, 46, 84),
+    letterRender: letterRender(66, 46, 86),
   },
   "heart-large": {
     id: "heart-large",
     shape: "heart",
     sizeId: "large",
     canvasSize: 900,
-    baseImage: BASE_IMAGE.heart,
+    baseImage: templateBase("heart-large"),
+    // Larger heart (belt ≈ y0.35 x[0.115,0.885]); more vertical room for 3 lines,
+    // still clear of the top notch and the bottom point.
     writablePolygon: [
-      p(0.32, 0.29),
-      p(0.68, 0.29),
-      p(0.82, 0.46),
-      p(0.63, 0.63),
-      p(0.50, 0.75),
-      p(0.37, 0.63),
-      p(0.18, 0.46),
+      p(0.27, 0.33),
+      p(0.73, 0.33),
+      p(0.81, 0.45),
+      p(0.66, 0.61),
+      p(0.50, 0.70),
+      p(0.34, 0.61),
+      p(0.19, 0.45),
     ],
     lineRules: { maxLines: 3, maxCharsPerLine: 8, maxTotalChars: 21 },
-    letterRender: letterRender(64, 46, 84),
+    letterRender: letterRender(66, 46, 86),
   },
   "oval-large": {
     id: "oval-large",
     shape: "oval",
     sizeId: "large",
     canvasSize: 900,
-    baseImage: BASE_IMAGE.oval,
-    // Octagon approximating an ellipse: wide belt in the middle, tapered ends.
+    baseImage: templateBase("oval-large"),
+    // Wide oval (belt ≈ y0.50 x[0.061,0.936]); octagon uses the wide middle belt
+    // and stays clear of the top/bottom taper.
     writablePolygon: [
-      p(0.36, 0.26),
-      p(0.64, 0.26),
-      p(0.82, 0.40),
-      p(0.82, 0.60),
-      p(0.64, 0.74),
-      p(0.36, 0.74),
-      p(0.18, 0.60),
-      p(0.18, 0.40),
+      p(0.30, 0.34),
+      p(0.70, 0.34),
+      p(0.86, 0.45),
+      p(0.86, 0.57),
+      p(0.70, 0.68),
+      p(0.30, 0.68),
+      p(0.14, 0.57),
+      p(0.14, 0.45),
     ],
     lineRules: { maxLines: 3, maxCharsPerLine: 12, maxTotalChars: 30 },
     letterRender: letterRender(62, 48, 82),
