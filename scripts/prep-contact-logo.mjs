@@ -45,6 +45,19 @@ for (const w of [360, 720]) {
   await r.clone().webp({ quality: 74, alphaQuality: 85, effort: 6 }).toFile(`public/contact/logo-${w}.webp`);
   await r.clone().avif({ quality: 50, effort: 7 }).toFile(`public/contact/logo-${w}.avif`);
 }
+// Share / search images (JPEG for maximum compatibility with WhatsApp,
+// Facebook and Google): 1200×630 Open Graph card and a square logo.
+const keyedPng = await keyed.clone().png().toBuffer();
+const onDark = async (w, h, logoH, file) => {
+  const logo = await sharp(keyedPng).resize({ height: logoH }).toBuffer();
+  await sharp({ create: { width: w, height: h, channels: 3, background: "#141315" } })
+    .composite([{ input: logo, gravity: "center" }])
+    .jpeg({ quality: 84, mozjpeg: true })
+    .toFile(file);
+};
+await onDark(1200, 630, 540, "public/contact/og.jpg");
+await onDark(512, 512, 340, "public/contact/logo-square.jpg");
+
 if (process.argv[2]) {
   await sharp({ create: { width: W, height: H, channels: 3, background: "#1d1a1b" } })
     .composite([{ input: await keyed.clone().png().toBuffer() }])

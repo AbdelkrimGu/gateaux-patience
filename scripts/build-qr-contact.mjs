@@ -14,8 +14,8 @@ const LANGS = ["fr", "ar", "en"];
 
 const COPY = {
   fr: {
-    title: "Contact | Gâteaux Patience",
-    desc: "Commandez votre gâteau sur mesure à Sidi Bel Abbès : WhatsApp, Instagram, Facebook.",
+    title: "Contact | Gâteaux Patience – Gâteaux sur mesure à Sidi Bel Abbès",
+    desc: "Commandez votre gâteau personnalisé chez Gâteaux Patience, pâtisserie artisanale à Sidi Bel Abbès depuis 2018. WhatsApp : +213 669 59 28 50, Instagram et Facebook.",
     ogLocale: "fr_DZ",
     eyebrow: "Pâtisserie artisanale · depuis 2018",
     headline: "Votre gâteau sur mesure, en un message",
@@ -31,8 +31,8 @@ const COPY = {
     location: "Sidi Bel Abbès, Algérie",
   },
   ar: {
-    title: "تواصل معنا | Gâteaux Patience",
-    desc: "اطلب كعكتك حسب الطلب في سيدي بلعباس عبر واتساب، إنستغرام أو فيسبوك.",
+    title: "تواصل معنا | Gâteaux Patience – كعكات حسب الطلب في سيدي بلعباس",
+    desc: "اطلب كعكتك المخصّصة من Gâteaux Patience، حلويات حرفية في سيدي بلعباس منذ 2018. واتساب: +213 669 59 28 50، إنستغرام وفيسبوك.",
     ogLocale: "ar_DZ",
     eyebrow: "صناعة يدوية · منذ 2018",
     headline: "كعكتك حسب الطلب، برسالة واحدة",
@@ -48,8 +48,8 @@ const COPY = {
     location: "سيدي بلعباس، الجزائر",
   },
   en: {
-    title: "Contact | Gâteaux Patience",
-    desc: "Order your custom cake in Sidi Bel Abbès, Algeria: WhatsApp, Instagram, Facebook.",
+    title: "Contact | Gâteaux Patience – Custom Cakes in Sidi Bel Abbès",
+    desc: "Order your custom cake from Gâteaux Patience, artisan cake designer in Sidi Bel Abbès, Algeria since 2018. WhatsApp: +213 669 59 28 50, Instagram and Facebook.",
     ogLocale: "en_US",
     eyebrow: "Artisan cake design · since 2018",
     headline: "Your custom cake, one message away",
@@ -196,7 +196,64 @@ function page(lang) {
   const c = COPY[lang];
   const waHref = `https://wa.me/${contact.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(c.waMessage)}`;
   const ltr = (s) => `<bdi dir="ltr">${esc(s)}</bdi>`;
-  const alternates = LANGS.map((l) => `<link rel="alternate" hreflang="${l}" href="${SITE}${publicPath(l)}">`).join("");
+  const url = `${SITE}${publicPath(lang)}`;
+  const alternates =
+    LANGS.map((l) => `<link rel="alternate" hreflang="${l}" href="${SITE}${publicPath(l)}">`).join("") +
+    `<link rel="alternate" hreflang="x-default" href="${SITE}/contact">`;
+
+  // schema.org structured data: lets Google tie this page to the business
+  // (local results / knowledge panel): name, phone, city, official socials.
+  // Only verified facts — no opening hours or prices until the owner confirms.
+  const tel = `+${contact.whatsapp.replace(/\D/g, "")}`;
+  const jsonLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Bakery",
+        "@id": `${SITE}/#business`,
+        name: "Gâteaux Patience",
+        alternateName: ["Gateaux Patience", "Gâteaux patience"],
+        description: COPY.fr.desc,
+        url: `${SITE}/`,
+        logo: `${SITE}/contact/logo-square.jpg`,
+        image: `${SITE}/contact/og.jpg`,
+        telephone: tel,
+        foundingDate: contact.founded,
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: "Sidi Bel Abbès",
+          addressRegion: "Sidi Bel Abbès",
+          addressCountry: "DZ",
+        },
+        areaServed: { "@type": "City", name: "Sidi Bel Abbès" },
+        sameAs: [contact.instagram, contact.facebook],
+        contactPoint: {
+          "@type": "ContactPoint",
+          telephone: tel,
+          contactType: "customer service",
+          availableLanguage: ["French", "Arabic", "English"],
+        },
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${SITE}/#website`,
+        url: `${SITE}/`,
+        name: "Gâteaux Patience",
+        publisher: { "@id": `${SITE}/#business` },
+      },
+      {
+        "@type": "ContactPage",
+        "@id": `${url}#webpage`,
+        url,
+        name: c.title,
+        description: c.desc,
+        inLanguage: lang,
+        isPartOf: { "@id": `${SITE}/#website` },
+        about: { "@id": `${SITE}/#business` },
+        primaryImageOfPage: `${SITE}/contact/og.jpg`,
+      },
+    ],
+  }).replace(/</g, "\\u003c");
   const langLinks = LANGS.map(
     (l) =>
       `<a href="/${l}/contact" hreflang="${l}" lang="${l}" aria-label="${LANG_NAMES[l][1]}"${l === lang ? ' aria-current="page"' : ""}>${LANG_NAMES[l][0]}</a>`
@@ -211,14 +268,24 @@ function page(lang) {
 <meta name="description" content="${esc(c.desc)}">
 <meta name="theme-color" content="#141315">
 <link rel="icon" href="data:,">
-<link rel="canonical" href="${SITE}${publicPath(lang)}">${alternates}
+<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
+<link rel="canonical" href="${url}">${alternates}
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Gâteaux Patience">
 <meta property="og:title" content="${esc(c.title)}">
 <meta property="og:description" content="${esc(c.desc)}">
-<meta property="og:url" content="${SITE}${publicPath(lang)}">
+<meta property="og:url" content="${url}">
 <meta property="og:locale" content="${c.ogLocale}">
-<meta property="og:image" content="${SITE}/contact/logo-720.webp">
+${LANGS.filter((l) => l !== lang).map((l) => `<meta property="og:locale:alternate" content="${COPY[l].ogLocale}">`).join("")}
+<meta property="og:image" content="${SITE}/contact/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Gâteaux Patience">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${esc(c.title)}">
+<meta name="twitter:description" content="${esc(c.desc)}">
+<meta name="twitter:image" content="${SITE}/contact/og.jpg">
+<script type="application/ld+json">${jsonLd}</script>
 <style>${minify(CSS)}</style>
 </head>
 <body>
