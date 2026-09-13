@@ -6,7 +6,8 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin", "/api"],
+        // /qr/*.html are the raw files behind /contact (served via rewrite).
+        disallow: ["/admin", "/api", "/qr/"],
       },
       // Allow AI crawlers explicitly
       {

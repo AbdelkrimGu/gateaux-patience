@@ -1,11 +1,8 @@
-export const CONTACT = {
-  phone: "+213 XXX XXX XXX",
-  whatsapp: "+213XXXXXXXXX",
-  facebook: "https://www.facebook.com/gateauxpatience",
-  instagram: "https://www.instagram.com/gateauxpatience",
-  city: "Sidi Bel Abbès, Algérie",
-  founded: "2018",
-};
+import contact from "./contact.json";
+
+// Single source of truth: contact.json is also read by
+// scripts/build-qr-contact.mjs to generate the static /contact page.
+export const CONTACT = contact;
 
 export const CATEGORIES = [
   {
