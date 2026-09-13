@@ -7,7 +7,6 @@ import FeaturedCakes from "@/components/home/FeaturedCakes";
 import CategoriesSection from "@/components/home/CategoriesSection";
 import AboutSection from "@/components/home/AboutSection";
 import HowToOrderSection from "@/components/home/HowToOrderSection";
-import TestimonialsSection from "@/components/home/TestimonialsSection";
 import SocialCTASection from "@/components/home/SocialCTASection";
 import {
   getCategoryImageGroups,
@@ -28,7 +27,8 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "meta" });
 
   return {
-    title: t("home_title"),
+    // home_title already contains the brand — skip the "%s | Gateaux Patience" template.
+    title: { absolute: t("home_title") },
     description: t("home_desc"),
     alternates: {
       canonical: locale === "fr" ? "/" : `/${locale}`,
@@ -57,7 +57,6 @@ export default async function HomePage() {
       <CategoriesSection categories={categories} />
       <AboutSection />
       <HowToOrderSection />
-      <TestimonialsSection />
       <SocialCTASection />
       <Footer />
     </main>

@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import { CONTACT, PHONE_E164, SITE_URL } from "@/lib/constants";
 import "../globals.css";
 
 const playfair = Playfair_Display({
@@ -31,6 +32,39 @@ const greatVibes = Great_Vibes({
   display: "swap",
 });
 
+// schema.org business entity. Same @id as the /contact page's JSON-LD so
+// Google merges them into one business. Only verified facts: add opening
+// hours / price range / exact address here once the owner confirms them.
+const BUSINESS_JSON_LD = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Bakery",
+  "@id": `${SITE_URL}/#business`,
+  name: "Gâteaux Patience",
+  alternateName: ["Gateaux Patience", "Gâteaux patience"],
+  description:
+    "Artisan cake designer creating custom cakes in Sidi Bel Abbès, Algeria since 2018",
+  url: `${SITE_URL}/`,
+  logo: `${SITE_URL}/contact/logo-square.jpg`,
+  image: `${SITE_URL}/contact/og.jpg`,
+  telephone: PHONE_E164,
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Sidi Bel Abbès",
+    addressRegion: "Sidi Bel Abbès",
+    addressCountry: "DZ",
+  },
+  areaServed: { "@type": "City", name: "Sidi Bel Abbès" },
+  servesCuisine: "Patisserie",
+  sameAs: [CONTACT.instagram, CONTACT.facebook],
+  contactPoint: {
+    "@type": "ContactPoint",
+    telephone: PHONE_E164,
+    contactType: "customer service",
+    availableLanguage: ["French", "Arabic", "English"],
+  },
+  foundingDate: CONTACT.founded,
+}).replace(/</g, "\\u003c");
+
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
@@ -45,7 +79,7 @@ export async function generateMetadata({
   const meta = (messages as Record<string, Record<string, string>>)["meta"];
 
   return {
-    title: meta?.home_title || "Gateaux Patience",
+    title: { absolute: meta?.home_title || "Gateaux Patience" },
     description: meta?.home_desc,
   };
 }
@@ -73,53 +107,11 @@ export default async function LocaleLayout({
       className={`${playfair.variable} ${inter.variable} ${cairo.variable} ${greatVibes.variable}`}
     >
       <head>
-        <link rel="canonical" href={`https://gateaux-patience.dz/${locale === "fr" ? "" : locale}`} />
+        {/* Canonical URLs are set per page (metadata.alternates), not here:
+            a layout-level canonical would mark every page as a copy of home. */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Bakery",
-              name: "Gateaux Patience",
-              description:
-                "Artisan cake designer creating custom cakes in Sidi Bel Abbès, Algeria since 2018",
-              url: "https://gateaux-patience.dz",
-              telephone: "+213-XXX-XXX-XXX",
-              address: {
-                "@type": "PostalAddress",
-                addressLocality: "Sidi Bel Abbès",
-                addressCountry: "DZ",
-              },
-              geo: {
-                "@type": "GeoCoordinates",
-                latitude: 35.1896,
-                longitude: -0.6299,
-              },
-              openingHoursSpecification: {
-                "@type": "OpeningHoursSpecification",
-                dayOfWeek: [
-                  "Monday",
-                  "Tuesday",
-                  "Wednesday",
-                  "Thursday",
-                  "Friday",
-                  "Saturday",
-                  "Sunday",
-                ],
-                opens: "08:00",
-                closes: "22:00",
-              },
-              servesCuisine: "Patisserie",
-              priceRange: "$$",
-              hasMap: "https://maps.google.com/?q=Sidi+Bel+Abbes+Algeria",
-              sameAs: [
-                "https://www.facebook.com/gateauxpatience",
-                "https://www.instagram.com/gateauxpatience",
-              ],
-              foundingDate: "2018",
-              image: "https://gateaux-patience.dz/logo.png",
-            }),
-          }}
+          dangerouslySetInnerHTML={{ __html: BUSINESS_JSON_LD }}
         />
       </head>
       <body

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { Phone, MapPin, Heart } from "lucide-react";
-import { CONTACT } from "@/lib/constants";
+import { CONTACT, PHONE_E164 } from "@/lib/constants";
 
 function FacebookIcon() {
   return (
@@ -40,7 +40,6 @@ export default function Footer() {
   const navLinks = [
     { href: `${prefix}/`, label: tNav("home") },
     { href: `${prefix}/galerie`, label: tNav("gallery") },
-    { href: `${prefix}/a-propos`, label: tNav("about") },
     { href: `${prefix}/contact`, label: tNav("contact") },
   ];
 
@@ -126,7 +125,8 @@ export default function Footer() {
               <li className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse justify-end" : ""}`}>
                 <Phone size={14} className="text-rose shrink-0" />
                 <a
-                  href={`tel:${CONTACT.phone}`}
+                  href={`tel:${PHONE_E164}`}
+                  dir="ltr"
                   className="text-white/60 hover:text-white text-sm transition-colors"
                 >
                   {CONTACT.phone}
@@ -152,7 +152,7 @@ export default function Footer() {
                 className={`flex items-center gap-2 text-white/60 hover:text-white text-sm transition-colors ${isRTL ? "flex-row-reverse justify-end" : ""}`}
               >
                 <FacebookIcon />
-                <span>Gateaux Patience</span>
+                <span>{CONTACT.facebookName}</span>
               </a>
               <a
                 href={CONTACT.instagram}
@@ -161,7 +161,7 @@ export default function Footer() {
                 className={`flex items-center gap-2 text-white/60 hover:text-white text-sm transition-colors ${isRTL ? "flex-row-reverse justify-end" : ""}`}
               >
                 <InstagramIcon />
-                <span>@gateauxpatience</span>
+                <span dir="ltr">{CONTACT.instagramHandle}</span>
               </a>
               <a
                 href={`https://wa.me/${CONTACT.whatsapp.replace(/\D/g, "")}`}

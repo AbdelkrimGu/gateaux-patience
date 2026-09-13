@@ -311,7 +311,7 @@ export default function CakeDetailClient({
                   {lbl("order")}
                 </a>
                 <a
-                  href={`tel:${CONTACT.phone}`}
+                  href={`tel:${CONTACT.phone.replace(/\s/g, "")}`}
                   className="flex items-center justify-center gap-2 py-4 px-6 rounded-2xl bg-surface-alt text-charcoal font-semibold hover:bg-rose hover:text-white transition-colors border border-border text-base"
                 >
                   <Phone size={18} />

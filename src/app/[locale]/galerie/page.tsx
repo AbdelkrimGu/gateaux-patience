@@ -19,6 +19,10 @@ export async function generateMetadata({
   return {
     title: t("gallery_title"),
     description: t("gallery_desc"),
+    alternates: {
+      canonical: locale === "fr" ? "/galerie" : `/${locale}/galerie`,
+      languages: { fr: "/galerie", ar: "/ar/galerie", en: "/en/galerie" },
+    },
   };
 }
 

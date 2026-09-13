@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/constants";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://gateaux-patience.dz"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Gateaux Patience | Pâtisserie Artisanale à Sidi Bel Abbès",
     template: "%s | Gateaux Patience",
@@ -22,17 +23,21 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Gateaux Patience" }],
   creator: "Gateaux Patience",
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
+  },
   openGraph: {
     type: "website",
     locale: "fr_DZ",
-    url: "https://gateaux-patience.dz",
+    url: SITE_URL,
     siteName: "Gateaux Patience",
     title: "Gateaux Patience | Pâtisserie Artisanale à Sidi Bel Abbès",
     description:
       "Gâteaux personnalisés et pâtisseries artisanales à Sidi Bel Abbès, Algérie.",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/contact/og.jpg",
         width: 1200,
         height: 630,
         alt: "Gateaux Patience - Pâtisserie Artisanale",
@@ -43,6 +48,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Gateaux Patience",
     description: "Pâtisserie artisanale à Sidi Bel Abbès, Algérie",
+    images: ["/contact/og.jpg"],
   },
   robots: {
     index: true,

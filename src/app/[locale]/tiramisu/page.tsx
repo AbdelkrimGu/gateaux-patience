@@ -23,7 +23,14 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const m = META[locale] ?? META.fr;
-  return { title: m.title, description: m.desc };
+  return {
+    title: m.title,
+    description: m.desc,
+    alternates: {
+      canonical: locale === "fr" ? "/tiramisu" : `/${locale}/tiramisu`,
+      languages: { fr: "/tiramisu", ar: "/ar/tiramisu", en: "/en/tiramisu" },
+    },
+  };
 }
 
 export default function TiramisuPage() {

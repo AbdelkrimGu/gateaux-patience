@@ -9,7 +9,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 
 const contact = JSON.parse(readFileSync(new URL("../src/lib/contact.json", import.meta.url), "utf8"));
-const SITE = (process.env.NEXT_PUBLIC_SITE_URL || "https://gateauxpatience.com").replace(/\/$/, "");
+const SITE = contact.siteUrl.replace(/\/$/, "");
 const LANGS = ["fr", "ar", "en"];
 
 const COPY = {
@@ -267,7 +267,7 @@ function page(lang) {
 <title>${esc(c.title)}</title>
 <meta name="description" content="${esc(c.desc)}">
 <meta name="theme-color" content="#141315">
-<link rel="icon" href="data:,">
+<link rel="icon" href="/icon.png" type="image/png">
 <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
 <link rel="canonical" href="${url}">${alternates}
 <meta property="og:type" content="website">

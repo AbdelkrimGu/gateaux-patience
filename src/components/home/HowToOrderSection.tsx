@@ -4,6 +4,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useInView } from "react-intersection-observer";
 import { Search, MessageCircle, Palette, PartyPopper } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WHATSAPP_URL } from "@/lib/constants";
 
 const STEPS = [
   { icon: Search, color: "bg-sky-100 text-sky-600", number: "01" },
@@ -100,7 +101,7 @@ export default function HowToOrderSection() {
         {/* CTA */}
         <div className={cn("flex mt-16", isRTL ? "justify-end" : "justify-center")}>
           <a
-            href="https://wa.me/213XXXXXXXXX"
+            href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-primary px-8 py-4 text-base"

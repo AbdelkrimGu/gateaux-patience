@@ -68,7 +68,7 @@ export default function SocialCTASection() {
     },
     {
       name: t("call"),
-      href: `tel:${CONTACT.phone}`,
+      href: `tel:${CONTACT.phone.replace(/\s/g, "")}`,
       icon: <Phone size={18} />,
       color: "bg-rose hover:bg-rose-dark",
     },

@@ -4,6 +4,14 @@ import contact from "./contact.json";
 // scripts/build-qr-contact.mjs to generate the static /contact page.
 export const CONTACT = contact;
 
+/** Production origin, no trailing slash — used for canonical URLs, sitemap, JSON-LD. */
+export const SITE_URL = contact.siteUrl;
+
+/** E.164 phone for tel: links and structured data, e.g. "+213669592850". */
+export const PHONE_E164 = `+${contact.whatsapp.replace(/\D/g, "")}`;
+
+export const WHATSAPP_URL = `https://wa.me/${contact.whatsapp.replace(/\D/g, "")}`;
+
 export const CATEGORIES = [
   {
     id: "birthday-adults-women",
@@ -139,41 +147,5 @@ export const MAIN_CATEGORIES = [
     icon: "🍮",
     gradient: "from-red-300 to-rose-500",
     image: "/categories/desserts.jpg",
-  },
-];
-
-export const TESTIMONIALS = [
-  {
-    id: 1,
-    name: "Amira B.",
-    rating: 5,
-    text_fr:
-      "Un gâteau absolument magnifique pour l'anniversaire de ma fille ! Patience a tout mis en œuvre pour réaliser nos souhaits. Je recommande vivement !",
-    text_ar: "كعكة رائعة لعيد ميلاد ابنتي! الصبر بذلت كل جهدها لتحقيق رغباتنا. أوصي بشدة!",
-    text_en: "An absolutely stunning cake for my daughter's birthday! Patience did everything to fulfill our wishes. Highly recommend!",
-    occasion: "Anniversaire enfant",
-    city: "Sidi Bel Abbès",
-  },
-  {
-    id: 2,
-    name: "Karim M.",
-    rating: 5,
-    text_fr:
-      "Le gâteau de mariage de nos rêves ! Superbe présentation, goût exceptionnel. Tous nos invités étaient ébahis.",
-    text_ar: "كعكة زفافنا من أحلامنا! عرض رائع، طعم استثنائي. أُذهل جميع ضيوفنا.",
-    text_en: "The wedding cake of our dreams! Superb presentation, exceptional taste. All our guests were amazed.",
-    occasion: "Mariage",
-    city: "Sidi Bel Abbès",
-  },
-  {
-    id: 3,
-    name: "Fatima Z.",
-    rating: 5,
-    text_fr:
-      "Professionnalisme et créativité au rendez-vous ! Mon gâteau de remise de diplôme était parfait, exactement comme je l'avais imaginé.",
-    text_ar: "الاحترافية والإبداع في الموعد! كعكة تخرجي كانت مثالية، تماماً كما تصورتها.",
-    text_en: "Professionalism and creativity delivered! My graduation cake was perfect, exactly as I imagined it.",
-    occasion: "Diplôme",
-    city: "Sidi Bel Abbès",
   },
 ];

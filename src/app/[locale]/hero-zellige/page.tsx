@@ -6,7 +6,6 @@ import FeaturedCakes from "@/components/home/FeaturedCakes";
 import CategoriesSection from "@/components/home/CategoriesSection";
 import AboutSection from "@/components/home/AboutSection";
 import HowToOrderSection from "@/components/home/HowToOrderSection";
-import TestimonialsSection from "@/components/home/TestimonialsSection";
 import SocialCTASection from "@/components/home/SocialCTASection";
 import { getFeaturedCakes } from "@/lib/cakes-data";
 import { getCategories } from "@/lib/categories-data";
@@ -33,7 +32,6 @@ export default async function HeroZelligePreviewPage() {
       <CategoriesSection categories={categories} />
       <AboutSection />
       <HowToOrderSection />
-      <TestimonialsSection />
       <SocialCTASection />
       <Footer />
     </main>

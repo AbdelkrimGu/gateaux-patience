@@ -19,6 +19,10 @@ export async function generateMetadata({
   return {
     title: `${t.title} | Gateaux Patience`,
     description: t.description.slice(0, 160),
+    alternates: {
+      canonical: locale === "fr" ? `/galerie/${slug}` : `/${locale}/galerie/${slug}`,
+      languages: { fr: `/galerie/${slug}`, ar: `/ar/galerie/${slug}`, en: `/en/galerie/${slug}` },
+    },
     openGraph: cake.images[0] ? { images: [{ url: cake.images[0] }] } : undefined,
   };
 }
