@@ -9,7 +9,34 @@ import { WORDMARK } from "./wordmark-paths";
   <Wordmark layout="stacked" />   two lines (mobile header)
   <Wordmark layout="inline" />    one line (desktop header)
   <CrownMark />                    the disc alone (favicon-like uses)
+
+  The two glyph paths (~9 KB) are emitted ONCE per document by <WordmarkDefs />
+  (in src/app/[locale]/layout.tsx); every wordmark draws them with <use>, so
+  the mobile + desktop header copies no longer inline the paths twice in the
+  HTML and twice again in the RSC payload. A page rendered outside that
+  layout must render <WordmarkDefs /> itself.
 */
+
+const L1 = "gp-wm-l1";
+const L2 = "gp-wm-l2";
+
+/** Hidden sprite with the wordmark glyph outlines. Render once per document. */
+export function WordmarkDefs() {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      width="0"
+      height="0"
+      style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
+    >
+      <defs>
+        <path id={L1} d={WORDMARK.line1} />
+        <path id={L2} d={WORDMARK.line2} />
+      </defs>
+    </svg>
+  );
+}
 
 export function CrownMark({ className, title }: { className?: string; title?: string }) {
   return (
@@ -46,8 +73,8 @@ export function WordmarkText({
       aria-hidden="true"
       focusable="false"
     >
-      <path d={WORDMARK.line1} />
-      <path d={WORDMARK.line2} transform={`translate(${v.line2Dx} ${v.line2Dy})`} />
+      <use href={`#${L1}`} />
+      <use href={`#${L2}`} transform={`translate(${v.line2Dx} ${v.line2Dy})`} />
     </svg>
   );
 }

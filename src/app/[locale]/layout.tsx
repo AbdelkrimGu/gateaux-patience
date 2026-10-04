@@ -7,17 +7,23 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { asLocale } from "@/i18n/locale";
 import { CONTACT, PHONE_E164, SITE_URL } from "@/lib/constants";
+import { WordmarkDefs } from "@/components/ui/Wordmark";
+import { DEFAULT_OG_IMAGE, SITE_NAME } from "@/lib/seo";
 import "../globals.css";
 
 /*
   Fonts (DESIGN.md amendment 6): max two families per locale.
-    FR/EN: Dela Gothic One (display) + Readex Pro latin (body)
-    AR:    Lalezar (display) + Readex Pro arabic (+ latin for digits/brand)
-  Only the current locale's variables are put on <html>, so a page never
-  references (and the browser never downloads) the other locale's display
-  face. next/font preloads every font declared in a layout on every route
-  under it, so only Readex latin (needed by all three locales) is preloaded;
-  the display faces swap in from the stylesheet (size-adjusted fallbacks).
+    FR/EN: Dela Gothic One (display) + Readex Pro (body)
+    AR:    Lalezar (display) + Readex Pro
+  ONE Readex instance: its CSS carries every unicode-range face (arabic,
+  latin-ext, latin), so Arabic text gets the Arabic slice on any locale and
+  the browser only downloads the slices a page actually uses. Only the latin
+  slice is preloaded (`subsets`). A second instance duplicated the latin
+  download (09 major 7).
+  Lalezar (arabic unicode-range only, never preloaded) is declared on every
+  locale as --font-display-ar, so an Arabic name typed on an FR/EN page can
+  use it in the ring/name stacks; it is only fetched when Arabic glyphs render.
+  Dela is FR/EN only: AR pages never reference it.
 */
 // Dela is self-hosted as a 14 KB Latin subset (scripts/build-display-font.mjs):
 // via next/font/google it drags ~120 Japanese unicode-range @font-face rules
@@ -42,17 +48,11 @@ const readex = Readex_Pro({
   variable: "--font-readex",
   display: "swap",
 });
-const readexArabic = Readex_Pro({
-  subsets: ["arabic"],
-  variable: "--font-readex-ar",
-  display: "swap",
-  preload: false,
-});
 
 const FONT_CLASSES = {
-  fr: `${dela.variable} ${readex.variable}`,
-  en: `${dela.variable} ${readex.variable}`,
-  ar: `${lalezar.variable} ${readexArabic.variable} ${readex.variable}`,
+  fr: `${dela.variable} ${lalezar.variable} ${readex.variable}`,
+  en: `${dela.variable} ${lalezar.variable} ${readex.variable}`,
+  ar: `${lalezar.variable} ${readex.variable}`,
 } as const;
 
 // schema.org business entity. Same @id as the /contact page's JSON-LD so
@@ -103,10 +103,27 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale: asLocale(locale), namespace: "meta" });
+  const l = asLocale(locale);
+  const t = await getTranslations({ locale: l, namespace: "meta" });
+  // Fallback for routes without their own metadata (the localized 404):
+  // localized title/description/og, no canonical or og:url.
   return {
     title: { absolute: t("home_title") },
     description: t("home_desc"),
+    openGraph: {
+      type: "website",
+      siteName: SITE_NAME,
+      locale: { fr: "fr_DZ", ar: "ar_DZ", en: "en_US" }[l],
+      title: t("home_title"),
+      description: t("home_desc"),
+      images: [DEFAULT_OG_IMAGE],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("home_title"),
+      description: t("home_desc"),
+      images: [DEFAULT_OG_IMAGE.url],
+    },
   };
 }
 
@@ -135,10 +152,9 @@ export default async function LocaleLayout({
       </head>
       <body>
         {/* No NextIntlClientProvider here: use-intl on the client is ~12 KB gz.
-            Translate in server components and pass strings as props; a client
-            island that truly needs useTranslations() wraps itself in
-            <IntlIsland namespaces={[...]}>. No global MotionProvider either
-            (~11 KB gz): islands that use `m` wrap themselves. */}
+            Translate in server components and pass strings as props. No
+            global motion provider either: CSS first (DESIGN.md amend. 9). */}
+        <WordmarkDefs />
         {children}
       </body>
     </html>
