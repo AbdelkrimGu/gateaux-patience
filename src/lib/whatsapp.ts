@@ -5,6 +5,10 @@
 //                      name: "Ines", date: "2026-11-02", guests: 20,
 //                      page: "/galerie/gateau-luxe-blanc-ivoire" })
 //
+//   // Filtered gallery (?c=wedding): "…un gâteau pour un mariage ou des fiançailles."
+//   buildWhatsAppUrl({ locale, kind: "general", category: "wedding",
+//                      page: "/galerie?c=wedding" })
+//
 // Message = greeting, what they want, the brief (name / date / guests) and the
 // page link. Date and guests are always asked (with "…" when unknown) instead
 // of quoting prices. Templates live in messages/<locale>/whatsapp.json.
@@ -12,6 +16,7 @@
 // of templates to the client).
 
 import { CONTACT, SITE_URL } from "./constants";
+import { occasionFor, type Occasion } from "./piping";
 import fr from "../../messages/fr/whatsapp.json";
 import ar from "../../messages/ar/whatsapp.json";
 import en from "../../messages/en/whatsapp.json";
@@ -22,6 +27,11 @@ export type WhatsAppKind = "general" | "cake" | "tiramisu" | "sweets";
 export interface WhatsAppOptions {
   locale: WhatsAppLocale | string;
   kind: WhatsAppKind;
+  /** kind "general" only: say what the cake is for. `occasion` wins over
+   *  `category` (a gallery category slug, e.g. the ?c= filter). Categories
+   *  without a known occasion keep the generic sentence. */
+  occasion?: Occasion;
+  category?: string | null;
   /** Required for kind "cake" (falls back to "general" without it). */
   cake?: { title: string; ref: string };
   /** Name to pipe on the cake / letters on the tiramisu. */
@@ -37,6 +47,14 @@ export interface WhatsAppOptions {
 }
 
 type Templates = typeof fr;
+
+/** Gallery category slug -> occasion, or null when the slug says nothing. */
+export function occasionOfCategory(category: string | null | undefined): Occasion | null {
+  if (!category || category === "all") return null;
+  const o = occasionFor(category);
+  if (o !== "birthday") return o;
+  return /^(birthday|anniversaire)/.test(category) ? "birthday" : null;
+}
 const TEMPLATES: Record<WhatsAppLocale, Templates> = { fr, ar, en };
 
 const WA_NUMBER = CONTACT.whatsapp.replace(/\D/g, "");
@@ -81,10 +99,13 @@ export function buildWhatsAppMessage(opts: WhatsAppOptions): string {
   const kind = opts.kind === "cake" && !opts.cake ? "general" : opts.kind;
 
   const lines: string[] = [t.greeting];
+  const occasion = kind === "general" ? (opts.occasion ?? occasionOfCategory(opts.category)) : null;
   lines.push(
     kind === "cake" && opts.cake
       ? fill(t.cake, { title: opts.cake.title.trim(), ref: opts.cake.ref }, rtl)
-      : t[kind]
+      : occasion
+        ? t.occasion[occasion]
+        : t[kind]
   );
 
   const name = opts.name?.trim();
@@ -99,7 +120,9 @@ export function buildWhatsAppMessage(opts: WhatsAppOptions): string {
   lines.push(guests ? fill(t.guests, { guests }, rtl) : fill(t.guests, { guests: t.blank }, false));
 
   if (opts.extra?.length) lines.push(...opts.extra.filter(Boolean));
-  if (opts.page) lines.push(fill(t.link, { url: absolute(opts.page, locale) }, rtl));
+  // Never isolate the URL: linkifiers can swallow U+2069 into it (-> 404).
+  // It sits alone at the end of its own line, so the bidi layout is fine.
+  if (opts.page) lines.push(fill(t.link, { url: absolute(opts.page, locale) }, false));
   return lines.join("\n");
 }
 

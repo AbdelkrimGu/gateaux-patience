@@ -1,6 +1,12 @@
 {
   "greeting": "Bonjour Gateaux Patience !",
   "general": "Je voudrais commander un gâteau personnalisé.",
+  "occasion": {
+    "wedding": "Je voudrais commander un gâteau pour un mariage ou des fiançailles.",
+    "birthday": "Je voudrais commander un gâteau d’anniversaire personnalisé.",
+    "birth": "Je voudrais commander un gâteau personnalisé pour une naissance.",
+    "success": "Je voudrais commander un gâteau personnalisé pour fêter une réussite."
+  },
   "cake": "Je voudrais un gâteau comme « {title} » (réf. {ref}).",
   "tiramisu": "Je voudrais commander un tiramisu personnalisé.",
   "sweets": "Je voudrais des douceurs de fête (cakesicles, cupcakes, cake pops).",
