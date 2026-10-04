@@ -10,6 +10,7 @@ import { HomeStickyBar } from "@/components/home/LiveOrder";
 import { pickHomeCakes } from "@/components/home/pick-cakes";
 import { getAllPublishedCakes } from "@/lib/cakes-data";
 import { CONTACT, PHONE_LOCAL } from "@/lib/constants";
+import { ogImage, pageMetadata } from "@/lib/seo";
 
 // ISR: served from cache, refreshed every 5 min and immediately when the
 // admin saves a cake/category (src/lib/revalidate.ts).
@@ -17,17 +18,16 @@ export const revalidate = 300;
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const locale = asLocale((await params).locale);
-  const t = await getTranslations({ locale, namespace: "home" });
-
-  return {
-    // meta_title already contains the brand: skip the "%s | Gateaux Patience" template.
-    title: { absolute: t("meta_title") },
+  const [t, cakes] = await Promise.all([getTranslations({ locale, namespace: "home" }), getAllPublishedCakes()]);
+  const hero = pickHomeCakes(cakes).hero;
+  // meta_title already contains the brand (no "%s | Gateaux Patience" template).
+  return pageMetadata({
+    locale,
+    path: "/",
+    title: t("meta_title"),
     description: t("meta_desc", { year: CONTACT.founded }),
-    alternates: {
-      canonical: locale === "fr" ? "/" : `/${locale}`,
-      languages: { fr: "/", ar: "/ar", en: "/en" },
-    },
-  };
+    image: ogImage(hero?.images[0]),
+  });
 }
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {

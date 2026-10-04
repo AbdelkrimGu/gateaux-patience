@@ -174,3 +174,20 @@ export async function getAllPublishedSlugs(): Promise<{ slug: string }[]> {
     fail("getAllPublishedSlugs", err);
   }
 }
+
+/** Sitemap rows: every published slug with its last edit (ISO string). */
+export async function getSitemapCakes(): Promise<{ slug: string; updatedAt?: string }[]> {
+  try {
+    const col = await getCakesCollection();
+    const docs = await col
+      .find({ published: true }, { projection: { _id: 0, slug: 1, updatedAt: 1, createdAt: 1 } })
+      .sort({ createdAt: -1 })
+      .toArray();
+    return docs.map((d) => {
+      const doc = d as { slug: string; updatedAt?: string; createdAt?: string };
+      return { slug: doc.slug, updatedAt: doc.updatedAt || doc.createdAt };
+    });
+  } catch (err) {
+    fail("getSitemapCakes", err);
+  }
+}
