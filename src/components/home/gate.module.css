@@ -248,8 +248,14 @@
       grid-column: 1;
       grid-row: 2;
       align-self: start;
+      /* Same height on the three cards (two lines of title + two of
+         text), so the scalloped seams line up across the row. */
+      min-height: 158px;
       padding: 18px 0 30px;
       padding-inline-start: 28px;
+    }
+    .copy:lang(ar) {
+      min-height: 182px;
     }
     .name:lang(ar) {
       font-size: 32px;
