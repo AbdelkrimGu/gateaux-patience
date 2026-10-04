@@ -1,0 +1,70 @@
+/* Mobile menu sheet: a modal <dialog> sliding in from the inline end.
+   Without @starting-style support it simply appears (progressive). */
+
+/* Layered so Tailwind utilities passed via className can override it
+   (unlayered CSS would beat every utility). */
+@layer components {
+  .sheet {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: auto;
+    inset-inline-end: 0;
+    margin: 0;
+    width: min(86vw, 380px);
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    padding: 0;
+    border: 0;
+    background: var(--color-sucre);
+    color: var(--color-paillette);
+    overscroll-behavior: contain;
+  }
+  .sheet::backdrop {
+    background: rgb(22 19 29 / 0.45);
+  }
+  .panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    padding: 8px var(--gutter) calc(24px + env(safe-area-inset-bottom));
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .sheet {
+      transition:
+        translate var(--d-base) var(--ease-out),
+        overlay var(--d-base) allow-discrete,
+        display var(--d-base) allow-discrete;
+    }
+    .sheet:not([open]) {
+      translate: 100% 0;
+    }
+    .sheet::backdrop {
+      transition:
+        opacity var(--d-base) var(--ease-out),
+        overlay var(--d-base) allow-discrete,
+        display var(--d-base) allow-discrete;
+    }
+    .sheet:not([open])::backdrop {
+      opacity: 0;
+    }
+    @starting-style {
+      .sheet[open] {
+        translate: 100% 0;
+      }
+      .sheet[open]::backdrop {
+        opacity: 0;
+      }
+    }
+    :global([dir="rtl"]) .sheet:not([open]) {
+      translate: -100% 0;
+    }
+    @starting-style {
+      :global([dir="rtl"]) .sheet[open] {
+        translate: -100% 0;
+      }
+    }
+  }
+}
+

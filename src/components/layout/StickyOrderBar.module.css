@@ -1,0 +1,44 @@
+
+/* Layered so Tailwind utilities passed via className can override it
+   (unlayered CSS would beat every utility). */
+@layer components {
+  .bar {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    gap: 8px;
+    padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom));
+    background: var(--color-sucre);
+    box-shadow: 0 -1px 0 rgb(22 19 29 / 0.08);
+  }
+  @media (min-width: 900px) {
+    .bar {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: scroll()) {
+      .reveal {
+        animation: gp-bar-in linear both;
+        animation-timeline: scroll(root);
+        animation-range: 420px 520px;
+      }
+      /* Keyboard users tabbing into it get it on screen. */
+      .reveal:focus-within {
+        animation: none;
+      }
+    }
+  }
+}
+
+@keyframes gp-bar-in {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: none;
+  }
+}

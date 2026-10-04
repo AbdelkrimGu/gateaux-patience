@@ -1,0 +1,101 @@
+/* La bordure (B §2): plate + scalloped sugar board + piped ring lettering.
+   Geometry in SVG user units: plate = 0..300 × 0..401, board/ring viewBox
+   -40 0 380 446, so the board overhangs the plate by 13.333% each side and
+   46 units (15.3% of the plate width) below it. */
+
+/* Layered so Tailwind utilities passed via className can override it
+   (unlayered CSS would beat every utility). */
+@layer components {
+  .board {
+    position: relative;
+    isolation: isolate;
+    width: 100%;
+    /* room for the board's overhang under the plate */
+    margin-block-end: 15.4%;
+  }
+
+  .scallop,
+  .ring {
+    position: absolute;
+    top: 0;
+    inset-inline-start: -13.333%;
+    width: 126.666%;
+    height: auto;
+    overflow: visible;
+  }
+  .scallop {
+    z-index: -1;
+  }
+  .scallop path {
+    fill: var(--color-dragee);
+  }
+  .ring {
+    pointer-events: none;
+    color: var(--color-framboise);
+  }
+  .ring text {
+    font-family: var(--font-display);
+    font-weight: 400;
+    fill: currentColor;
+  }
+
+  .plate {
+    position: relative;
+    aspect-ratio: 718 / 960;
+    border-radius: var(--radius-plate);
+    overflow: hidden;
+    background: var(--tint, var(--color-dragee));
+  }
+  .plate img {
+    object-fit: cover;
+    filter: saturate(1.06) contrast(1.04) brightness(1.02);
+  }
+
+  .tag {
+    position: absolute;
+    top: 14px;
+    inset-inline-start: -12px;
+    z-index: 1;
+  }
+
+  /* Écrin tone (weddings, DESIGN.md amendment 1): copper on paillette. */
+  .ecrin .scallop path {
+    fill: #221c2a;
+    stroke: rgb(196 134 74 / 0.45);
+    stroke-width: 1;
+  }
+  .ecrin .ring {
+    color: var(--color-cuivre);
+  }
+  .ecrin .plate {
+    box-shadow: 0 0 0 1px rgb(196 134 74 / 0.45);
+  }
+
+  /* Signature: the lettering is piped as an outline, then set (B §8).
+     The whole run is stroked, so Arabic is never split into letters. */
+  @media (prefers-reduced-motion: no-preference) {
+    .pipe text {
+      stroke: currentColor;
+      stroke-width: 1.1;
+      stroke-dasharray: var(--dash, 180);
+      stroke-dashoffset: var(--dash, 180);
+      fill-opacity: 0;
+      animation:
+        gp-pipe var(--d-pipe) var(--ease-pipe) var(--pipe-delay, 350ms) forwards,
+        gp-set 420ms ease-out calc(var(--pipe-delay, 350ms) + var(--d-pipe) - 300ms) forwards;
+    }
+  }
+}
+
+@keyframes gp-pipe {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes gp-set {
+  to {
+    fill-opacity: 1;
+    stroke-width: 0;
+  }
+}
