@@ -1,49 +1,157 @@
-import { Suspense } from "react";
+import { ViewTransition } from "react";
+import { preload } from "react-dom";
 import type { Metadata } from "next";
+import { getImageProps } from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { asLocale } from "@/i18n/locale";
-import { IntlIsland } from "@/components/layout/IntlIsland";
+import { localizePath } from "@/i18n/paths";
 import { StickyOrderBar } from "@/components/layout/StickyOrderBar";
-import GalleryClient from "@/components/gallery/GalleryClient";
+import { Button } from "@/components/ui/Button";
+import { CakeCard } from "@/components/ui/CakeCard";
+import { GalleryFilter, GalleryFilterStyles, type FilterChip } from "@/components/gallery/GalleryFilter";
+import { CardTransitionScope } from "@/components/gallery/CardTransitionScope";
+import { categoriesWithCakes } from "@/components/gallery/catalog";
 import { getAllPublishedCakes } from "@/lib/cakes-data";
 import { getCategories } from "@/lib/categories-data";
+import { assertUniqueRefs } from "@/lib/cake-ref";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { ViewTransitionStyles } from "@/components/gallery/ViewTransitionStyles";
 
-// ISR (see src/lib/revalidate.ts). Keep this page static: read the ?c=
-// filter on the client (useSearchParams inside <Suspense>), not from the
-// `searchParams` prop, which would make every request dynamic.
+// ISR (see src/lib/revalidate.ts). Keep this page static: the ?c= filter is
+// read on the client (GalleryFilter), never from `searchParams` here.
 export const revalidate = 300;
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
-  const { locale } = await params;
-  const t = await getTranslations({ locale: asLocale(locale), namespace: "meta" });
+/** Same as CakeCard's default `sizes` (2 cols phone, 4 cols ≥900). */
+const CARD_SIZES = "(min-width: 1240px) 290px, (min-width: 900px) 23vw, 46vw";
+/** Above the fold: one row on desktop, two rows on a phone. */
+const EAGER = 4;
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const locale = asLocale((await params).locale);
+  const t = await getTranslations({ locale, namespace: "gallery" });
   return {
-    title: t("gallery_title"),
-    description: t("gallery_desc"),
+    title: { absolute: t("meta_title") },
+    description: t("meta_desc"),
     alternates: {
       canonical: locale === "fr" ? "/galerie" : `/${locale}/galerie`,
-      languages: { fr: "/galerie", ar: "/ar/galerie", en: "/en/galerie" },
+      languages: {
+        fr: "/galerie",
+        ar: "/ar/galerie",
+        en: "/en/galerie",
+        "x-default": "/galerie",
+      },
     },
+    openGraph: { title: t("meta_title"), description: t("meta_desc") },
   };
 }
 
-// WAVE 2b (gallery agent): GalleryClient is the OLD gallery. Replace it.
 export default async function GalleriePage({ params }: { params: Promise<{ locale: string }> }) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
-  const [cakes, categories] = await Promise.all([getAllPublishedCakes(), getCategories()]);
+  const [cakes, categories, t] = await Promise.all([
+    getAllPublishedCakes(),
+    getCategories(),
+    getTranslations({ locale, namespace: "gallery" }),
+  ]);
+  assertUniqueRefs(cakes);
+
+  const cats = categoriesWithCakes(cakes, categories, locale);
+  const listed = new Set(cats.map((c) => c.slug));
+  const chips: FilterChip[] = [
+    {
+      slug: null,
+      label: t("all"),
+      count: cakes.length,
+      href: localizePath(locale, "/galerie"),
+    },
+    ...cats.map((c) => ({
+      slug: c.slug,
+      label: c.label,
+      count: c.count,
+      dot: c.dot,
+      href: localizePath(locale, `/galerie?c=${encodeURIComponent(c.slug)}`),
+    })),
+  ];
+  const countLabels: Record<string, string> = {
+    "": t("count", { count: cakes.length }),
+  };
+  for (const c of cats) countLabels[c.slug] = t("count", { count: c.count });
+
+  // The first card is the phone LCP: preload it at high priority with the
+  // exact srcset CakeCard's next/image will request (CakeCard itself only
+  // offers `eager`).
+  const first = cakes[0]?.images[0];
+  if (first) {
+    const { props } = getImageProps({
+      src: first,
+      alt: "",
+      fill: true,
+      sizes: CARD_SIZES,
+    });
+    preload(props.src, {
+      as: "image",
+      imageSrcSet: props.srcSet,
+      imageSizes: props.sizes,
+      fetchPriority: "high",
+    });
+  }
+
   return (
-    <>
-      <IntlIsland namespaces={[]}>
-        <Suspense>
-          <GalleryClient cakes={cakes} categories={categories} />
-        </Suspense>
-      </IntlIsland>
+    <ViewTransition default="none">
+      <ViewTransitionStyles />
+      <div className="pb-16 desk:pb-24">
+        <header className="wrap pt-6 pb-2 desk:pt-14 desk:pb-4">
+          <h1 className="type-h1">{t("title")}</h1>
+          <p className="type-lead mt-3 desk:mt-5">{t("intro")}</p>
+        </header>
+
+        <GalleryFilter chips={chips} filterLabel={t("filter_label")} countLabels={countLabels}>
+          <CardTransitionScope>
+            <ul className="grid grid-cols-2 gap-x-3 gap-y-6 desk:grid-cols-4 desk:gap-x-6 desk:gap-y-10">
+              {cakes.map((cake, i) => (
+                <li
+                  key={cake.id}
+                  data-cat={listed.has(cake.category) ? cake.category : "_"}
+                  // Below the fold: skip layout/paint until near the viewport.
+                  className={i < EAGER ? undefined : "[contain-intrinsic-size:auto_420px] [content-visibility:auto]"}
+                >
+                  <CakeCard cake={cake} locale={locale} as="h2" eager={i < EAGER} sizes={CARD_SIZES} />
+                </li>
+              ))}
+            </ul>
+          </CardTransitionScope>
+        </GalleryFilter>
+        <GalleryFilterStyles slugs={[...listed]} />
+
+        <section aria-labelledby="gallery-closing" className="wrap mt-16 desk:mt-24">
+          <div className="grid gap-6 rounded-band bg-dragee px-6 py-8 desk:grid-cols-[1.2fr_1fr] desk:items-end desk:gap-12 desk:px-12 desk:py-12">
+            <div>
+              <h2 id="gallery-closing" className="type-h2 max-w-[16ch]">
+                {t("closing_title")}
+              </h2>
+              <p className="type-lead mt-3">{t("closing_text")}</p>
+            </div>
+            <div className="flex flex-col items-start gap-4">
+              <Button
+                href={buildWhatsAppUrl({
+                  locale,
+                  kind: "general",
+                  page: "/galerie",
+                })}
+                icon="whatsapp"
+                className="w-full desk:w-auto"
+              >
+                {t("closing_cta")}
+              </Button>
+              <p className="type-meta mt-2 text-ink-soft">{t("closing_tiramisu_text")}</p>
+              <Button href="/tiramisu" variant="ghost" size="sm" iconEnd="chevron" className="-mt-1">
+                {t("closing_tiramisu")}
+              </Button>
+            </div>
+          </div>
+        </section>
+      </div>
       <StickyOrderBar waHref={buildWhatsAppUrl({ locale, kind: "general", page: "/galerie" })} />
-    </>
+    </ViewTransition>
   );
 }
