@@ -108,7 +108,7 @@ async function shoot(page, name) {
     const h = document.documentElement.scrollHeight;
     for (let y = 0; y < h; y += Math.round(window.innerHeight * 0.8)) {
       window.scrollTo(0, y);
-      await new Promise((r) => setTimeout(r, 120));
+      await new Promise((r) => setTimeout(r, 200));
     }
     window.scrollTo(0, 0);
   });

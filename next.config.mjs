@@ -8,6 +8,10 @@ const s3Region = process.env.S3_REGION || "eu-west-3";
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    formats: ["image/avif", "image/webp"],
+    // Next 16 changed these defaults; pin the Next 14 behaviour for parity.
+    minimumCacheTTL: 60,
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
       {
         protocol: "https",
