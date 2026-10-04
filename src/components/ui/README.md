@@ -59,11 +59,13 @@ Live demo: `/ui-kit` (dev server, or `GP_UI_KIT=1 npx next start -p 3123`; 404 o
 
 | Module | API |
 |---|---|
-| `whatsapp.ts` | `buildWhatsAppUrl({ locale, kind: "general" \| "cake" \| "tiramisu" \| "sweets", cake?: { title, ref }, name?, date?: "yyyy-mm-dd", guests?, page?: "/galerie/x", extra?: string[] })`, `buildWhatsAppMessage()`, `WHATSAPP_CHAT_URL`. Templates: `messages/*/whatsapp.json`. Date and guests are always asked. Pass an unprefixed `page`: the locale prefix is added. |
-| `cake-ref.ts` | `cakeRef(cake.id)` → `"GP-3K7Q"`; `assertUniqueRefs(cakes)`. In RTL render it in `<bdi className="ltr">`. |
+| `whatsapp.ts` | `buildWhatsAppUrl({ locale, kind: "general" \| "cake" \| "tiramisu" \| "sweets", cake?: { title, ref }, name?, date?: "yyyy-mm-dd", guests?, page?: "/galerie/x", extra?: string[] })`, `buildWhatsAppMessage()`, `WHATSAPP_CHAT_URL`. Templates: `messages/*/whatsapp.json`. Date and guests are always asked. Pass an unprefixed `page`: the locale prefix is added. The page URL is never bidi-isolated. **Occasion** (kind `"general"` only): `occasion?: "wedding" \| "birthday" \| "birth" \| "success"` or `category?: string \| null` (a gallery `?c=` slug, mapped with `occasionOfCategory()`; unknown slugs and `"all"` keep the generic sentence). E.g. the `?c=wedding` gallery: `buildWhatsAppUrl({ locale, kind: "general", category: "wedding", page: "/galerie?c=wedding" })` → « …un gâteau pour un mariage ou des fiançailles. ». |
+| `cake-ref.ts` | `cakeRef(cake.id)` → `"GP-3K7Q"` (alphabet `23456789ABCDEFGHJKMNPQRSTUVWXYZ`: no 0/O/1/I/L); `assertUniqueRefs(cakes)`. In RTL render it in `<bdi className="ltr">`. |
 | `piping.ts` | `pipingFor(cake)` → `"bleu" \| "lilas" \| "menthe" \| "rouge" \| "or"` (weddings `or`), `PIPING`, `pipingStyle()`, `isWedding(slug)`, `occasionFor(categorySlug)` → `common.occasion.<key>`. |
 | `business.ts` | `LEAD_TIME_DAYS`, `PRICE_FROM`, `DELIVERY`, `PAYMENT`, `DEPOSIT`: all `null`. Render a fact only when non-null. Never invent one. |
 | `revalidate.ts` | `PUBLIC_REVALIDATE` (300), `CATALOG_TAG`, `revalidatePublicCatalog()` (already called by the admin save/delete routes). |
+| `/api/orders` | POST JSON `{ name, phone, message?, cakeId?, cakeTitle? }`. **Honeypot:** add a visually hidden, `tabIndex={-1}`, `autoComplete="off"`, `aria-hidden` text input named **`website`** and send its value as `website`; a non-empty value gets a fake `202 { ok: true }` and nothing is stored. Rate limit: 5 requests/min per IP (`429` + `Retry-After`). |
+| `admin-auth.ts` | `isAdmin()` / `requireAdmin()` for admin pages and API routes (signed HttpOnly cookie). Admin only. |
 | `constants.ts` | `CONTACT`, `PHONE_E164`, `PHONE_LOCAL`, `SITE_URL`. |
 | `@/i18n/paths` | `localizePath(locale, href)`, `stripLocale(pathname)`, `switchLocaleHref(locale, path)`. |
 | `@/i18n/locale` | `asLocale(param)`, `isRtl(locale)`. |
