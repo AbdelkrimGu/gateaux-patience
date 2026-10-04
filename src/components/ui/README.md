@@ -7,11 +7,11 @@ Live demo: `/ui-kit` (dev server, or `GP_UI_KIT=1 npx next start -p 3123`; 404 o
 
 | Rule | Why |
 |---|---|
-| **Don't edit shared files**: `globals.css`, `legacy.css`, `[locale]/layout.tsx`, `(site)/layout.tsx`, `src/components/{ui,layout}/*`, `src/lib/{whatsapp,piping,cake-ref,business,revalidate}.ts`, `src/i18n/*`, `messages/*/common.json`, `messages/*/whatsapp.json`, `messages/*/meta.json`. | Three agents work in parallel worktrees. If a shared piece is wrong or missing, put a local version in your own folder and flag it in your report. |
+| **Don't edit shared files**: `globals.css`, `[locale]/layout.tsx`, `(site)/layout.tsx`, `src/components/{ui,layout}/*`, `src/lib/{whatsapp,piping,cake-ref,business,revalidate}.ts`, `src/i18n/*`, `messages/*/common.json`, `messages/*/whatsapp.json`, `messages/*/meta.json`. | Three agents work in parallel worktrees. If a shared piece is wrong or missing, put a local version in your own folder and flag it in your report. |
 | **Your files:** home → `src/components/home/*`, `(site)/page.tsx`, `messages/*/home.json`. Gallery + detail → `src/components/gallery/*`, `(site)/galerie/**`, `messages/*/gallery.json`, `messages/*/cake.json`. Tiramisu → `src/components/tiramisu/*` (skin only), `tiramisu/page.tsx`, `messages/*/tiramisuUi.json`. | No two agents touch the same file. |
 | Page metadata strings go in your own namespace (e.g. `home.meta_title`), not in `meta.json`. | `meta.json` is shared. |
 | **Translate on the server, pass strings as props.** There is no global `NextIntlClientProvider` (use-intl on the client costs ~12 KB gz). If a client island really needs `useTranslations`, wrap it: `<IntlIsland namespaces={["home"]}>…</IntlIsland>` (it always adds `common`). | JS budget. |
-| **No global MotionProvider.** CSS first. If an island needs `m.*`, wrap that island in `<MotionProvider>` and import `m` from `motion/react`. Never `motion.*`, never framer-motion, never lucide in public UI. | Motion core is ~11 KB gz before any feature. |
+| **No motion library.** CSS first (transitions, `@starting-style`, view transitions). The unused `motion` dependency and `MotionProvider` were removed; if an island ever truly needs it, re-add `motion` and wrap only that island in `MotionConfig reducedMotion="user"` + `LazyMotion` with `m`. Never `motion.*`, never framer-motion, never lucide in public UI. | Motion core is ~11 KB gz before any feature. |
 | Links: `LocaleLink` (from `@/i18n/LocaleLink`) or `<Button href="/x">`. Never `@/i18n/navigation` (adds the next-intl navigation runtime). | JS budget. |
 | `(site)/layout.tsx` already renders skip link + `<Header>` + `<main id="main">` + `<Footer>`. Pages return sections, not `<main>`, and render their own `<StickyOrderBar>`. | One landmark set. |
 | The home steps band (écrin) must have `id="commander"`: the header links to `/#commander`. | Nav target. |
@@ -24,7 +24,7 @@ Live demo: `/ui-kit` (dev server, or `GP_UI_KIT=1 npx next start -p 3123`; 404 o
 
 - Colours: `sucre`, `paillette`, `framboise` (`framboise-deep` hover), `dragee`, `cuivre` (on dark only), `cacao`, `mascarpone`, `ink`, `ink-soft`, `ink-muted`, `hairline`; piping `p-{bleu,lilas,menthe,rouge,or}` / tints `t-*`; semantic `background`, `foreground`, `primary`, `muted`, `accent`, `border`, `ring`.
 - Per-cake colour: `style={pipingStyle(name)}` or class `piping-lilas`, then `text-piping`, `bg-tint`.
-- Type: `type-h1`, `type-h2`, `type-band`, `type-card`, `type-lead`, `type-meta` (Arabic sizes/line-heights built in). `font-display`, `font-sans`.
+- Type: `type-h1`, `type-h2`, `type-band`, `type-card`, `type-lead`, `type-meta` (Arabic sizes/line-heights built in). `font-display`, `font-sans`. `--font-display-ar` (Lalezar, every locale, downloaded only when Arabic glyphs render) for stacks that must show a typed Arabic name on FR/EN: `font-family: var(--font-dela), var(--font-display-ar), …`.
 - Layout: `wrap` (gutter 16 → 48 at 900px, max 1240), `bleed`, breakpoint variant `desk:` (≥900px), `--gutter`, `--header-h`.
 - Shapes: `rounded-pill`, `rounded-plate`, `rounded-tin`, `rounded-band`.
 - Motion: vars `--d-fast` 160ms, `--d-base` 280ms, `--d-pipe` 1400ms; `ease-pipe`, `ease-out`; `press` (scale .97). Wrap any signature motion in `@media (prefers-reduced-motion: no-preference)`; a global reduce guard exists.
@@ -35,7 +35,7 @@ Live demo: `/ui-kit` (dev server, or `GP_UI_KIT=1 npx next start -p 3123`; 404 o
 
 | Component | Use |
 |---|---|
-| `Wordmark`, `CrownMark`, `WordmarkText` | `<Wordmark layout="stacked" />` / `"inline"`. Always LTR, never mirrored. |
+| `Wordmark`, `CrownMark`, `WordmarkText`, `WordmarkDefs` | `<Wordmark layout="stacked" />` / `"inline"`. Always LTR, never mirrored. The glyph paths come from `<WordmarkDefs />`, rendered once in `[locale]/layout.tsx` (`<use href>`); a page outside that layout must render it itself. |
 | `Icon` | `<Icon name="chevron" size={20} label?="…" />`. Names: menu, close, chevron, arrow, back, calendar, guests, gift, pin, instagram, facebook, check, phone, whatsapp. chevron/arrow/back mirror in RTL. |
 | `Button`, `buttonClasses()` | `<Button href={waUrl} icon="whatsapp">{t("order.cta")}</Button>`, `<Button href="/galerie" variant="ghost" iconEnd="chevron">`, `variant="on-dark"` on écrin, `size="lg"/"md"/"sm"`, `block`. Internal `href` → LocaleLink, `https://` → new tab, no href → `<button>`. |
 | `LetteredBoard`, `RefTag`, `ringLayout()` | `<LetteredBoard lang={locale} message={t("common.occasion.birthday")} name={name} tone="sucre" image={{ src, alt, priority: true }} tag={<RefTag refCode={ref} label={…} />} caption="…" className="w-[min(58vw,300px)] desk:w-[380px]" style={pipingStyle(p)} />`. Hook-free (server or client). `tone="ecrin"` for weddings (copper ring, Dela 20% smaller). `animate="pipe"` default; changing `pipeKey` (default message+name) replays: debounce it when typing. Ring auto-shrinks long text. `priority` only on the page's LCP image; the image is never opacity-gated. |
@@ -66,6 +66,7 @@ Live demo: `/ui-kit` (dev server, or `GP_UI_KIT=1 npx next start -p 3123`; 404 o
 | `revalidate.ts` | `PUBLIC_REVALIDATE` (300), `CATALOG_TAG`, `revalidatePublicCatalog()` (already called by the admin save/delete routes). |
 | `/api/orders` | POST JSON `{ name, phone, message?, cakeId?, cakeTitle? }`. **Honeypot:** add a visually hidden, `tabIndex={-1}`, `autoComplete="off"`, `aria-hidden` text input named **`website`** and send its value as `website`; a non-empty value gets a fake `202 { ok: true }` and nothing is stored. Rate limit: 5 requests/min per IP (`429` + `Retry-After`). |
 | `admin-auth.ts` | `isAdmin()` / `requireAdmin()` for admin pages and API routes (signed HttpOnly cookie). Admin only. |
+| `seo.ts` | `pageMetadata({ locale, path: "/galerie", title, description, image?: ogImage(src, alt), type? })`: canonical, hreflang + x-default, Open Graph (url, locale fr_DZ/ar_DZ/en_US, siteName, image) and Twitter in one call. Use it in every page's `generateMetadata`. |
 | `constants.ts` | `CONTACT`, `PHONE_E164`, `PHONE_LOCAL`, `SITE_URL`. |
 | `@/i18n/paths` | `localizePath(locale, href)`, `stripLocale(pathname)`, `switchLocaleHref(locale, path)`. |
 | `@/i18n/locale` | `asLocale(param)`, `isRtl(locale)`. |
