@@ -1,0 +1,57 @@
+{
+  "meta_title": "Party sweets: cupcakes, cake pops, cakesicles | Gateaux Patience",
+  "meta_desc": "Handmade cupcakes, cake pops, cakesicles and desserts in Sidi Bel Abbès, in your colors and matched to your cake. Order on WhatsApp.",
+  "breadcrumb_home": "Home",
+  "hero": {
+    "title": "Sweets for the party.",
+    "lead": "Handmade cupcakes, cake pops and cakesicles from Sidi Bel Abbès: in your colors, in your theme, even spelling a name letter by letter.",
+    "ring": "A treat for every guest",
+    "photo_alt": "Pink cakesicles bearing the letters K, E, N, Z and A, chocolate cakesicles and 2020 graduation cake pops",
+    "caption": "A real order: cakesicles that spell a name, and cake pops wearing graduation caps.",
+    "cta": "Start my order",
+    "note": "Tell us the date, the number of guests and the theme, and we’ll reply on WhatsApp.",
+    "see_menu": "See the menu"
+  },
+  "menu": {
+    "title": "The sweets menu",
+    "intro": "Pick a sweet: your WhatsApp message is already written, just add the date and the number of guests.",
+    "cupcakes": {
+      "name": "Cupcakes",
+      "text": "A soft little cake topped with frosting, decorated in your theme: characters, flowers or the party colors.",
+      "for": "For a birthday party, a new baby or a wedding table.",
+      "action": "Order cupcakes"
+    },
+    "cake_pops": {
+      "name": "Cake pops",
+      "text": "A bite of cake on a stick, dipped in chocolate and decorated one by one.",
+      "for": "For guest favors, a birthday or a success to celebrate.",
+      "action": "Order cake pops"
+    },
+    "cakesicles": {
+      "name": "Cakesicles",
+      "text": "A cake popsicle dipped in chocolate, which can carry a letter, a number or a small decoration.",
+      "for": "To spell a name letter by letter, for a graduation or an engagement.",
+      "action": "Order cakesicles"
+    },
+    "desserts": {
+      "name": "Desserts",
+      "text": "Party desserts to share, prepared for your table and your guests.",
+      "for": "To round out a buffet, an engagement or a wedding.",
+      "action": "Ask for desserts"
+    },
+    "other": "Something else in mind? Send us a photo or an idea and we’ll tell you what we can make.",
+    "other_cta": "Message us on WhatsApp"
+  },
+  "creations": {
+    "title": "Already made for their parties",
+    "intro": "Sweets made for real orders."
+  },
+  "set": {
+    "title": "The cake and its sweets, matched.",
+    "text": "Same theme, same colors: ask for cupcakes or cake pops to match your cake, and add name tiramisus to complete the table.",
+    "photo_alt": "Rapunzel cake surrounded by six cupcakes decorated with princesses",
+    "caption": "A Rapunzel cake and its princess cupcakes, made for the same party.",
+    "cakes": "Choose the cake",
+    "tiramisu": "Build tiramisu boxes"
+  }
+}
