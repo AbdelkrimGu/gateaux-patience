@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { CakeCard, cakeTransitionName } from "@/components/ui/CakeCard";
 import { EcrinSurface } from "@/components/ui/EcrinSurface";
 import { Icon } from "@/components/ui/Icon";
+import { CardTransitionScope } from "@/components/gallery/CardTransitionScope";
 import { CakeStudio } from "@/components/gallery/CakeStudio";
 import { PhotoStrip } from "@/components/gallery/PhotoStrip";
 import { cakeDescription, cakeTitle, categoryLabel, dimensionsOf, relatedCakes } from "@/components/gallery/catalog";
@@ -41,7 +42,11 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const title = cakeTitle(cake, locale);
   const desc = cakeDescription(cake, locale);
   const description =
-    desc.length > 40 ? (desc.length > 158 ? `${desc.slice(0, 157).trimEnd()}…` : desc) : t("meta_desc", { title, ref: cakeRef(cake.id) });
+    desc.length > 40
+      ? desc.length > 158
+        ? `${desc.slice(0, 157).trimEnd()}…`
+        : desc
+      : t("meta_desc", { title, ref: cakeRef(cake.id) });
   return {
     title: { absolute: t("meta_title", { title }) },
     description,
@@ -85,7 +90,10 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
   const page = `/galerie/${slug}`;
 
   const facts = [
-    dims && { label: t("dimensions"), value: t("dimensions_value", { value: dims }) },
+    dims && {
+      label: t("dimensions"),
+      value: t("dimensions_value", { value: dims }),
+    },
     cake.pieces ? { label: t("pieces"), value: String(cake.pieces) } : null,
     cake.persons ? { label: t("persons"), value: String(cake.persons) } : null,
   ].filter((f): f is { label: string; value: string } => !!f);
@@ -132,7 +140,10 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
             {facts.map((f) => (
               <div
                 key={f.label}
-                className={cn("min-w-[96px] rounded-[18px] px-4 py-3 whitespace-nowrap", ecrin ? "bg-sucre/[0.06] bezel" : "bg-tint")}
+                className={cn(
+                  "min-w-[96px] rounded-[18px] px-4 py-3 whitespace-nowrap",
+                  ecrin ? "bg-sucre/[0.06] bezel" : "bg-tint"
+                )}
               >
                 <dt className={cn("type-meta", ecrin ? "text-sucre/75" : "text-ink-muted")}>{f.label}</dt>
                 <dd className={cn("mt-1 font-display text-xl leading-tight", ecrin ? "text-cuivre" : "text-piping")}>
@@ -155,6 +166,7 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
       ecrin={ecrin}
       image={cake.images[0] ? { src: cake.images[0], alt: title } : undefined}
       caption={t("board_caption", { title, message })}
+      slug={cake.slug}
       transitionName={cakeTransitionName(cake.slug)}
       boardStyle={pipingStyle(pipingFor(cake))}
       labels={{
@@ -208,9 +220,21 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
       manufacturer: { "@id": `${SITE_URL}/#business` },
       ...(cake.length && cake.width && cake.height
         ? {
-            depth: { "@type": "QuantitativeValue", value: cake.length, unitCode: "CMT" },
-            width: { "@type": "QuantitativeValue", value: cake.width, unitCode: "CMT" },
-            height: { "@type": "QuantitativeValue", value: cake.height, unitCode: "CMT" },
+            depth: {
+              "@type": "QuantitativeValue",
+              value: cake.length,
+              unitCode: "CMT",
+            },
+            width: {
+              "@type": "QuantitativeValue",
+              value: cake.width,
+              unitCode: "CMT",
+            },
+            height: {
+              "@type": "QuantitativeValue",
+              value: cake.height,
+              unitCode: "CMT",
+            },
           }
         : {}),
     },
@@ -218,9 +242,24 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: t("home"), item: abs(locale, "/") },
-        { "@type": "ListItem", position: 2, name: tc("nav.creations"), item: abs(locale, "/galerie") },
-        { "@type": "ListItem", position: 3, name: title, item: abs(locale, page) },
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: t("home"),
+          item: abs(locale, "/"),
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: tc("nav.creations"),
+          item: abs(locale, "/galerie"),
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: title,
+          item: abs(locale, page),
+        },
       ],
     },
   ]).replace(/</g, "\\u003c");
@@ -235,7 +274,11 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
           </div>
         </EcrinSurface>
       ) : (
-        <section aria-label={title} className="wrap pt-2 pb-14 desk:pt-8 desk:pb-24" style={pipingStyle(pipingFor(cake))}>
+        <section
+          aria-label={title}
+          className="wrap pt-2 pb-14 desk:pt-8 desk:pb-24"
+          style={pipingStyle(pipingFor(cake))}
+        >
           {back}
           {studio}
         </section>
@@ -251,13 +294,15 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
               {t("related_more")}
             </Button>
           </div>
-          <ul className="mt-6 grid grid-cols-2 gap-x-3 gap-y-6 desk:mt-10 desk:grid-cols-4 desk:gap-x-6">
-            {related.map((c) => (
-              <li key={c.id}>
-                <CakeCard cake={c} locale={locale} transitionName />
-              </li>
-            ))}
-          </ul>
+          <CardTransitionScope>
+            <ul className="mt-6 grid grid-cols-2 gap-x-3 gap-y-6 desk:mt-10 desk:grid-cols-4 desk:gap-x-6">
+              {related.map((c) => (
+                <li key={c.id}>
+                  <CakeCard cake={c} locale={locale} />
+                </li>
+              ))}
+            </ul>
+          </CardTransitionScope>
           <Button href="/galerie" variant="ghost" size="sm" iconEnd="chevron" className="mt-8 desk:hidden">
             {t("related_more")}
           </Button>

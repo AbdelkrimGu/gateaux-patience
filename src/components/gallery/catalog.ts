@@ -44,8 +44,6 @@ export function relatedCakes(cake: Cake, all: Cake[], count = 4): Cake[] {
 
 /** "26 × 26 × 12" from whichever of length/width/height are set. */
 export function dimensionsOf(cake: Pick<Cake, "length" | "width" | "height">): string | null {
-  const parts = [cake.length, cake.width, cake.height].filter(
-    (n): n is number => typeof n === "number" && n > 0
-  );
+  const parts = [cake.length, cake.width, cake.height].filter((n): n is number => typeof n === "number" && n > 0);
   return parts.length ? parts.join(" × ") : null;
 }

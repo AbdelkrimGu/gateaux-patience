@@ -9,6 +9,7 @@ import { StickyOrderBar } from "@/components/layout/StickyOrderBar";
 import { Button } from "@/components/ui/Button";
 import { CakeCard } from "@/components/ui/CakeCard";
 import { GalleryFilter, GalleryFilterStyles, type FilterChip } from "@/components/gallery/GalleryFilter";
+import { CardTransitionScope } from "@/components/gallery/CardTransitionScope";
 import { categoriesWithCakes } from "@/components/gallery/catalog";
 import { getAllPublishedCakes } from "@/lib/cakes-data";
 import { getCategories } from "@/lib/categories-data";
@@ -33,7 +34,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     description: t("meta_desc"),
     alternates: {
       canonical: locale === "fr" ? "/galerie" : `/${locale}/galerie`,
-      languages: { fr: "/galerie", ar: "/ar/galerie", en: "/en/galerie", "x-default": "/galerie" },
+      languages: {
+        fr: "/galerie",
+        ar: "/ar/galerie",
+        en: "/en/galerie",
+        "x-default": "/galerie",
+      },
     },
     openGraph: { title: t("meta_title"), description: t("meta_desc") },
   };
@@ -52,7 +58,12 @@ export default async function GalleriePage({ params }: { params: Promise<{ local
   const cats = categoriesWithCakes(cakes, categories, locale);
   const listed = new Set(cats.map((c) => c.slug));
   const chips: FilterChip[] = [
-    { slug: null, label: t("all"), count: cakes.length, href: localizePath(locale, "/galerie") },
+    {
+      slug: null,
+      label: t("all"),
+      count: cakes.length,
+      href: localizePath(locale, "/galerie"),
+    },
     ...cats.map((c) => ({
       slug: c.slug,
       label: c.label,
@@ -61,7 +72,9 @@ export default async function GalleriePage({ params }: { params: Promise<{ local
       href: localizePath(locale, `/galerie?c=${encodeURIComponent(c.slug)}`),
     })),
   ];
-  const countLabels: Record<string, string> = { "": t("count", { count: cakes.length }) };
+  const countLabels: Record<string, string> = {
+    "": t("count", { count: cakes.length }),
+  };
   for (const c of cats) countLabels[c.slug] = t("count", { count: c.count });
 
   // The first card is the phone LCP: preload it at high priority with the
@@ -69,7 +82,12 @@ export default async function GalleriePage({ params }: { params: Promise<{ local
   // offers `eager`).
   const first = cakes[0]?.images[0];
   if (first) {
-    const { props } = getImageProps({ src: first, alt: "", fill: true, sizes: CARD_SIZES });
+    const { props } = getImageProps({
+      src: first,
+      alt: "",
+      fill: true,
+      sizes: CARD_SIZES,
+    });
     preload(props.src, {
       as: "image",
       imageSrcSet: props.srcSet,
@@ -87,13 +105,15 @@ export default async function GalleriePage({ params }: { params: Promise<{ local
         </header>
 
         <GalleryFilter chips={chips} filterLabel={t("filter_label")} countLabels={countLabels}>
-          <ul className="grid grid-cols-2 gap-x-3 gap-y-6 desk:grid-cols-4 desk:gap-x-6 desk:gap-y-10">
-            {cakes.map((cake, i) => (
-              <li key={cake.id} data-cat={listed.has(cake.category) ? cake.category : "_"}>
-                <CakeCard cake={cake} locale={locale} as="h2" eager={i < EAGER} sizes={CARD_SIZES} transitionName />
-              </li>
-            ))}
-          </ul>
+          <CardTransitionScope>
+            <ul className="grid grid-cols-2 gap-x-3 gap-y-6 desk:grid-cols-4 desk:gap-x-6 desk:gap-y-10">
+              {cakes.map((cake, i) => (
+                <li key={cake.id} data-cat={listed.has(cake.category) ? cake.category : "_"}>
+                  <CakeCard cake={cake} locale={locale} as="h2" eager={i < EAGER} sizes={CARD_SIZES} />
+                </li>
+              ))}
+            </ul>
+          </CardTransitionScope>
         </GalleryFilter>
         <GalleryFilterStyles slugs={[...listed]} />
 
@@ -107,7 +127,11 @@ export default async function GalleriePage({ params }: { params: Promise<{ local
             </div>
             <div className="flex flex-col items-start gap-4">
               <Button
-                href={buildWhatsAppUrl({ locale, kind: "general", page: "/galerie" })}
+                href={buildWhatsAppUrl({
+                  locale,
+                  kind: "general",
+                  page: "/galerie",
+                })}
                 icon="whatsapp"
                 className="w-full desk:w-auto"
               >

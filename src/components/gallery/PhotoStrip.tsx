@@ -24,8 +24,7 @@ export interface PhotoStripLabels {
   count: string; // "{n} sur {total}"
 }
 
-const fill = (s: string, n: number, total: number) =>
-  s.replace("{n}", String(n)).replace("{total}", String(total));
+const fill = (s: string, n: number, total: number) => s.replace("{n}", String(n)).replace("{total}", String(total));
 
 export function PhotoStrip({
   images,
@@ -54,7 +53,11 @@ export function PhotoStrip({
     if (!open) return;
     const track = trackRef.current;
     const slide = track?.children[index] as HTMLElement | undefined;
-    slide?.scrollIntoView({ block: "nearest", inline: "start", behavior: "instant" });
+    slide?.scrollIntoView({
+      block: "nearest",
+      inline: "start",
+      behavior: "instant",
+    });
     const root = document.documentElement;
     const prev = root.style.overflow;
     root.style.overflow = "hidden";
@@ -143,7 +146,10 @@ export function PhotoStrip({
               className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {images.map((src, i) => (
-                <div key={src} className="relative h-full w-full shrink-0 snap-center [touch-action:pan-x_pan-y_pinch-zoom]">
+                <div
+                  key={src}
+                  className="relative h-full w-full shrink-0 snap-center [touch-action:pan-x_pan-y_pinch-zoom]"
+                >
                   <Image
                     src={src}
                     alt={fill(labels.alt, i + 1, total)}

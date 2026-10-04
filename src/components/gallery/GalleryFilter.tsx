@@ -69,7 +69,10 @@ export function GalleryFilter({
     const r = row.getBoundingClientRect();
     const b = chip.getBoundingClientRect();
     if (b.left < r.left || b.right > r.right) {
-      row.scrollBy({ left: b.left - r.left - (r.width - b.width) / 2, behavior: "instant" });
+      row.scrollBy({
+        left: b.left - r.left - (r.width - b.width) / 2,
+        behavior: "instant",
+      });
     }
   }, [active]);
 
@@ -117,7 +120,9 @@ export function GalleryFilter({
                   <span
                     aria-hidden="true"
                     className="size-2 rounded-full"
-                    style={{ background: selected ? PIPING[chip.dot].tint : PIPING[chip.dot].piping }}
+                    style={{
+                      background: selected ? PIPING[chip.dot].tint : PIPING[chip.dot].piping,
+                    }}
                   />
                 )}
                 <span>{chip.label}</span>
@@ -146,9 +151,7 @@ export function GalleryFilter({
  */
 export function GalleryFilterStyles({ slugs }: { slugs: string[] }) {
   const safe = slugs.filter((s) => /^[a-z0-9-]+$/.test(s));
-  const css = safe
-    .map((s) => `#${GRID_ID}[data-c="${s}"] [data-cat]:not([data-cat="${s}"]){display:none}`)
-    .join("");
+  const css = safe.map((s) => `#${GRID_ID}[data-c="${s}"] [data-cat]:not([data-cat="${s}"]){display:none}`).join("");
   const list = JSON.stringify(safe);
   const js = `(function(){try{var c=new URLSearchParams(location.search).get("c");if(c&&${list}.indexOf(c)>-1)document.getElementById("${GRID_ID}").setAttribute("data-c",c)}catch(e){}})()`;
   return (

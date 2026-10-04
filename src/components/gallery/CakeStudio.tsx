@@ -6,6 +6,7 @@ import { NameField } from "@/components/ui/NameField";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { StickyOrderBarView } from "@/components/layout/StickyOrderBar";
+import { useRememberCake } from "./CardTransitionScope";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +49,7 @@ export interface CakeStudioProps {
   ecrin: boolean;
   image?: { src: string; alt: string };
   caption: string;
+  slug: string;
   /** view-transition-name shared with the gallery card. */
   transitionName: string;
   boardStyle: CSSProperties;
@@ -73,6 +75,7 @@ export function CakeStudio({
   ecrin,
   image,
   caption,
+  slug,
   transitionName,
   boardStyle,
   labels,
@@ -84,6 +87,7 @@ export function CakeStudio({
   const [date, setDate] = useState("");
   const [guests, setGuests] = useState("");
   const id = useId();
+  useRememberCake(slug);
 
   // Re-pipe the ring once typing pauses (the text itself updates live).
   useEffect(() => {
@@ -133,7 +137,10 @@ export function CakeStudio({
             }
             tag={<RefTag refCode={cake.ref} />}
             caption={caption}
-            className={cn("mx-auto w-[min(70vw,320px)]", ecrin ? "desk:w-[min(100%,380px)]" : "desk:w-[min(100%,420px)]")}
+            className={cn(
+              "mx-auto w-[min(70vw,320px)]",
+              ecrin ? "desk:w-[min(100%,380px)]" : "desk:w-[min(100%,420px)]"
+            )}
             style={{ viewTransitionName: transitionName, ...boardStyle }}
           />
         </div>
