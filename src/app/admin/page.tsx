@@ -1,15 +1,11 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/admin-auth";
 import { getCakes, getOrders } from "@/lib/admin-data";
 import AdminShell from "@/components/admin/AdminShell";
 import { CakeSlice, ShoppingBag, Star, Eye } from "lucide-react";
 import Link from "next/link";
 
 export default async function AdminDashboard() {
-  const cookieStore = await cookies();
-  if (cookieStore.get("admin_session")?.value !== "authenticated") {
-    redirect("/admin/login");
-  }
+  await requireAdmin();
 
   const [cakes, orders] = await Promise.all([getCakes(), getOrders()]);
   const newOrders = orders.filter((o) => o.status === "new");

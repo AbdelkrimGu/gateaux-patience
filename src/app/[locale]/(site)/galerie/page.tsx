@@ -15,6 +15,7 @@ import { getAllPublishedCakes } from "@/lib/cakes-data";
 import { getCategories } from "@/lib/categories-data";
 import { assertUniqueRefs } from "@/lib/cake-ref";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { ogImage, pageMetadata } from "@/lib/seo";
 import { ViewTransitionStyles } from "@/components/gallery/ViewTransitionStyles";
 
 // ISR (see src/lib/revalidate.ts). Keep this page static: the ?c= filter is
@@ -28,21 +29,14 @@ const EAGER = 4;
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const locale = asLocale((await params).locale);
-  const t = await getTranslations({ locale, namespace: "gallery" });
-  return {
-    title: { absolute: t("meta_title") },
+  const [t, cakes] = await Promise.all([getTranslations({ locale, namespace: "gallery" }), getAllPublishedCakes()]);
+  return pageMetadata({
+    locale,
+    path: "/galerie",
+    title: t("meta_title"),
     description: t("meta_desc"),
-    alternates: {
-      canonical: locale === "fr" ? "/galerie" : `/${locale}/galerie`,
-      languages: {
-        fr: "/galerie",
-        ar: "/ar/galerie",
-        en: "/en/galerie",
-        "x-default": "/galerie",
-      },
-    },
-    openGraph: { title: t("meta_title"), description: t("meta_desc") },
-  };
+    image: ogImage(cakes[0]?.images[0]),
+  });
 }
 
 export default async function GalleriePage({ params }: { params: Promise<{ locale: string }> }) {

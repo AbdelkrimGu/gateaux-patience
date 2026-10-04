@@ -3,6 +3,7 @@ import { getMessages, getTranslations, setRequestLocale } from "next-intl/server
 import { asLocale } from "@/i18n/locale";
 import TiramisuWizard from "@/components/tiramisu/TiramisuWizard";
 import type { TiramisuUi } from "@/components/tiramisu/ui-context";
+import { pageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -11,14 +12,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const locale = asLocale((await params).locale);
   const t = await getTranslations({ locale, namespace: "tiramisuUi" });
-  return {
-    title: { absolute: t("meta_title") },
-    description: t("meta_desc"),
-    alternates: {
-      canonical: locale === "fr" ? "/tiramisu" : `/${locale}/tiramisu`,
-      languages: { fr: "/tiramisu", ar: "/ar/tiramisu", en: "/en/tiramisu" },
-    },
-  };
+  return pageMetadata({ locale, path: "/tiramisu", title: t("meta_title"), description: t("meta_desc") });
 }
 
 export default async function TiramisuPage({

@@ -1,26 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePublicCatalog } from "@/lib/revalidate";
-import { cookies } from "next/headers";
-import { createCategory, getCategories, type CategoryInput } from "@/lib/categories-data";
+import { isAdmin } from "@/lib/admin-auth";
+import { createCategory, getCategoriesOrEmpty, type CategoryInput } from "@/lib/categories-data";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-async function isAuthed() {
-  const c = await cookies();
-  return c.get("admin_session")?.value === "authenticated";
-}
-
 export async function GET() {
-  if (!(await isAuthed())) {
+  if (!(await isAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const cats = await getCategories();
+  const cats = await getCategoriesOrEmpty();
   return NextResponse.json(cats);
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await isAuthed())) {
+  if (!(await isAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   let body: Partial<CategoryInput>;

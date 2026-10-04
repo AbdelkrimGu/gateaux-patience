@@ -7,6 +7,9 @@ const s3Region = process.env.S3_REGION || "eu-west-3";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // experimental.inlineCss was measured and rejected (2026-10, LH mobile
+  // median of 3): the CSS lands twice in every document (<style> + RSC
+  // payload, +27 KB gz HTML, never cached) and scores dropped 5-11 points.
   images: {
     formats: ["image/avif", "image/webp"],
     // Next 16 changed these defaults; pin the Next 14 behaviour for parity.

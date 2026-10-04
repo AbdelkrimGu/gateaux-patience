@@ -1,17 +1,13 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/admin-auth";
 import AdminShell from "@/components/admin/AdminShell";
 import CategoriesManager from "@/components/admin/CategoriesManager";
-import { getCategories } from "@/lib/categories-data";
+import { getCategoriesOrEmpty } from "@/lib/categories-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminCategoriesPage() {
-  const cookieStore = await cookies();
-  if (cookieStore.get("admin_session")?.value !== "authenticated") {
-    redirect("/admin/login");
-  }
-  const categories = await getCategories();
+  await requireAdmin();
+  const categories = await getCategoriesOrEmpty();
   return (
     <AdminShell>
       <CategoriesManager initial={categories} />

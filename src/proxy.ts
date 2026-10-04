@@ -1,6 +1,7 @@
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
+import { ADMIN_COOKIE, verifyAdminToken } from "./lib/admin-auth";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -27,13 +28,40 @@ function detectLocale(req: NextRequest): string {
   return routing.defaultLocale;
 }
 
+// Admin guard (defence in depth: every admin page and API route also calls
+// isAdmin()). /admin/login and /api/admin/login stay public.
+const ADMIN_PAGE = /^\/admin(?:\/|$)/;
+const ADMIN_API = /^\/api\/(?:admin|generate-description)(?:\/|$)/;
+const ADMIN_PUBLIC = /^\/(?:admin\/login|api\/admin\/login)\/?$/;
+
+function adminGuard(req: NextRequest): NextResponse | null {
+  const { pathname } = req.nextUrl;
+  const page = ADMIN_PAGE.test(pathname);
+  const api = ADMIN_API.test(pathname);
+  if (!page && !api) return null;
+  if (ADMIN_PUBLIC.test(pathname) || verifyAdminToken(req.cookies.get(ADMIN_COOKIE)?.value)) {
+    return NextResponse.next();
+  }
+  if (api) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const url = req.nextUrl.clone();
+  url.pathname = "/admin/login";
+  url.search = "";
+  return NextResponse.redirect(url);
+}
+
 export default function proxy(req: NextRequest) {
+  const guarded = adminGuard(req);
+  if (guarded) return guarded;
+
   const match = req.nextUrl.pathname.match(CONTACT_PATH);
   if (match) {
     const explicit = match[1];
     const url = req.nextUrl.clone();
     url.pathname = `/qr/${explicit ?? detectLocale(req)}.html`;
     const res = NextResponse.rewrite(url);
+    // A bare /contact picks its language from the cookie / Accept-Language:
+    // tell shared caches the response varies on them.
+    if (!explicit) res.headers.set("Vary", "Accept-Language, Cookie");
     // Remember an explicitly chosen language so the "website" button (and a
     // later bare /contact visit) stays in it instead of being re-detected.
     if (explicit) res.cookies.set("NEXT_LOCALE", explicit, { path: "/", sameSite: "lax" });
@@ -46,5 +74,8 @@ export const config = {
   matcher: [
     "/((?!api|admin|_next|_vercel|.*\\..*).*)",
     "/",
+    "/admin/:path*",
+    "/api/admin/:path*",
+    "/api/generate-description",
   ],
 };
