@@ -7,6 +7,8 @@ import { TIRAMISU_CATALOG, formatDA, findOption } from "@/lib/tiramisu-catalog";
 import { STYLE_META, type Locale, type TiramisuStyle } from "@/lib/tiramisu-config";
 import type { TiramisuSizeId } from "@/lib/tiramisu-templates";
 import { LocaleLink } from "@/i18n/LocaleLink";
+import { switchLocaleHref } from "@/i18n/paths";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { Icon } from "@/components/ui/Icon";
@@ -55,9 +57,9 @@ export default function TiramisuWizard({ locale, ui }: { locale: Locale; ui: Tir
 
 function Wizard() {
   const { locale, ui } = useTiramisuUi();
-  // Only for the order message sent to the shop (payload kept byte-identical).
-  const t = (fr: string, ar: string, en: string) =>
-    locale === "ar" ? ar : locale === "en" ? en : fr;
+  // Order message words for the shop: tiramisuUi.order_message. Keep those
+  // strings byte-identical (the admin reads them); they are not UI copy.
+  const om = ui.order_message;
 
   const [step, setStep] = useState<Step>("mode");
   const [mode, setMode] = useState<Mode>("custom");
@@ -71,6 +73,8 @@ function Wizard() {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  // Honeypot (POST /api/orders rejects a non-empty `website`): people never see it.
+  const [website, setWebsite] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [doneId, setDoneId] = useState<string | null>(null);
@@ -174,9 +178,8 @@ function Wizard() {
 
   // ---- order message (sent to the shop; unchanged) ----
   function buildOrder() {
-    const head = t("Commande Tiramisu", "طلب تيراميسو", "Tiramisu order");
-    const modeLabel =
-      mode === "custom" ? t("Personnalisé", "مخصّص", "Personalized") : t("Simple", "بسيط", "Simple");
+    const head = om.head;
+    const modeLabel = mode === "custom" ? om.custom : om.simple;
     const rows: string[] = [`${head} — ${modeLabel}`, ""];
     bucket.forEach((b) => {
       const f = findOption(b.optionId);
@@ -193,13 +196,13 @@ function Wizard() {
       });
       const plain = plainOf(b);
       if (b.personalizations.length > 0 && plain > 0) {
-        rows.push(`   • ${plain} ${t("sans message", "بدون رسالة", "plain")}`);
+        rows.push(`   • ${plain} ${om.plain}`);
       }
     });
-    rows.push("", `${t("Total", "المجموع", "Total")}: ${formatDA(total)}`);
+    rows.push("", `${om.total}: ${formatDA(total)}`);
     return {
       message: rows.join("\n"),
-      cakeTitle: `${t("Tiramisu", "تيراميسو", "Tiramisu")} — ${count} ${t("article(s)", "عنصر", "item(s)")}`,
+      cakeTitle: `${om.tiramisu} — ${count} ${om.items}`,
     };
   }
 
@@ -215,7 +218,7 @@ function Wizard() {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), phone: phone.trim(), message, cakeTitle }),
+        body: JSON.stringify({ name: name.trim(), phone: phone.trim(), message, cakeTitle, website }),
       });
       if (!res.ok) throw new Error("bad status");
       const data = (await res.json()) as { id?: string };
@@ -264,7 +267,7 @@ function Wizard() {
           <h1 className="type-h2 mt-6">{ui.success.title}</h1>
           <p className="type-lead mt-3 text-center">{ui.success.body}</p>
           <p className="type-meta mt-5 rounded-pill bg-dragee px-4 py-2 font-medium">
-            {ui.success.ref} :{" "}
+            {fmt(ui.review.label, { label: ui.success.ref })}{" "}
             <bdi className="ltr font-semibold">{doneId.slice(0, 8).toUpperCase()}</bdi>
           </p>
           <div className="mt-8 flex w-full flex-col gap-3">
@@ -291,7 +294,7 @@ function Wizard() {
           className={cn(
             s.stepIn,
             "mx-auto flex h-full w-full max-w-[560px] flex-col",
-            step === "boxes" && "desk:max-w-[960px]"
+            (step === "boxes" || step === "mode") && "desk:max-w-[1040px]"
           )}
         >
           {step === "mode" && (
@@ -337,6 +340,8 @@ function Wizard() {
               phone={phone}
               setName={setName}
               setPhone={setPhone}
+              website={website}
+              setWebsite={setWebsite}
               total={total}
               count={count}
               canSubmit={canSubmit}
@@ -405,26 +410,99 @@ function Shell({ children }: { children: React.ReactNode }) {
   return <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-sucre text-paillette">{children}</div>;
 }
 
+const LOCALES = ["fr", "ar", "en"] as const;
+const LANG_SHORT = { fr: "FR", ar: "ع", en: "EN" } as const;
+
+/**
+ * FR / ع / EN, as on the site header. Plain <a href> full navigations: a
+ * locale switch changes <html lang/dir> and must set the locale cookie, which
+ * a soft (RSC) navigation doesn't do.
+ */
+function LanguageCircles() {
+  const { ui, locale } = useTiramisuUi();
+  const names = { fr: ui.chrome.lang_fr, ar: ui.chrome.lang_ar, en: ui.chrome.lang_en };
+  return (
+    <nav aria-label={ui.chrome.lang_label} className="flex items-center">
+      {LOCALES.map((l) => {
+        const active = l === locale;
+        return (
+          <a
+            key={l}
+            href={switchLocaleHref(l, "/tiramisu")}
+            lang={l}
+            hrefLang={l}
+            aria-label={names[l]}
+            aria-current={active ? "true" : undefined}
+            className="group grid size-11 place-items-center rounded-full no-underline"
+          >
+            <span
+              className={cn(
+                "grid size-8 place-items-center rounded-full text-[13px] leading-none font-medium",
+                active ? "bg-paillette text-sucre" : "text-paillette group-hover:bg-dragee",
+                // System font for the lone "ع" (no Arabic font slice on FR/EN).
+                l === "ar" && "pb-0.5 font-[system-ui,sans-serif] text-[15px]"
+              )}
+            >
+              {LANG_SHORT[l]}
+            </span>
+          </a>
+        );
+      })}
+    </nav>
+  );
+}
+
+/** The WhatsApp way out, on every step (same brief kind as the home band). */
+function WhatsAppShortcut() {
+  const { ui, locale } = useTiramisuUi();
+  const href = useMemo(() => buildWhatsAppUrl({ locale, kind: "tiramisu", page: "/tiramisu" }), [locale]);
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={ui.chrome.whatsapp}
+      className="press grid size-11 shrink-0 place-items-center rounded-full bg-dragee text-framboise hover:bg-[#f0c6d6]"
+    >
+      <Icon name="whatsapp" size={22} />
+    </a>
+  );
+}
+
 function TopBar({ step, stepIndex, onBack }: { step: Step; stepIndex: number; onBack: () => void }) {
   const { ui } = useTiramisuUi();
+  if (step === "mode") {
+    // Same maison as the site: wordmark home link, languages, WhatsApp.
+    return (
+      <header className="relative z-20 flex h-16 shrink-0 items-center justify-between gap-2 px-4 desk:px-8">
+        <span className="sr-only">{fmt(ui.chrome.progress, { n: stepIndex + 1, total: STEP_ORDER.length })}</span>
+        <LocaleLink
+          href="/"
+          prefetch={false}
+          aria-label={ui.chrome.home}
+          className="-ms-1 inline-flex min-h-11 min-w-0 items-center rounded-pill px-1"
+        >
+          <Wordmark layout="stacked" className="desk:hidden" />
+          <Wordmark layout="inline" className="hidden desk:inline-flex" />
+        </LocaleLink>
+        <div className="flex items-center gap-1">
+          <LanguageCircles />
+          <WhatsAppShortcut />
+        </div>
+      </header>
+    );
+  }
   return (
     <header className="relative z-20 grid h-16 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 desk:px-8">
       <div className="flex justify-start">
-        {step === "mode" ? (
-          // The discreet way back to the site.
-          <LocaleLink href="/" prefetch={false} aria-label={ui.chrome.home} className="-ms-1 inline-flex min-h-11 items-center rounded-pill px-1">
-            <Wordmark layout="stacked" />
-          </LocaleLink>
-        ) : (
-          <button
-            type="button"
-            onClick={onBack}
-            className="press -ms-1 inline-flex min-h-11 items-center gap-1.5 rounded-pill pe-4 ps-3 text-[15px] font-medium shadow-[inset_0_0_0_1.5px_var(--color-hairline)] hover:shadow-[inset_0_0_0_1.5px_var(--color-paillette)]"
-          >
-            <Icon name="back" size={20} />
-            {ui.chrome.back}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={onBack}
+          className="press -ms-1 inline-flex min-h-11 items-center gap-1.5 rounded-pill pe-4 ps-3 text-[15px] font-medium shadow-[inset_0_0_0_1.5px_var(--color-hairline)] hover:shadow-[inset_0_0_0_1.5px_var(--color-paillette)]"
+        >
+          <Icon name="back" size={20} />
+          {ui.chrome.back}
+        </button>
       </div>
 
       <div className="flex items-center gap-1.5">
@@ -442,7 +520,7 @@ function TopBar({ step, stepIndex, onBack }: { step: Step; stepIndex: number; on
       </div>
 
       <div className="flex justify-end">
-        {step !== "mode" && <CrownMark className="size-9" />}
+        <WhatsAppShortcut />
       </div>
     </header>
   );
@@ -490,14 +568,15 @@ function ModeStep({ onPick }: { onPick: (m: Mode) => void }) {
     { mode: "simple", title: ui.mode.simple_title, desc: ui.mode.simple_desc, img: "/images/tiramisu/boxes/box-square.png", featured: false },
   ];
   return (
-    <div className="flex h-full min-h-0 flex-col gap-5 px-4 pb-4 desk:px-6 desk:pb-8">
-      {/* The stage (écrin) + the page's one signature moment. */}
-      <EcrinSurface className="flex min-h-0 flex-1 items-center justify-center rounded-[32px] p-5">
+    <div className="flex h-full min-h-0 flex-col gap-5 overflow-y-auto px-4 pb-4 desk:grid desk:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] desk:content-center desk:items-center desk:gap-x-14 desk:px-6 desk:pb-8">
+      {/* The stage (écrin) + the page's one signature moment: a slim band on
+          phones (the choice must sit in the first viewport), a tile on desktop. */}
+      <EcrinSurface className="flex h-[clamp(160px,34dvh,300px)] shrink-0 items-center justify-center rounded-[28px] p-3.5 desk:row-span-3 desk:aspect-square desk:h-auto desk:max-h-[520px] desk:rounded-[32px] desk:p-8">
         <LettersLand
           word={ui.mode.sample}
           label={fmt(ui.mode.stage_label, { word: ui.mode.sample })}
           priority
-          className="h-full max-h-[260px] w-auto max-w-full"
+          className="h-full w-auto max-w-full desk:h-auto desk:w-full"
         />
       </EcrinSurface>
 
@@ -543,55 +622,91 @@ function BoxesStep({
   count: number; total: number; onContinue: () => void;
 }) {
   const { ui, locale } = useTiramisuUi();
-  const category = TIRAMISU_CATALOG.find((c) => c.id === activeCat)!;
+  const listRef = useRef<HTMLDivElement>(null);
+  const baseId = useId();
+  const sectionId = (id: string) => `${baseId}-size-${id}`;
+
+  // Every size is listed (one list, no lonely card); the chips jump to a size
+  // and follow the scroll, so `activeCat` always names the size in view.
+  useEffect(() => {
+    const root = listRef.current;
+    if (!root || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        const top = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        const id = top?.target.getAttribute("data-size");
+        if (id) setActiveCat(id);
+      },
+      { root, rootMargin: "0px 0px -60% 0px" }
+    );
+    root.querySelectorAll("[data-size]").forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [setActiveCat]);
+
+  const jumpTo = (id: string) => {
+    setActiveCat(id);
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById(sectionId(id))?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+  };
+
   return (
     <div className="flex h-full flex-col">
       <StepHead title={ui.boxes.title} lead={mode === "custom" ? ui.boxes.lead_custom : ui.boxes.lead_simple} />
 
-      <div role="group" aria-label={ui.boxes.sizes} className={cn(s.rail, "mt-4 flex shrink-0 snap-x gap-2 overflow-x-auto px-4 pb-1 desk:px-6")}>
+      <div role="group" aria-label={ui.boxes.sizes} className={cn(s.rail, "mt-4 flex shrink-0 snap-x gap-2 overflow-x-auto px-4 pb-1 desk:hidden")}>
         {TIRAMISU_CATALOG.map((c) => (
-          <Chip key={c.id} selected={c.id === activeCat} onClick={() => setActiveCat(c.id)} className="h-11">
+          <Chip key={c.id} selected={c.id === activeCat} onClick={() => jumpTo(c.id)} className="h-11">
             {c.labels[locale]}
             <span className="ms-1.5 font-normal opacity-70">{c.portions[locale]}</span>
           </Chip>
         ))}
       </div>
 
-      <div className="flex min-h-0 flex-1 items-center">
-        <ul className={cn(s.rail, "flex w-full snap-x snap-mandatory gap-3 overflow-x-auto px-4 py-3 desk:justify-center desk:px-6")}>
-          {category.options.map((o) => {
-            const n = qtyOf(o.id);
-            return (
-              <li key={o.id} className="flex w-[68vw] max-w-[280px] shrink-0 snap-center flex-col overflow-hidden rounded-[24px] bg-white shadow-[inset_0_0_0_1.5px_var(--color-hairline)]">
-                <div className="relative aspect-square w-full bg-mascarpone">
-                  <Image src={o.image} alt="" fill sizes="(min-width: 900px) 240px, 62vw" className="object-cover" />
-                  {n > 0 && (
-                    <span key={n} className={cn(s.pop, "type-meta absolute start-2.5 top-2.5 rounded-pill bg-paillette px-2.5 py-1 font-medium text-sucre")}>
-                      {fmt(ui.boxes.in_bucket, { n })}
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-col gap-3 p-3.5">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <h2 className="type-card">{o.shapeLabel[locale]}</h2>
-                    <span className="ltr text-[15px] font-semibold">{money(o.price)}</span>
-                  </div>
-                  <Button
-                    size="sm"
-                    block
-                    onClick={() => onAdd(o.id)}
-                    aria-label={fmt(ui.boxes.add_aria, { box: `${category.labels[locale]} · ${o.shapeLabel[locale]}` })}
-                  >
-                    <span className="inline-flex items-center gap-1.5">
-                      <TIcon name="plus" size={18} />
-                      {ui.boxes.add}
-                    </span>
-                  </Button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+      {/* Phone: full-width rows grouped by size (the chips jump between sizes).
+          Desktop: the three sizes side by side, everything in one view. */}
+      <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto px-4 pt-2 pb-6 desk:grid desk:grid-cols-3 desk:content-start desk:gap-6 desk:px-6 desk:pt-6">
+        {TIRAMISU_CATALOG.map((category) => (
+          <section key={category.id} id={sectionId(category.id)} data-size={category.id} aria-labelledby={`${sectionId(category.id)}-h`} className="scroll-mt-2 pt-4 desk:pt-0">
+            <h2 id={`${sectionId(category.id)}-h`} className="mb-2.5 flex flex-wrap items-baseline gap-x-2">
+              <span className="text-[15px] font-semibold">{category.labels[locale]}</span>
+              <span className="type-meta text-ink-muted">{category.portions[locale]}</span>
+            </h2>
+            <ul className="grid gap-3">
+              {category.options.map((o) => {
+                const n = qtyOf(o.id);
+                return (
+                  <li key={o.id} className="grid grid-cols-[112px_minmax(0,1fr)] overflow-hidden rounded-[24px] bg-white shadow-[inset_0_0_0_1.5px_var(--color-hairline)]">
+                    <div className="relative aspect-square w-full bg-mascarpone">
+                      <Image src={o.image} alt="" fill sizes="112px" className="object-cover" />
+                      {n > 0 && (
+                        <span key={n} className={cn(s.pop, "type-meta absolute start-2 top-2 rounded-pill bg-paillette px-2.5 py-1 text-xs font-medium text-sucre")}>
+                          {fmt(ui.boxes.in_bucket, { n })}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-col justify-between gap-3 p-3.5">
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 desk:flex-col desk:items-start">
+                        <h3 className="type-card">{o.shapeLabel[locale]}</h3>
+                        <span className="ltr text-[15px] font-semibold">{money(o.price)}</span>
+                      </div>
+                      <Button
+                        size="sm"
+                        block
+                        onClick={() => onAdd(o.id)}
+                        aria-label={fmt(ui.boxes.add_aria, { box: `${category.labels[locale]} · ${o.shapeLabel[locale]}` })}
+                      >
+                        <span className="inline-flex items-center gap-1.5">
+                          <TIcon name="plus" size={18} />
+                          {ui.boxes.add}
+                        </span>
+                      </Button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ))}
       </div>
 
       <FooterBar>
@@ -822,21 +937,71 @@ function TotalRow({ label, total, accent }: { label: string; total: number; acce
 }
 
 // ============ Sheets ============
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
+
+/*
+  Bottom sheet (modal). Focus moves in on open and back on close; Tab is
+  trapped inside; everything else on the page is `inert` while it is open.
+  `onClose` is read through a ref, so parents can pass an inline arrow without
+  re-running the effect (which used to re-focus the panel on every render).
+*/
 function Sheet({ children, onClose, labelledBy }: { children: React.ReactNode; onClose: () => void; labelledBy: string }) {
+  const root = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
   useEffect(() => {
     const prev = document.activeElement as HTMLElement | null;
     panel.current?.focus();
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+
+    // Make the rest of the page inert: every sibling along the path to <body>.
+    const inerted: HTMLElement[] = [];
+    for (let node: HTMLElement | null = root.current; node && node !== document.body; node = node.parentElement) {
+      const parent: HTMLElement | null = node.parentElement;
+      if (!parent) break;
+      for (const sib of Array.from(parent.children)) {
+        if (sib !== node && sib instanceof HTMLElement && !sib.inert) {
+          sib.inert = true;
+          inerted.push(sib);
+        }
+      }
+    }
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+      if (e.key !== "Tab" || !panel.current) return;
+      const items = Array.from(panel.current.querySelectorAll<HTMLElement>(FOCUSABLE));
+      if (items.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || active === panel.current)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
+      for (const el of inerted) el.inert = false;
       prev?.focus?.();
     };
-  }, [onClose]);
+  }, []);
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center desk:items-center">
-      <div className={cn(s.scrimIn, "absolute inset-0 bg-paillette/55")} onClick={onClose} aria-hidden="true" />
+    <div ref={root} className="fixed inset-0 z-50 flex items-end justify-center desk:items-center">
+      <div className={cn(s.scrimIn, "absolute inset-0 bg-paillette/55")} onClick={() => onCloseRef.current()} aria-hidden="true" />
       <div
         ref={panel}
         role="dialog"
@@ -974,7 +1139,7 @@ function ReviewStep({ bucket, total, onConfirm }: { bucket: CartLine[]; total: n
                   {b.personalizations.map((p, i) => (
                     <p key={i} className="type-meta mt-1.5 flex items-center gap-2 text-ink-soft">
                       <StyleDot style={p.style} />
-                      <span className="shrink-0">{STYLE_META[p.style].labels[locale]} :</span>
+                      <span className="shrink-0">{fmt(ui.review.label, { label: STYLE_META[p.style].labels[locale] })}</span>
                       <span className="ltr truncate font-display uppercase tracking-[0.04em]">
                         {personalizationText(p).replace(/\n/g, " · ") || "…"}
                       </span>
@@ -1008,9 +1173,10 @@ function ReviewStep({ bucket, total, onConfirm }: { bucket: CartLine[]; total: n
 
 // ============ Step: Confirm ============
 function ConfirmStep({
-  name, phone, setName, setPhone, total, count, canSubmit, submitting, error, onSubmit,
+  name, phone, setName, setPhone, website, setWebsite, total, count, canSubmit, submitting, error, onSubmit,
 }: {
   name: string; phone: string; setName: (v: string) => void; setPhone: (v: string) => void;
+  website: string; setWebsite: (v: string) => void;
   total: number; count: number; canSubmit: boolean; submitting: boolean; error: string | null; onSubmit: () => void;
 }) {
   const { ui } = useTiramisuUi();
@@ -1048,6 +1214,17 @@ function ConfirmStep({
             className={cn(field, "text-start")}
           />
         </div>
+        {/* Honeypot: clipped (sr-only), out of the tab order and the a11y tree. */}
+        <input
+          type="text"
+          name="website"
+          value={website}
+          onChange={(e) => setWebsite(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          className="sr-only"
+        />
 
         <div className="rounded-[22px] bg-dragee p-4">
           <div className="flex items-baseline justify-between gap-3">
