@@ -141,7 +141,10 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   return (
-    <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} className={FONT_CLASSES[locale]}>
+    // data-scroll-behavior: Next turns the global smooth scrolling off while it
+    // resets the scroll on a route change (no animated scroll under a page
+    // transition, e.g. switching universes from deep in the gallery).
+    <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} className={FONT_CLASSES[locale]} data-scroll-behavior="smooth">
       <head>
         {/* Canonical URLs are set per page (metadata.alternates), not here:
             a layout-level canonical would mark every page as a copy of home. */}
