@@ -41,7 +41,7 @@ export function UniverseStrip({
   className?: string;
 }) {
   return (
-    <div className={cn(styles.bar, className)}>
+    <div className={cn(styles.bar, className)} style={{ viewTransitionName: "gp-switch-bar" }}>
       <UniverseSwitcher current={current} labels={labels} label={label} />
     </div>
   );

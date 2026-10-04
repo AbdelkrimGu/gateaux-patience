@@ -55,7 +55,12 @@ export function UniverseSwitcher({ current, labels, label, className, size = "st
       data-u={shown ?? undefined}
       style={{ "--i": Math.max(index, 0) } as React.CSSProperties}
     >
-      {index > -1 && <span aria-hidden="true" className={styles.indicator} />}
+      {shown && (
+        // Named inline: a CSS module would hash the view-transition-name.
+        <span aria-hidden="true" className={styles.indicator} style={{ viewTransitionName: "gp-switch-ind" }}>
+          {labels[shown]}
+        </span>
+      )}
       <ul className={styles.track}>
         {UNIVERSES.map((u) => (
           <li key={u} className="flex">

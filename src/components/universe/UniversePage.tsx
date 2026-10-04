@@ -24,6 +24,21 @@ const CLASSES = {
   default: "none",
 };
 
+/**
+ * Same classes around the site chrome's <main> + footer (SiteChrome): the
+ * top-most boundary when the whole chrome is inserted or removed, i.e.
+ * between a site page and the full-screen tiramisu wizard. Between two
+ * site pages it only "updates" (default none) and the pages' own
+ * <UniversePage> boundaries animate.
+ */
+export function UniverseChromeTransition({ children }: { children: ReactNode }) {
+  return (
+    <ViewTransition enter={CLASSES} exit={CLASSES} default="none">
+      {children}
+    </ViewTransition>
+  );
+}
+
 export function UniversePage({ children }: { children: ReactNode }) {
   return (
     <>

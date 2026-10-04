@@ -59,7 +59,7 @@
     color: var(--color-framboise);
   }
   .segment[data-on] {
-    color: var(--u-ink);
+    color: transparent;
   }
   .indicator {
     position: absolute;
@@ -70,7 +70,22 @@
     border-radius: 999px;
     background: var(--u-bg);
     transform: translateX(calc(var(--i) * 100% * var(--dir)));
-    view-transition-name: gp-switch-ind;
+    /* Carries the current label itself (the link's own text goes
+       transparent), so in a page transition the label travels with the
+       pill instead of hiding under it. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.1;
+    white-space: nowrap;
+    color: var(--u-ink);
+    pointer-events: none;
+  }
+  :global([lang="ar"]) .indicator {
+    font-size: 16px;
   }
   @media (prefers-reduced-motion: no-preference) {
     .indicator {
@@ -94,7 +109,6 @@
     z-index: 30;
     padding: 6px var(--gutter) 8px;
     background: var(--color-sucre);
-    view-transition-name: gp-switch-bar;
   }
   .bar::after {
     content: "";

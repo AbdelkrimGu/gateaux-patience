@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 import { UniverseBar } from "@/components/universe/UniverseBar";
 import { UniverseIdle } from "@/components/universe/UniverseIdle";
+import { UniverseChromeTransition } from "@/components/universe/UniversePage";
 import { UNIVERSES, type Universe } from "@/components/universe/model";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
@@ -26,10 +27,12 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
       <Header />
       <UniverseBar labels={labels} label={tu("switcher_label")} />
       <UniverseIdle />
-      <main id="main" tabIndex={-1} className="outline-none">
-        {children}
-      </main>
-      <Footer />
+      <UniverseChromeTransition>
+        <main id="main" tabIndex={-1} className="outline-none">
+          {children}
+        </main>
+        <Footer />
+      </UniverseChromeTransition>
     </>
   );
 }
