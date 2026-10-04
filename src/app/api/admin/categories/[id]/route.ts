@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePublicCatalog } from "@/lib/revalidate";
 import { isAdmin } from "@/lib/admin-auth";
 import { deleteCategory, updateCategory, type CategoryPatch } from "@/lib/categories-data";
+import { isCategoryUniverse } from "@/lib/universes-core";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,6 +23,9 @@ export async function PUT(
   }
   if (body.labels && !body.labels.fr?.trim()) {
     return NextResponse.json({ error: "FR label is required" }, { status: 400 });
+  }
+  if (body.universe !== undefined && !isCategoryUniverse(body.universe)) {
+    return NextResponse.json({ error: "Invalid universe" }, { status: 400 });
   }
   try {
     const result = await updateCategory(id, body);

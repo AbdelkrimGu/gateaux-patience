@@ -4,6 +4,7 @@ import { getCakesCollection, getCategoriesCollection } from "./mongodb";
 import { slugify } from "./admin-data";
 import { deleteS3Object } from "./s3";
 import type { Category } from "./db-types";
+import { isCategoryUniverse, type CategoryUniverse } from "./universes-core";
 
 const PROJECT_NO_ID = { _id: 0 } as const;
 
@@ -60,6 +61,8 @@ export interface CategoryInput {
   labels: { fr: string; ar: string; en: string };
   image?: string;
   order?: number;
+  /** Omitted = not stored (read-time default, see universes-core.ts). */
+  universe?: CategoryUniverse;
 }
 
 export async function createCategory(input: CategoryInput): Promise<Category> {
@@ -89,6 +92,7 @@ export async function createCategory(input: CategoryInput): Promise<Category> {
       en: input.labels.en.trim() || input.labels.fr.trim(),
     },
     image: input.image || undefined,
+    ...(isCategoryUniverse(input.universe) ? { universe: input.universe } : {}),
     order: nextOrder,
     createdAt: now,
     updatedAt: now,
@@ -101,6 +105,8 @@ export interface CategoryPatch {
   labels?: { fr: string; ar: string; en: string };
   image?: string | null;
   order?: number;
+  /** undefined = unchanged. Only the owner's admin save sends it. */
+  universe?: CategoryUniverse;
 }
 
 export async function updateCategory(
@@ -121,6 +127,7 @@ export async function updateCategory(
     };
   }
   if (typeof patch.order === "number") updates.order = patch.order;
+  if (isCategoryUniverse(patch.universe)) updates.universe = patch.universe;
 
   // image: null or "" means "remove", undefined means "unchanged", string means "set"
   let oldImageToDelete: string | null = null;
