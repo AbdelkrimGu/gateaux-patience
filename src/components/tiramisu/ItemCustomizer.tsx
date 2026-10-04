@@ -1,10 +1,13 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { useLocale } from "next-intl";
-import { Check, X, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
+import { EcrinSurface } from "@/components/ui/EcrinSurface";
 import TiramisuPreview from "./TiramisuPreview";
+import { TIcon } from "./TiramisuIcon";
+import { useTiramisuUi, fmt } from "./ui-context";
 import { computeLayout } from "@/lib/tiramisu-layout";
 import {
   resolveTemplate,
@@ -14,7 +17,6 @@ import {
 import {
   STYLE_META,
   cleanTiramisuLine,
-  type Locale,
   type TiramisuStyle,
 } from "@/lib/tiramisu-config";
 
@@ -55,10 +57,8 @@ export default function ItemCustomizer({
   onSave: (p: Personalization) => void;
   onCancel: () => void;
 }) {
-  const locale = useLocale() as Locale;
+  const { locale, ui } = useTiramisuUi();
   const isRTL = locale === "ar";
-  const t = (fr: string, ar: string, en: string) =>
-    locale === "ar" ? ar : locale === "en" ? en : fr;
 
   // The product template is fully determined by the box (shape × size).
   const template = useMemo(() => resolveTemplate(shape, sizeId), [shape, sizeId]);
@@ -111,64 +111,64 @@ export default function ItemCustomizer({
     }
   }
 
-  const styleLabel = t(
-    "Petit conseil : plus le texte est court, plus les lettres sont grandes et belles.",
-    "نصيحة: كلما كان النص أقصر، كانت الحروف أكبر وأجمل.",
-    "Tip: the shorter the text, the larger and more beautiful the letters."
-  );
+  const styles = Object.keys(STYLE_META) as TiramisuStyle[];
 
   return (
-    <div dir={isRTL ? "rtl" : "ltr"} className="flex h-full flex-col">
-      {/* Progress (when walking through several boxes) */}
-      {progressLabel && (
-        <div className="flex shrink-0 justify-center pt-1.5">
-          <span className="rounded-full bg-rose/10 px-3 py-1 text-[11px] font-semibold text-rose">
+    <div className="flex h-full flex-col">
+      {/* The stage: preview on the écrin surface, in the box's real shape + size. */}
+      <EcrinSurface className="mx-4 mt-1 flex shrink-0 flex-col items-center gap-3 rounded-[32px] px-3 pt-3 pb-3 desk:mx-6">
+        {progressLabel && (
+          <p className="text-[13px] font-medium text-cuivre" aria-live="polite">
             {progressLabel}
-          </span>
-        </div>
-      )}
+          </p>
+        )}
+        <TiramisuPreview style={style} template={template} text={text} />
+      </EcrinSurface>
 
-      {/* Preview — in the customer's actual box shape + size */}
-      <div className="flex shrink-0 items-center justify-center px-4 pt-2">
-        <div className="h-[32vh] w-[32vh] max-w-full">
-          <TiramisuPreview style={style} template={template} text={text} />
-        </div>
-      </div>
+      {/* Controls */}
+      <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-4 pt-3.5 pb-3 desk:px-6">
+        <h2 className="type-meta text-ink-muted">
+          {ui.custom.personalizing} <span className="font-semibold text-paillette">{optionLabel}</span>
+        </h2>
 
-      {/* Controls — all on screen */}
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-2 pt-3">
-        <p className="text-center text-xs font-medium text-charcoal-light">
-          {t("Personnalisation de", "تخصيص", "Personalizing")}{" "}
-          <span className="text-rose">{optionLabel}</span>
-        </p>
-
-        {/* Style */}
-        <div className="grid grid-cols-2 gap-2">
-          {(Object.keys(STYLE_META) as TiramisuStyle[]).map((s) => {
-            const active = style === s;
+        {/* Decoration style */}
+        <div role="radiogroup" aria-label={ui.custom.style} className="grid grid-cols-2 gap-2">
+          {styles.map((st) => {
+            const active = style === st;
             return (
               <button
-                key={s}
-                onClick={() => setStyle(s)}
+                key={st}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setStyle(st)}
                 className={cn(
-                  "rounded-xl border px-3 py-2 text-start transition-all",
-                  active ? "border-rose bg-rose/5 shadow-xs" : "border-border bg-white"
+                  "press flex min-h-[52px] items-center gap-2.5 rounded-[18px] px-3 py-2 text-start text-[14px] font-medium leading-tight",
+                  active
+                    ? "bg-paillette text-sucre"
+                    : "bg-white shadow-[inset_0_0_0_1.5px_var(--color-hairline)] hover:shadow-[inset_0_0_0_1.5px_var(--color-paillette)]"
                 )}
               >
-                <span className="text-lg">{STYLE_META[s].emoji}</span>
-                <span className="ms-1 text-xs font-semibold text-charcoal">
-                  {STYLE_META[s].labels[locale]}
-                </span>
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "size-5 shrink-0 rounded-full",
+                    st === "cacao" ? "bg-cacao" : "bg-white shadow-[inset_0_0_0_1.5px_var(--color-cacao)]",
+                    active && "ring-2 ring-sucre/70"
+                  )}
+                />
+                {STYLE_META[st].labels[locale]}
               </button>
             );
           })}
         </div>
 
-        <div className="rounded-xl border border-border bg-white px-3 py-2 text-[11px] leading-snug text-charcoal-light">
-          💡 {styleLabel}
-        </div>
+        <p className="type-meta flex items-start gap-2 text-ink-muted">
+          <TIcon name="info" size={17} className="mt-px" />
+          {ui.custom.tip}
+        </p>
 
-        {/* Text lines */}
+        {/* Text lines (Latin letters only: the product's letter set) */}
         <div className="space-y-2">
           {Array.from({ length: maxLines }).map((_, i) => {
             const val = lines[i] ?? "";
@@ -181,21 +181,27 @@ export default function ItemCustomizer({
                   type="text"
                   inputMode="text"
                   autoCapitalize="characters"
+                  autoComplete="off"
+                  spellCheck={false}
                   enterKeyHint={i < maxLines - 1 ? "next" : "done"}
                   value={val}
                   maxLength={perLine}
                   onChange={(e) => handleChange(i, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(i, e)}
-                  placeholder={
-                    maxLines > 1
-                      ? `${t("Ligne", "سطر", "Line")} ${i + 1}`
-                      : t("Tapez ici…", "اكتب هنا…", "Type here…")
-                  }
+                  aria-label={fmt(ui.custom.line_aria, { n: i + 1 })}
+                  aria-describedby={`gp-count-${i}`}
+                  placeholder={maxLines > 1 ? fmt(ui.custom.line, { n: i + 1 }) : ui.custom.type_here}
                   dir={isRTL ? "rtl" : "ltr"}
-                  className="w-full rounded-xl border border-border bg-white px-3 py-2.5 pe-12 font-playfair text-base uppercase text-charcoal outline-hidden transition-colors focus:border-rose focus:ring-2 focus:ring-rose/20"
+                  className="h-14 w-full rounded-[18px] bg-white pe-16 ps-4 font-display text-[20px] uppercase tracking-[0.04em] text-paillette shadow-[inset_0_0_0_1.5px_var(--color-hairline)] placeholder:font-sans placeholder:text-[16px] placeholder:normal-case placeholder:tracking-normal placeholder:text-ink-muted/70"
                 />
-                <span className="pointer-events-none absolute inset-e-3 top-1/2 -translate-y-1/2 text-[10px] tabular-nums text-charcoal-lighter">
-                  {val.length}/{perLine}
+                <span
+                  id={`gp-count-${i}`}
+                  className="pointer-events-none absolute inset-e-4 top-1/2 -translate-y-1/2 text-[12px] font-medium tabular-nums text-ink-muted"
+                >
+                  <span aria-hidden="true" className="ltr">
+                    {val.length}/{perLine}
+                  </span>
+                  <span className="sr-only">{fmt(ui.custom.count, { n: val.length, max: perLine })}</span>
                 </span>
               </div>
             );
@@ -204,35 +210,24 @@ export default function ItemCustomizer({
 
         {/* Gentle fit warning (does not block saving) */}
         {!layout.fits && text.length > 0 && (
-          <div className="flex items-start gap-1.5 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-[11px] leading-snug text-charcoal">
-            <AlertTriangle size={14} className="mt-0.5 shrink-0 text-gold" />
-            <span>
-              {t(
-                "Ce message est un peu long pour cette boîte — les lettres seront plus petites.",
-                "هذه الرسالة طويلة قليلاً على هذه العلبة — ستكون الحروف أصغر.",
-                "This message is a little long for this box — the letters will be smaller."
-              )}
-            </span>
-          </div>
+          <p role="status" className="type-meta flex items-start gap-2 rounded-[16px] bg-dragee px-3.5 py-2.5 text-paillette">
+            <TIcon name="alert" size={17} className="mt-px text-framboise" />
+            {ui.custom.too_long}
+          </p>
         )}
       </div>
 
-      {/* Footer actions */}
-      <div className="flex shrink-0 gap-3 border-t border-border bg-white px-4 py-3">
-        <button
-          onClick={onCancel}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border py-3 text-sm font-medium text-charcoal-light transition-colors hover:border-charcoal-light"
-        >
-          <X size={16} />
-          {t("Annuler", "إلغاء", "Cancel")}
-        </button>
-        <button
-          onClick={() => onSave({ style, sizeId, lines })}
-          className="flex flex-2 items-center justify-center gap-1.5 rounded-full bg-rose py-3 text-sm font-semibold text-white shadow-cake transition-all hover:bg-rose-dark active:scale-[0.98]"
-        >
-          <Check size={16} />
-          {t("Enregistrer", "حفظ", "Save")}
-        </button>
+      {/* Footer actions (thumb zone) */}
+      <div className="flex shrink-0 gap-2.5 bg-sucre px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] shadow-[0_-1px_0_var(--color-hairline)] desk:px-6">
+        <Button variant="ghost" onClick={onCancel} className="flex-1 px-4">
+          {ui.custom.cancel}
+        </Button>
+        <Button onClick={() => onSave({ style, sizeId, lines })} className="flex-2">
+          <span className="inline-flex items-center gap-2">
+            <Icon name="check" size={20} />
+            {ui.custom.save}
+          </span>
+        </Button>
       </div>
     </div>
   );

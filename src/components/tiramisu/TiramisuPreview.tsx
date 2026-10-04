@@ -10,20 +10,24 @@
 //    idle spin / intro; a weak-GPU heuristic trims shadow + DPR.
 //  • The render loop pauses whenever the preview scrolls off-screen or the tab
 //    is hidden (IntersectionObserver + visibilitychange).
+//
+// Skin: the square keeps its own warm backdrop (the preview content is
+// unchanged); the controls sit under it, on the écrin stage.
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { useLocale } from "next-intl";
-import { Box, Square, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import TiramisuCanvas from "./TiramisuCanvas";
+import { TIcon } from "./TiramisuIcon";
+import { useTiramisuUi, fmt } from "./ui-context";
+import s from "./tiramisu.module.css";
 import type { ViewKey } from "./three/TiramisuScene3D";
-import type { Locale, TiramisuStyle } from "@/lib/tiramisu-config";
+import type { TiramisuStyle } from "@/lib/tiramisu-config";
 import type { TiramisuTemplate } from "@/lib/tiramisu-templates";
 
 const TiramisuScene3D = dynamic(() => import("./three/TiramisuScene3D"), {
   ssr: false,
-  loading: () => <div className="absolute inset-0 shimmer" />,
+  loading: () => <div className={cn(s.loading, "absolute inset-0")} />,
 });
 
 const LS_KEY = "tiramisu-preview-mode";
@@ -48,11 +52,17 @@ interface Props {
   text: string;
 }
 
+// Segmented pills on the dark stage: sucre outline group, selected = sucre fill.
+const segGroup = "flex items-center rounded-pill p-1 shadow-[inset_0_0_0_1.5px_rgb(247_242_244/0.28)]";
+const segBtn = (on: boolean) =>
+  cn(
+    "press inline-flex min-h-11 min-w-11 items-center justify-center rounded-pill px-2.5 text-[13px] font-semibold",
+    on ? "bg-sucre text-paillette" : "text-sucre/85 hover:text-sucre"
+  );
+
 export default function TiramisuPreview({ style, template, text }: Props) {
   const shape = template.shape;
-  const locale = useLocale() as Locale;
-  const t = (fr: string, ar: string, en: string) =>
-    locale === "ar" ? ar : locale === "en" ? en : fr;
+  const { ui } = useTiramisuUi();
 
   const [webgl, setWebgl] = useState(false);
   const [reduced, setReduced] = useState(false);
@@ -124,118 +134,99 @@ export default function TiramisuPreview({ style, template, text }: Props) {
     }
   }
 
-  const presets: { key: ViewKey; label: string }[] = useMemo(
-    () => [
-      { key: "top", label: t("Dessus", "أعلى", "Top") },
-      { key: "hero", label: t("3/4", "3/4", "3/4") },
-      { key: "side", label: t("Côté", "جانب", "Side") },
-    ],
-    [locale] // eslint-disable-line react-hooks/exhaustive-deps
-  );
+  const presets: { key: ViewKey; label: string }[] = [
+    { key: "top", label: ui.preview.top },
+    { key: "hero", label: ui.preview.hero },
+    { key: "side", label: ui.preview.side },
+  ];
 
   const show3D = ready && webgl && mode === "3d";
 
-  const shapeName = t(
-    shape === "heart" ? "cœur" : shape === "square" ? "carrée" : shape === "oval" ? "ovale" : "ronde",
-    shape === "heart" ? "قلب" : shape === "square" ? "مربّع" : shape === "oval" ? "بيضاوي" : "دائري",
-    shape === "heart" ? "heart" : shape === "square" ? "square" : shape === "oval" ? "oval" : "round"
-  );
+  const shapeName =
+    shape === "heart"
+      ? ui.preview.shape_heart
+      : shape === "square"
+        ? ui.preview.shape_square
+        : shape === "oval"
+          ? ui.preview.shape_oval
+          : ui.preview.shape_round;
   const msg = text.trim().replace(/\s+/g, " ");
-  const sceneLabel = t(
-    `Aperçu 3D de votre boîte ${shapeName}${msg ? ` avec le message « ${msg} »` : ""}`,
-    `معاينة ثلاثية الأبعاد لعلبتك ${shapeName}${msg ? ` مع الرسالة « ${msg} »` : ""}`,
-    `3D preview of your ${shapeName} box${msg ? ` with the message “${msg}”` : ""}`
-  );
+  const sceneLabel = msg
+    ? fmt(ui.preview.scene_msg, { shape: shapeName, msg })
+    : fmt(ui.preview.scene, { shape: shapeName });
 
   return (
-    <div
-      ref={wrapRef}
-      className="relative aspect-square w-full overflow-hidden rounded-4xl shadow-[0_24px_70px_rgba(40,20,8,0.4)] ring-1 ring-black/5"
-      style={{
-        background: "radial-gradient(120% 120% at 50% 20%, #FBF1E6 0%, #F3E2D2 55%, #E9D2BE 100%)",
-      }}
-    >
-      {show3D ? (
-        <div role="img" aria-label={sceneLabel} className="absolute inset-0">
-          <TiramisuScene3D
-            style={style}
-            template={template}
-            text={text}
-            reducedMotion={reduced}
-            view={view}
-            frameloop={onScreen ? (reduced ? "demand" : "always") : "never"}
-            lowPower={lowPower}
-          />
-        </div>
-      ) : (
-        <div className="absolute inset-0">
-          <TiramisuCanvas style={style} template={template} text={text} />
-        </div>
-      )}
+    <>
+      <div
+        ref={wrapRef}
+        className="relative aspect-square h-[32vh] max-w-full overflow-hidden rounded-[24px] bezel"
+        style={{
+          background: "radial-gradient(120% 120% at 50% 20%, #FBF1E6 0%, #F3E2D2 55%, #E9D2BE 100%)",
+        }}
+      >
+        {show3D ? (
+          <div role="img" aria-label={sceneLabel} className="absolute inset-0">
+            <TiramisuScene3D
+              style={style}
+              template={template}
+              text={text}
+              reducedMotion={reduced}
+              view={view}
+              frameloop={onScreen ? (reduced ? "demand" : "always") : "never"}
+              lowPower={lowPower}
+            />
+          </div>
+        ) : (
+          <div className="absolute inset-0">
+            <TiramisuCanvas style={style} template={template} text={text} />
+          </div>
+        )}
+      </div>
 
-      {/* 2D ⇄ 3D toggle (only when 3D is possible). */}
+      {/* Controls on the stage: 2D ⇄ 3D (only when 3D is possible) + angles (3D only). */}
       {ready && webgl && (
-        <div className="absolute inset-e-2 top-2 z-10 flex rounded-full bg-white/85 p-0.5 shadow-xs ring-1 ring-black/5 backdrop-blur-xs">
-          <button
-            onClick={() => choose("2d")}
-            aria-label={t("Aperçu 2D", "معاينة 2D", "2D preview")}
-            aria-pressed={mode === "2d"}
-            className={cn(
-              "flex min-h-[40px] min-w-[44px] items-center justify-center gap-1 rounded-full px-3 py-2 text-[11px] font-semibold transition-colors",
-              "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-1",
-              mode === "2d" ? "bg-rose text-white shadow-sm" : "text-charcoal-light"
-            )}
-          >
-            <Square size={12} /> 2D
-          </button>
-          <button
-            onClick={() => choose("3d")}
-            aria-label={t("Aperçu 3D", "معاينة 3D", "3D preview")}
-            aria-pressed={mode === "3d"}
-            className={cn(
-              "flex min-h-[40px] min-w-[44px] items-center justify-center gap-1 rounded-full px-3 py-2 text-[11px] font-semibold transition-colors",
-              "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-1",
-              mode === "3d" ? "bg-rose text-white shadow-sm" : "text-charcoal-light"
-            )}
-          >
-            <Box size={12} /> 3D
-          </button>
-        </div>
-      )}
-
-      {/* Preset angles + reset (3D only). */}
-      {show3D && (
-        <div className="absolute inset-x-0 bottom-2 z-10 flex items-center justify-center gap-1.5">
-          <div className="flex items-center gap-1 rounded-full bg-white/85 p-0.5 shadow-xs ring-1 ring-black/5 backdrop-blur-xs">
-            {presets.map((p) => (
-              <button
-                key={p.key}
-                onClick={() => goView(p.key)}
-                aria-pressed={activePreset === p.key}
-                className={cn(
-                  "flex min-h-[40px] min-w-[44px] items-center justify-center rounded-full px-3 py-2 text-[11px] font-semibold transition-colors",
-                  "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-1",
-                  activePreset === p.key
-                    ? "bg-rose text-white shadow-sm"
-                    : "text-charcoal-light hover:bg-rose/10 hover:text-rose"
-                )}
-              >
-                {p.label}
-              </button>
-            ))}
+        <div className="flex w-full flex-wrap items-center justify-between gap-2">
+          <div role="group" aria-label={ui.preview.mode} className={segGroup}>
             <button
-              onClick={() => goView("hero")}
-              aria-label={t("Réinitialiser la vue", "إعادة الضبط", "Reset view")}
-              className={cn(
-                "flex min-h-[40px] min-w-[44px] items-center justify-center rounded-full px-3 py-2 text-charcoal-light transition-colors hover:bg-rose/10 hover:text-rose",
-                "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-1"
-              )}
+              type="button"
+              onClick={() => choose("2d")}
+              aria-label={ui.preview.label_2d}
+              aria-pressed={mode === "2d"}
+              className={segBtn(mode === "2d")}
             >
-              <RotateCcw size={12} />
+              2D
+            </button>
+            <button
+              type="button"
+              onClick={() => choose("3d")}
+              aria-label={ui.preview.label_3d}
+              aria-pressed={mode === "3d"}
+              className={segBtn(mode === "3d")}
+            >
+              3D
             </button>
           </div>
+
+          {show3D && (
+            <div role="group" aria-label={ui.preview.views} className={segGroup}>
+              {presets.map((p) => (
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={() => goView(p.key)}
+                  aria-pressed={activePreset === p.key}
+                  className={segBtn(activePreset === p.key)}
+                >
+                  {p.label}
+                </button>
+              ))}
+              <button type="button" onClick={() => goView("hero")} aria-label={ui.preview.reset} className={segBtn(false)}>
+                <TIcon name="rotate" size={16} />
+              </button>
+            </div>
+          )}
         </div>
       )}
-    </div>
+    </>
   );
 }
