@@ -1,20 +1,19 @@
-import { cookies } from "next/headers";
-import { redirect, notFound } from "next/navigation";
+import { requireAdmin } from "@/lib/admin-auth";
+import { notFound } from "next/navigation";
 import AdminShell from "@/components/admin/AdminShell";
 import CakeForm from "@/components/admin/CakeForm";
 import { getCakeById } from "@/lib/admin-data";
-import { getCategories } from "@/lib/categories-data";
+import { getCategoriesOrEmpty } from "@/lib/categories-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function EditCakePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const cookieStore = await cookies();
-  if (cookieStore.get("admin_session")?.value !== "authenticated") redirect("/admin/login");
+  await requireAdmin();
 
   const [cake, categories] = await Promise.all([
     getCakeById(id),
-    getCategories(),
+    getCategoriesOrEmpty(),
   ]);
   if (!cake) notFound();
 

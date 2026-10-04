@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { isAdmin } from "@/lib/admin-auth";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-async function isAuthed() {
-  const c = await cookies();
-  return c.get("admin_session")?.value === "authenticated";
-}
-
 export async function POST(req: NextRequest) {
-  if (!(await isAuthed())) {
+  if (!(await isAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

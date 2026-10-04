@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import { cache } from "react";
 import { getCakesCollection, getCategoriesCollection } from "./mongodb";
 import { slugify } from "./admin-data";
 import { deleteS3Object } from "./s3";
@@ -8,7 +9,11 @@ const PROJECT_NO_ID = { _id: 0 } as const;
 
 export type { Category } from "./db-types";
 
-export async function getCategories(): Promise<Category[]> {
+/**
+ * All categories. Throws on a DB error (public ISR pages must not cache an
+ * empty result, see cakes-data.ts); admin pages use getCategoriesOrEmpty().
+ */
+export const getCategories = cache(async function getCategories(): Promise<Category[]> {
   try {
     const col = await getCategoriesCollection();
     const docs = await col
@@ -18,6 +23,15 @@ export async function getCategories(): Promise<Category[]> {
     return docs as unknown as Category[];
   } catch (err) {
     console.error("[categories-data:getCategories]", err instanceof Error ? err.message : err);
+    throw err instanceof Error ? err : new Error(String(err));
+  }
+});
+
+/** Admin callers: degrade to an empty list instead of an error page. */
+export async function getCategoriesOrEmpty(): Promise<Category[]> {
+  try {
+    return await getCategories();
+  } catch {
     return [];
   }
 }

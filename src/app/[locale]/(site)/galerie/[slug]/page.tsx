@@ -16,6 +16,7 @@ import { cakeDescription, cakeTitle, categoryLabel, dimensionsOf, relatedCakes }
 import { getAllPublishedCakes, getAllPublishedSlugs, getCakeBySlug } from "@/lib/cakes-data";
 import { cakeRef } from "@/lib/cake-ref";
 import { PHONE_LOCAL, SITE_URL } from "@/lib/constants";
+import { ogImage, pageMetadata } from "@/lib/seo";
 import { isWedding, occasionFor, pipingFor, pipingStyle } from "@/lib/piping";
 import { cn } from "@/lib/utils";
 import styles from "@/components/gallery/gallery.module.css";
@@ -47,24 +48,14 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
         ? `${desc.slice(0, 157).trimEnd()}…`
         : desc
       : t("meta_desc", { title, ref: cakeRef(cake.id) });
-  return {
-    title: { absolute: t("meta_title", { title }) },
+  return pageMetadata({
+    locale,
+    path: `/galerie/${slug}`,
+    title: t("meta_title", { title }),
     description,
-    alternates: {
-      canonical: locale === "fr" ? `/galerie/${slug}` : `/${locale}/galerie/${slug}`,
-      languages: {
-        fr: `/galerie/${slug}`,
-        ar: `/ar/galerie/${slug}`,
-        en: `/en/galerie/${slug}`,
-        "x-default": `/galerie/${slug}`,
-      },
-    },
-    openGraph: {
-      title,
-      description,
-      images: cake.images[0] ? [{ url: cake.images[0], alt: title }] : undefined,
-    },
-  };
+    image: ogImage(cake.images[0], title),
+    type: "article",
+  });
 }
 
 export default async function CakeDetailPage({ params }: { params: Params }) {
@@ -206,37 +197,31 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
   );
 
   const jsonLd = JSON.stringify([
+    // ItemPage + CreativeWork (not Product): there is no price/offer to
+    // publish, and a Product without offers/review is an invalid rich result.
     {
       "@context": "https://schema.org",
-      "@type": "Product",
-      "@id": `${abs(locale, page)}#product`,
-      name: title,
-      description: description || undefined,
-      image: cake.images,
-      sku: ref,
-      category,
+      "@type": "ItemPage",
+      "@id": `${abs(locale, page)}#page`,
       url: abs(locale, page),
-      brand: { "@type": "Brand", name: "Gateaux Patience" },
-      manufacturer: { "@id": `${SITE_URL}/#business` },
-      ...(cake.length && cake.width && cake.height
-        ? {
-            depth: {
-              "@type": "QuantitativeValue",
-              value: cake.length,
-              unitCode: "CMT",
-            },
-            width: {
-              "@type": "QuantitativeValue",
-              value: cake.width,
-              unitCode: "CMT",
-            },
-            height: {
-              "@type": "QuantitativeValue",
-              value: cake.height,
-              unitCode: "CMT",
-            },
-          }
-        : {}),
+      name: title,
+      inLanguage: locale,
+      isPartOf: { "@type": "WebSite", name: "Gateaux Patience", url: `${SITE_URL}/` },
+      primaryImageOfPage: cake.images[0]
+        ? { "@type": "ImageObject", contentUrl: cake.images[0], caption: title }
+        : undefined,
+      mainEntity: {
+        "@type": "CreativeWork",
+        "@id": `${abs(locale, page)}#cake`,
+        name: title,
+        description: description || undefined,
+        genre: category,
+        identifier: ref,
+        image: cake.images.map((src) => ({ "@type": "ImageObject", contentUrl: src, caption: title })),
+        creator: { "@id": `${SITE_URL}/#business` },
+        dateCreated: cake.createdAt || undefined,
+        dateModified: cake.updatedAt || undefined,
+      },
     },
     {
       "@context": "https://schema.org",

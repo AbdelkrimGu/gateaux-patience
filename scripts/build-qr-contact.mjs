@@ -313,7 +313,19 @@ ${button("qc-home", c.homeHref, ICON.home, c.home, esc(c.homeMeta))}
 
 const outDir = new URL("../public/qr/", import.meta.url);
 mkdirSync(outDir, { recursive: true });
+// Deterministic output: always LF (see .gitattributes: public/qr/*.html is
+// eol=lf), and the file is left untouched when nothing changed, so a prebuild
+// never shows up in `git status`.
+let changed = 0;
 for (const lang of LANGS) {
-  writeFileSync(new URL(`${lang}.html`, outDir), page(lang));
+  const file = new URL(`${lang}.html`, outDir);
+  const html = page(lang).replace(/\r\n?/g, "\n");
+  let current = null;
+  try {
+    current = readFileSync(file, "utf8"); // raw: a CRLF copy is rewritten as LF
+  } catch {}
+  if (current === html) continue;
+  writeFileSync(file, html);
+  changed++;
 }
-console.log(`qr contact pages written (${LANGS.join(", ")}) for ${SITE}`);
+console.log(`qr contact pages (${LANGS.join(", ")}) for ${SITE}: ${changed ? `${changed} written` : "unchanged"}`);

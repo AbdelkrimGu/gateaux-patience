@@ -1,6 +1,12 @@
 {
   "greeting": "Hello Gateaux Patience!",
   "general": "I would like to order a custom cake.",
+  "occasion": {
+    "wedding": "I would like to order a cake for a wedding or an engagement.",
+    "birthday": "I would like to order a custom birthday cake.",
+    "birth": "I would like to order a custom cake for a new baby.",
+    "success": "I would like to order a custom cake to celebrate a success."
+  },
   "cake": "I would like a cake like “{title}” (ref. {ref}).",
   "tiramisu": "I would like to order a custom tiramisu.",
   "sweets": "I would like some party sweets (cakesicles, cupcakes, cake pops).",

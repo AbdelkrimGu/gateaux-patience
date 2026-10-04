@@ -2,18 +2,28 @@
 //
 //   cakeRef("be421475-28cd-…") -> "GP-3K7Q"
 //
-// 4 base-36 chars = 1.68M codes; for a few hundred cakes the collision odds are
-// tiny, and assertUniqueRefs() warns in development if it ever happens.
+// 4 chars from a Crockford-style alphabet with the look-alikes removed
+// (no 0/O, 1/I/L), so a ref read aloud or retyped from a WhatsApp chat can't
+// be misread: 31^4 = 923,521 codes. For a few hundred cakes the collision odds
+// are tiny, and assertUniqueRefs() warns in development if it ever happens.
 // Show it on cards, the detail page and in WhatsApp messages. In RTL wrap it
 // in <bdi> or className="ltr".
 
 import { fnv1a } from "./hash";
 
-const SPACE = 36 ** 4;
+export const REF_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+const BASE = REF_ALPHABET.length;
+const LENGTH = 4;
+const SPACE = BASE ** LENGTH;
 
 export function cakeRef(cakeId: string): string {
-  const n = fnv1a(cakeId) % SPACE;
-  return `GP-${n.toString(36).padStart(4, "0").toUpperCase()}`;
+  let n = fnv1a(cakeId) % SPACE;
+  let out = "";
+  for (let i = 0; i < LENGTH; i++) {
+    out = REF_ALPHABET[n % BASE] + out;
+    n = Math.floor(n / BASE);
+  }
+  return `GP-${out}`;
 }
 
 /** Dev-only guard: logs any two cakes that share a ref. Returns the clashes. */

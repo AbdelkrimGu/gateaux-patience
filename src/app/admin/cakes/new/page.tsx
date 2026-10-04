@@ -1,16 +1,14 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/admin-auth";
 import AdminShell from "@/components/admin/AdminShell";
 import CakeForm from "@/components/admin/CakeForm";
-import { getCategories } from "@/lib/categories-data";
+import { getCategoriesOrEmpty } from "@/lib/categories-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewCakePage() {
-  const cookieStore = await cookies();
-  if (cookieStore.get("admin_session")?.value !== "authenticated") redirect("/admin/login");
+  await requireAdmin();
 
-  const categories = await getCategories();
+  const categories = await getCategoriesOrEmpty();
 
   return (
     <AdminShell>

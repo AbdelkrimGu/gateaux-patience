@@ -2,6 +2,7 @@
 
 import { useState, useRef, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Sparkles, Upload, X, Loader2, Save, ChevronDown,
   Globe, GripVertical, Check, Eye, ChevronLeft, ChevronRight
@@ -585,7 +586,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
       {noCategories && (
         <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-xl px-4 py-3">
           Aucune catégorie disponible. Créez-en au moins une dans{" "}
-          <a href="/admin/categories" className="font-semibold underline">Catégories</a>{" "}avant d&apos;ajouter un gâteau.
+          <Link href="/admin/categories" className="font-semibold underline">Catégories</Link>{" "}avant d&apos;ajouter un gâteau.
         </div>
       )}
 
@@ -676,7 +677,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
               <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
             <p className="text-[10px] text-gray-400 mt-2">
-              Gérer la liste dans <a href="/admin/categories" className="text-rose-500 hover:underline">Catégories</a>.
+              Gérer la liste dans <Link href="/admin/categories" className="text-rose-500 hover:underline">Catégories</Link>.
             </p>
           </div>
 

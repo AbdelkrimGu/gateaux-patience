@@ -27,10 +27,11 @@ export const metadata: Metadata = {
     icon: "/icon.png",
     apple: "/apple-icon.png",
   },
+  // Defaults only (404s, admin). Public pages set a complete, per-locale
+  // openGraph/twitter through pageMetadata() (src/lib/seo.ts); no `url` here,
+  // or every page without its own would claim to be the home page.
   openGraph: {
     type: "website",
-    locale: "fr_DZ",
-    url: SITE_URL,
     siteName: "Gateaux Patience",
     title: "Gateaux Patience | Pâtisserie Artisanale à Sidi Bel Abbès",
     description:
@@ -50,17 +51,8 @@ export const metadata: Metadata = {
     description: "Pâtisserie artisanale à Sidi Bel Abbès, Algérie",
     images: ["/contact/og.jpg"],
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
+  // No `robots` default here: pages set it through pageMetadata(), and the
+  // localized 404 says noindex without a conflicting "index, follow".
 };
 
 export default function RootLayout({

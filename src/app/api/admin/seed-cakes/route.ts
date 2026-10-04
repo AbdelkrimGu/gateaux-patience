@@ -10,18 +10,13 @@
 
 import { NextResponse } from "next/server";
 import { revalidatePublicCatalog } from "@/lib/revalidate";
-import { cookies } from "next/headers";
+import { isAdmin } from "@/lib/admin-auth";
 import { randomUUID } from "crypto";
 import { getCakesCollection, getCategoriesCollection } from "@/lib/mongodb";
 import type { Cake, Category } from "@/lib/db-types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-async function isAuthed() {
-  const c = await cookies();
-  return c.get("admin_session")?.value === "authenticated";
-}
 
 const DEFAULT_CATEGORY_LABELS: Record<string, Category["labels"]> = {
   "birthday-kids": { fr: "Anniversaire Enfants", ar: "عيد ميلاد الأطفال", en: "Kids Birthday" },
@@ -666,7 +661,7 @@ async function run() {
 }
 
 export async function GET() {
-  if (!(await isAuthed())) {
+  if (!(await isAdmin())) {
     return NextResponse.json({ error: "Unauthorized — log in to /admin first." }, { status: 401 });
   }
   try {

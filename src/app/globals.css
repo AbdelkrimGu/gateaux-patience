@@ -7,7 +7,10 @@
   page-specific CSS in a CSS module next to your component.
 */
 @import "tailwindcss" source("../");
-@import "./legacy.css"; /* TEMPORARY — see the header of legacy.css */
+/* Public CSS only: never generate utilities for the admin's class names. */
+@source not "./admin";
+@source not "../components/admin";
+@source not "../**/*.{md,test.ts}";
 
 /* ------------------------------------------------------------------ tokens */
 @theme static {
@@ -92,15 +95,17 @@
     --sequin-b: rgb(196 134 74 / 0.1);
     --header-h: 60px;
 
-    /* next/font sets --font-dela / --font-lalezar / --font-readex /
-       --font-readex-ar on <html> for the current locale only. Never define
-       those four here (that was the audit's font bug). */
+    /* next/font sets --font-dela (FR/EN), --font-lalezar and --font-readex
+       (every locale) on <html>. Never define those here (that was the
+       audit's font bug). --font-display-ar = the Arabic display face, for
+       stacks that must render a typed Arabic name on any locale:
+       font-family: var(--font-dela), var(--font-display-ar), ...  */
+    --font-display-ar: var(--font-lalezar);
     --gp-font-body: var(--font-readex), ui-sans-serif, system-ui, sans-serif;
     --gp-font-display: var(--font-dela), var(--font-readex), ui-sans-serif, system-ui, sans-serif;
   }
   :root:lang(ar) {
-    --gp-font-body: var(--font-readex-ar), var(--font-readex), ui-sans-serif, system-ui, sans-serif;
-    --gp-font-display: var(--font-lalezar), var(--font-readex-ar), ui-sans-serif, system-ui, sans-serif;
+    --gp-font-display: var(--font-lalezar), var(--font-readex), ui-sans-serif, system-ui, sans-serif;
   }
   @media (min-width: 900px) {
     :root {

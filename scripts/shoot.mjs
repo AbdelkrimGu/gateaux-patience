@@ -18,16 +18,33 @@
 //   --devices   phone,desktop
 //   --reduced   emulate prefers-reduced-motion: reduce
 //   --tiramisu  drive the wizard to the customizer, type a message, shoot 2D + 3D
-//   --admin     visit /admin pages with the admin_session cookie (no writes)
+//   --admin     log in with ADMIN_PASSWORD (env or .env.local) and visit the
+//               /admin pages (read-only: nothing is saved)
 //   --only-flows  skip the route shots (use with --tiramisu / --admin)
+//   --help      print this help and exit
 //
 // Rules baked in (see research/website-revamp/05 §7): block *kaspersky-labs.com*,
 // fresh browser context per locale (the NEXT_LOCALE cookie leaks), wait for
 // `load` + 1500 ms (the current home never goes network-idle).
 
-import { chromium } from "playwright";
-import { mkdirSync } from "fs";
+import { mkdirSync, readFileSync } from "fs";
 import { join, resolve } from "path";
+import { fileURLToPath } from "url";
+
+if (process.argv.includes("--help") || process.argv.includes("-h")) {
+  // Print the header comment above as usage.
+  const src = readFileSync(fileURLToPath(import.meta.url), "utf8");
+  const usage = src
+    .split(/\r?\n/)
+    .slice(0)
+    .filter((l, i, all) => all.slice(0, i + 1).every((x) => x.startsWith("//")))
+    .map((l) => l.replace(/^\/\/ ?/, ""))
+    .join("\n");
+  console.log(usage);
+  process.exit(0);
+}
+
+const { chromium } = await import("playwright");
 
 function parseArgs(argv) {
   const out = {};
@@ -138,7 +155,7 @@ async function discoverDetail(browser) {
 const TL = {
   fr: { custom: "Tiramisu personnalisé", add: "Ajouter", bucket: "Voir le panier", perso: "Personnaliser ce tiramisu" },
   ar: { custom: "تيراميسو مخصّص", add: "أضف", bucket: "عرض السلة", perso: "خصّص هذا التيراميسو" },
-  en: { custom: "Custom tiramisu", add: "Add", bucket: "View bucket", perso: "Personalize this tiramisu" },
+  en: { custom: "Custom tiramisu", add: "Add", bucket: "View basket", perso: "Personalize this tiramisu" },
 };
 
 async function tiramisuFlow(browser, locale) {
@@ -193,8 +210,22 @@ async function tiramisuFlow(browser, locale) {
 }
 
 // ---- admin smoke (read-only) ---------------------------------------------
+function adminPassword() {
+  if (process.env.ADMIN_PASSWORD) return process.env.ADMIN_PASSWORD;
+  try {
+    const env = readFileSync(resolve(".env.local"), "utf8");
+    const m = /^ADMIN_PASSWORD\s*=\s*"?([^"\r\n]*)"?/m.exec(env);
+    return m ? m[1] : null;
+  } catch {
+    return null;
+  }
+}
+
 async function adminFlow(browser) {
-  const host = new URL(BASE).hostname;
+  const password = adminPassword();
+  if (!password) {
+    console.warn("--admin: ADMIN_PASSWORD not found (env or .env.local); skipping the admin pages.");
+  }
   for (const device of ["desktop"]) {
     const login = await newContext(browser, device, "fr");
     const lp = await login.newPage();
@@ -206,9 +237,16 @@ async function adminFlow(browser) {
     console.log(`admin /admin/login -> ${r?.status()}`);
     await login.close();
 
+    if (!password) return;
+    // Real login (the session cookie is signed: it can't be forged any more).
     const ctx = await newContext(browser, device, "fr");
-    await ctx.addCookies([{ name: "admin_session", value: "authenticated", domain: host, path: "/" }]);
     const page = await ctx.newPage();
+    const auth = await page.request.post(`${BASE}/api/admin/login`, { data: { password } });
+    console.log(`admin login -> ${auth.status()}`);
+    if (!auth.ok()) {
+      await ctx.close();
+      return;
+    }
     const errors = [];
     page.on("pageerror", (e) => errors.push(String(e)));
     const paths = ["/admin", "/admin/cakes", "/admin/cakes/new", "/admin/categories", "/admin/orders"];
@@ -261,7 +299,8 @@ try {
         for (const route of routes) {
           const page = await ctx.newPage(); // fresh page per route (same cookies)
           const url = localeUrl(locale, route);
-          const name = `${locale}-${device}-${slugOf(route.startsWith("/galerie/") ? "/detail" : route)}`;
+          // Detail routes are named by slug: detail-<slug>.
+          const name = `${locale}-${device}-${route.startsWith("/galerie/") ? `detail-${route.split("/").pop()}` : slugOf(route)}`;
           try {
             const res = await page.goto(url, { waitUntil: "load", timeout: 60000 });
             await settle(page);

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildWhatsAppMessage, buildWhatsAppUrl } from "./whatsapp";
-import { cakeRef, assertUniqueRefs } from "./cake-ref";
+import { buildWhatsAppMessage, buildWhatsAppUrl, occasionOfCategory } from "./whatsapp";
+import { cakeRef, assertUniqueRefs, REF_ALPHABET } from "./cake-ref";
 import { pipingFor, occasionFor } from "./piping";
 
 const FSI = "⁨";
@@ -67,6 +67,31 @@ test("page paths get the locale prefix (none for FR)", () => {
   assert.ok(last("ar", "/tiramisu")!.includes("https://gateauxpatience.com/ar/tiramisu"));
 });
 
+test("AR link is never wrapped in FSI/PDI (linkifiers would eat U+2069)", () => {
+  const last = buildWhatsAppMessage({ locale: "ar", kind: "general", page: "/galerie/gateau-cocomelon" })
+    .split("\n")
+    .pop()!;
+  assert.equal(last, "شاهدتها هنا: https://gateauxpatience.com/ar/galerie/gateau-cocomelon");
+  assert.ok(!last.includes(FSI) && !last.includes(PDI));
+});
+
+test("general messages can carry an occasion or a gallery category", () => {
+  const line = (o: Parameters<typeof buildWhatsAppMessage>[0]) => buildWhatsAppMessage(o).split("\n")[1];
+  assert.equal(
+    line({ locale: "fr", kind: "general", category: "wedding" }),
+    "Je voudrais commander un gâteau pour un mariage ou des fiançailles."
+  );
+  assert.equal(line({ locale: "ar", kind: "general", category: "wedding" }), "أودّ طلب كعكة لعرس أو خطوبة.");
+  assert.match(line({ locale: "en", kind: "general", occasion: "birth" })!, /new baby/);
+  assert.match(line({ locale: "fr", kind: "general", category: "birthday-kids" })!, /anniversaire/);
+  // Unknown / "all" categories keep the generic sentence; cake kind ignores it.
+  assert.equal(line({ locale: "fr", kind: "general", category: "creation-coloree" }), "Je voudrais commander un gâteau personnalisé.");
+  assert.equal(line({ locale: "fr", kind: "general", category: null }), "Je voudrais commander un gâteau personnalisé.");
+  assert.match(line({ locale: "fr", kind: "tiramisu", category: "wedding" })!, /tiramisu/);
+  assert.equal(occasionOfCategory("all"), null);
+  assert.equal(occasionOfCategory("graduation"), "success");
+});
+
 test("tiramisu and sweets kinds, extra lines", () => {
   assert.match(buildWhatsAppMessage({ locale: "fr", kind: "tiramisu" }), /tiramisu personnalisé/);
   const sweets = buildWhatsAppMessage({ locale: "en", kind: "sweets", extra: ["Box: heart"] });
@@ -83,7 +108,9 @@ test("unknown locale falls back to FR; URL is wa.me with encoded text", () => {
 test("cakeRef is stable, well-formed and unique on a realistic set", () => {
   const id = "be421475-28cd-4883-b466-980176a38d02";
   assert.equal(cakeRef(id), cakeRef(id));
-  assert.match(cakeRef("x"), /^GP-[0-9A-Z]{4}$/);
+  assert.match(cakeRef("x"), /^GP-[2-9A-HJKMNP-Z]{4}$/);
+  assert.ok(!/[01ILO]/.test(REF_ALPHABET), "no look-alike characters");
+  for (let i = 0; i < 500; i++) assert.ok(!/[01ILO]/.test(cakeRef(`id-${i}`).slice(3)));
   const ids = Array.from({ length: 300 }, (_, i) => `cake-${i}-${(i * 7919).toString(16)}`);
   assert.deepEqual(assertUniqueRefs(ids.map((v) => ({ id: v }))), []);
 });

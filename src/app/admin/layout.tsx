@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import "./admin.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -11,11 +9,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("admin_session");
-  const isLogin = false; // layout wraps both login and dashboard
-
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  // Auth: proxy.ts guards every /admin page except /admin/login, and each
+  // page/API route re-checks with isAdmin()/requireAdmin() (src/lib/admin-auth.ts).
   return (
     <html lang="fr">
       <body className={`${inter.className} bg-gray-50 text-gray-900 antialiased`}>
