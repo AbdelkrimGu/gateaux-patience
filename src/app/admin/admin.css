@@ -1,0 +1,332 @@
+/*
+  ADMIN stylesheet: a frozen copy of the pre-revamp globals.css (Tailwind 4
+  port of the v3 config). The admin is out of scope for the revamp, so it keeps
+  its own tokens and fonts here and never sees the public design system in
+  src/app/globals.css. Do not import this file from public routes.
+*/
+/* Scan only src/ for classes (v3 content globs were src/{app,components,pages}). */
+@import "tailwindcss" source("../../");
+
+/*
+  Tailwind CSS 4 — CSS-first config (replaces tailwind.config.ts).
+  Every token below is carried over unchanged from the v3 config.
+*/
+@theme {
+  --color-background: #fff8f3;
+  --color-surface: #ffffff;
+  --color-surface-alt: #fff0e8;
+  --color-border: #e8d5c4;
+
+  --color-rose: #c9727a;
+  --color-rose-light: #f2a8ad;
+  --color-rose-dark: #a85860;
+
+  --color-gold: #d4af37;
+  --color-gold-light: #f0d060;
+  --color-gold-dark: #a8841a;
+
+  --color-charcoal: #2d2d2d;
+  --color-charcoal-light: #6b6b6b;
+  --color-charcoal-lighter: #9b9b9b;
+
+  --color-cream: #fff8f3;
+
+  /* font-sans also drives the preflight default font (html). font-playfair,
+     font-arabic and font-script are the @utility classes further down — kept
+     out of @theme because --font-playfair is also the next/font variable
+     (a theme key of the same name would be self-referential). */
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+
+  --animate-fade-in: fadeIn 0.6s ease-in-out;
+  --animate-slide-up: slideUp 0.6s ease-out;
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
+  --animate-scale-in: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+  --shadow-cake: 0 8px 32px rgba(201, 114, 122, 0.15);
+  --shadow-cake-hover: 0 16px 48px rgba(201, 114, 122, 0.25);
+  --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.3);
+
+  /* Tailwind 4 moved the default palette to OKLCH. The admin + a few public
+     accents use default shades; pin the exact v3 sRGB values for the shades
+     in use so nothing shifts. (Generated from tailwindcss@3.4.19 colors.) */
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+  --color-blue-50: #eff6ff;
+  --color-blue-500: #3b82f6;
+  --color-emerald-300: #6ee7b7;
+  --color-emerald-400: #34d399;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-green-50: #f0fdf4;
+  --color-green-100: #dcfce7;
+  --color-green-200: #bbf7d0;
+  --color-green-400: #4ade80;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+  --color-green-700: #15803d;
+  --color-indigo-400: #818cf8;
+  --color-indigo-500: #6366f1;
+  --color-orange-300: #fdba74;
+  --color-orange-400: #fb923c;
+  --color-pink-50: #fdf2f8;
+  --color-pink-400: #f472b6;
+  --color-pink-500: #ec4899;
+  --color-purple-50: #faf5ff;
+  --color-purple-300: #d8b4fe;
+  --color-purple-400: #c084fc;
+  --color-purple-500: #a855f7;
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-200: #fecaca;
+  --color-red-300: #fca5a5;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-rose-50: #fff1f2;
+  --color-rose-100: #ffe4e6;
+  --color-rose-300: #fda4af;
+  --color-rose-400: #fb7185;
+  --color-rose-500: #f43f5e;
+  --color-rose-600: #e11d48;
+  --color-sky-100: #e0f2fe;
+  --color-sky-300: #7dd3fc;
+  --color-sky-400: #38bdf8;
+  --color-sky-600: #0284c7;
+  --color-teal-400: #2dd4bf;
+  --color-teal-500: #14b8a6;
+  --color-violet-400: #a78bfa;
+  --color-violet-500: #8b5cf6;
+  --color-violet-600: #7c3aed;
+  --color-yellow-500: #eab308;
+}
+
+/* Keyframes live outside @theme so they are always emitted (.shimmer uses
+   `animation: shimmer` directly, not via an animate-* utility). */
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes slideUp {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes scaleIn {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* v3 parity: hover styles also applied on touch devices (TW4 wraps hover in
+   @media (hover: hover)). Drop this when the revamp decides otherwise. */
+@custom-variant hover (&:hover);
+
+/*
+  v3 parity for Tailwind 4 preflight changes:
+  - default border color was gray-200 (now currentcolor),
+  - buttons had cursor: pointer (now default),
+  - placeholders were gray-400 (now currentcolor at 50%).
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
+}
+@utility section-padding {
+  @apply py-16 md:py-24 lg:py-32;
+}
+
+@utility container-custom {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+@utility section-badge {
+  @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium
+           bg-rose/10 text-rose border border-rose/20 mb-4;
+}
+
+@utility section-title {
+  @apply font-playfair text-3xl md:text-4xl lg:text-5xl font-bold text-charcoal leading-tight md:leading-10 lg:leading-none;
+}
+
+@utility section-subtitle {
+  @apply text-charcoal-light text-base md:text-lg max-w-2xl leading-relaxed md:leading-7;
+}
+
+@utility btn-primary {
+  @apply inline-flex items-center gap-2 px-6 py-3 rounded-full
+           bg-rose text-white font-medium text-sm
+           hover:bg-rose-dark transition-all duration-300
+           shadow-cake hover:shadow-cake-hover
+           hover:-translate-y-0.5 active:translate-y-0;
+}
+
+@utility btn-secondary {
+  @apply inline-flex items-center gap-2 px-6 py-3 rounded-full
+           bg-white text-charcoal font-medium text-sm border border-border
+           hover:border-rose hover:text-rose transition-all duration-300
+           hover:-translate-y-0.5 active:translate-y-0;
+}
+
+@utility btn-gold {
+  @apply inline-flex items-center gap-2 px-6 py-3 rounded-full
+           bg-gold text-white font-medium text-sm
+           hover:bg-gold-dark transition-all duration-300
+           shadow-gold hover:-translate-y-0.5 active:translate-y-0;
+}
+
+@utility cake-card {
+  @apply relative overflow-hidden rounded-2xl bg-white
+           shadow-cake hover:shadow-cake-hover
+           transition-all duration-500 hover:-translate-y-1
+           border border-border/50;
+}
+
+@utility gradient-rose-gold {
+  @apply bg-linear-to-r/srgb from-rose to-gold;
+}
+
+@utility text-gradient {
+  @apply bg-linear-to-r/srgb from-rose to-gold bg-clip-text text-transparent;
+}
+
+@utility pattern-dots {
+  /* Decorative patterns */
+  background-image: radial-gradient(
+    circle,
+    rgba(201, 114, 122, 0.12) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}
+
+@utility glass {
+  /* Glassmorphism */
+  @apply bg-white/80 backdrop-blur-md border border-white/60;
+}
+
+@utility category-card {
+  /* Category card hover */
+  @apply relative overflow-hidden rounded-2xl cursor-pointer
+           transition-all duration-500;
+
+  &:hover .category-overlay {
+    @apply opacity-100;
+  }
+}
+
+@utility category-overlay {
+  .category-card:hover & {
+    @apply opacity-100;
+  }
+  @apply absolute inset-0 opacity-0 transition-opacity duration-500
+           bg-linear-to-t/srgb from-rose/80 via-rose/20 to-transparent;
+}
+
+@utility shimmer {
+  /* Shimmer loading */
+  background: linear-gradient(90deg, #f0e8e2 25%, #fff8f3 50%, #f0e8e2 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@utility font-arabic {
+  font-family: var(--font-cairo), Arial, sans-serif;
+}
+
+@utility font-playfair {
+  font-family: var(--font-playfair), Georgia, serif;
+}
+
+@utility font-script {
+  font-family: var(--font-great-vibes), cursive;
+}
+
+@utility clip-wave {
+  /* Clip path for hero wave */
+  clip-path: ellipse(100% 80% at 50% 20%);
+}
+
+@utility text-balance {
+  /* Text balance */
+  text-wrap: balance;
+}
+
+@layer base {
+  :root {
+    --font-playfair: "Playfair Display", Georgia, serif;
+    --font-inter: "Inter", system-ui, sans-serif;
+    --font-cairo: "Cairo", Arial, sans-serif;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-charcoal;
+  }
+
+  /* RTL Support */
+  [dir="rtl"] {
+    @apply font-arabic;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-background;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-rose rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-rose-dark;
+  }
+}

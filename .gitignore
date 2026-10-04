@@ -43,3 +43,4 @@ next-env.d.ts
 design/**/shots/*
 !design/**/shots/*390-viewport.png
 !design/**/shots/*1440-viewport.png
+assets-src/fonts/*.ttf

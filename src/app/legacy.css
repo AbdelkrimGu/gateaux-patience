@@ -1,0 +1,144 @@
+/*
+  LEGACY COMPAT — temporary. Imported by globals.css so the not-yet-rebuilt
+  public screens (old home sections, old gallery/detail clients, the tiramisu
+  wizard before its reskin) keep rendering on the new design system.
+
+  - Old colour names (rose, gold, charcoal, surface…) keep their old values.
+  - Old font utilities now point at the NEW families (Playfair / Great Vibes /
+    Cairo are no longer loaded on public routes).
+
+  New code must not use anything in this file. Delete the import in
+  globals.css once `grep -rE "btn-primary|font-playfair|text-charcoal|bg-rose"
+  src/components src/app/[locale]` comes back empty (after Wave 2b merges).
+*/
+
+@theme {
+  --color-surface: #ffffff;
+  --color-surface-alt: #fff0e8;
+
+  --color-rose: #c9727a;
+  --color-rose-light: #f2a8ad;
+  --color-rose-dark: #a85860;
+
+  --color-gold: #d4af37;
+  --color-gold-light: #f0d060;
+  --color-gold-dark: #a8841a;
+
+  --color-charcoal: #2d2d2d;
+  --color-charcoal-light: #6b6b6b;
+  --color-charcoal-lighter: #9b9b9b;
+
+  --color-cream: #fff8f3;
+
+  --shadow-cake: 0 8px 32px rgba(201, 114, 122, 0.15);
+  --shadow-cake-hover: 0 16px 48px rgba(201, 114, 122, 0.25);
+  --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.3);
+
+  --animate-fade-in: fadeIn 0.6s ease-in-out;
+  --animate-slide-up: slideUp 0.6s ease-out;
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
+  --animate-scale-in: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes slideUp {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes scaleIn {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@utility section-padding {
+  @apply py-16 md:py-24 lg:py-32;
+}
+@utility container-custom {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+@utility section-badge {
+  @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium
+           bg-rose/10 text-rose border border-rose/20 mb-4;
+}
+@utility section-title {
+  @apply font-display text-3xl md:text-4xl lg:text-5xl text-charcoal leading-tight;
+}
+@utility section-subtitle {
+  @apply text-charcoal-light text-base md:text-lg max-w-2xl leading-relaxed md:leading-7;
+}
+@utility btn-primary {
+  @apply inline-flex items-center gap-2 px-6 py-3 rounded-full
+           bg-framboise text-white font-medium text-sm
+           hover:bg-framboise-deep transition-colors duration-300;
+}
+@utility btn-secondary {
+  @apply inline-flex items-center gap-2 px-6 py-3 rounded-full
+           bg-white text-paillette font-medium text-sm border border-hairline
+           hover:border-framboise hover:text-framboise transition-colors duration-300;
+}
+@utility btn-gold {
+  @apply inline-flex items-center gap-2 px-6 py-3 rounded-full
+           bg-framboise text-white font-medium text-sm
+           hover:bg-framboise-deep transition-colors duration-300;
+}
+@utility cake-card {
+  @apply relative overflow-hidden rounded-2xl bg-white border border-hairline;
+}
+@utility gradient-rose-gold {
+  @apply bg-framboise;
+}
+@utility text-gradient {
+  @apply text-framboise;
+}
+@utility pattern-dots {
+  background-image: radial-gradient(circle, rgba(184, 23, 79, 0.1) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+@utility glass {
+  @apply bg-white/90 border border-white/60;
+}
+@utility category-card {
+  @apply relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500;
+  &:hover .category-overlay {
+    @apply opacity-100;
+  }
+}
+@utility category-overlay {
+  .category-card:hover & {
+    @apply opacity-100;
+  }
+  @apply absolute inset-0 opacity-0 transition-opacity duration-500
+           bg-linear-to-t/srgb from-paillette/70 via-paillette/10 to-transparent;
+}
+@utility shimmer {
+  background: linear-gradient(90deg, #efe4e9 25%, #f7f2f4 50%, #efe4e9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+@utility font-arabic {
+  font-family: var(--font-sans);
+}
+@utility font-playfair {
+  font-family: var(--font-display);
+}
+@utility font-script {
+  font-family: var(--font-display);
+}
+@utility clip-wave {
+  clip-path: ellipse(100% 80% at 50% 20%);
+}
+@utility text-balance {
+  text-wrap: balance;
+}
