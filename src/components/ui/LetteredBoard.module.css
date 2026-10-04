@@ -38,6 +38,16 @@
     font-weight: 400;
     fill: currentColor;
   }
+  /* An Arabic name inside a Latin ring (FR/EN pages): Lalezar first (it only
+     covers Arabic here), no tracking, scaled to sit with Dela's capitals.
+     `--font-display-ar` is set on every locale by the root layout; the
+     unknown family `gp-none` is skipped when a variable is missing.
+     Keep the scale in sync with AR_NAME_SCALE in LetteredBoard.tsx. */
+  .arName {
+    font-family: var(--font-display-ar, var(--font-lalezar, gp-none)), var(--font-display);
+    font-size: 1.3em;
+    letter-spacing: 0;
+  }
 
   .plate {
     position: relative;

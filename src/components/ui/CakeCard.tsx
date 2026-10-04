@@ -80,7 +80,8 @@ export function CakeCard({
           />
         )}
       </div>
-      <Heading className="type-card mt-3 text-piping">{title}</Heading>
+      {/* Max two balanced lines: long owner titles never make the grid ragged. */}
+      <Heading className="type-card mt-3 line-clamp-2 text-balance text-piping">{title}</Heading>
       {metaLine && <p className="type-meta mt-1 text-ink-soft">{metaLine}</p>}
       <p className="mt-0.5 text-xs font-medium text-ink-muted">
         <bdi className="ltr">{ref}</bdi>
