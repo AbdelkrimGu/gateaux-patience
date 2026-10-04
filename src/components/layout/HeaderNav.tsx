@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import NextLink from "next/link";
 import { useParams, usePathname as useBrowserPathname } from "next/navigation";
 import { LocaleLink as Link } from "@/i18n/LocaleLink";
 import { stripLocale, switchLocaleHref } from "@/i18n/paths";
@@ -57,30 +56,46 @@ function LanguageCircles({
   className?: string;
 }) {
   const current = useParams<{ locale?: string }>()?.locale ?? routing.defaultLocale;
+  // Plain <a>: a locale switch changes <html lang/dir>, so it is a document
+  // navigation. A soft (RSC) navigation to /fr/... got a 307 without
+  // Set-Cookie and bounced back to the cookie's locale (09 blocker 1).
+  // The click also writes NEXT_LOCALE and keeps ?query/#hash (e.g. ?c=wedding).
+  const pick = (l: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+    document.cookie = `NEXT_LOCALE=${l}; path=/; max-age=31536000; samesite=lax`;
+    const { search, hash } = window.location;
+    if (search || hash) e.currentTarget.href = `${e.currentTarget.href.split(/[?#]/)[0]}${search}${hash}`;
+    onPick?.();
+  };
   return (
-    <nav aria-label={label} className={cn("flex items-center gap-0.5", className)}>
+    <nav aria-label={label} className={cn("-mx-1.5 flex items-center", className)}>
       {routing.locales.map((l) => {
         const active = l === current;
         return (
-          <NextLink
+          <a
             key={l}
             href={switchLocaleHref(l, pathname)}
-            prefetch={false}
             lang={l}
             hrefLang={l}
-            aria-label={langs[l].name}
             aria-current={active ? "true" : undefined}
-            onClick={onPick}
-            className={cn(
-              "grid size-8 place-items-center rounded-full text-[13px] leading-none font-medium no-underline",
-              active ? "bg-paillette text-sucre" : "text-paillette hover:bg-dragee",
-              // System font for the lone "ع": avoids pulling the 22 KB Arabic Readex
-              // slice into FR/EN pages for one glyph.
-              l === "ar" && "pb-0.5 font-[system-ui,sans-serif] text-[15px]"
-            )}
+            onClick={pick(l)}
+            // 44px hit area around a 32px circle. The accessible name starts
+            // with the visible label ("FR Français"): WCAG 2.5.3.
+            className="group grid size-11 place-items-center rounded-full no-underline"
           >
-            {langs[l].short}
-          </NextLink>
+            <span
+              aria-hidden="true"
+              className={cn(
+                "grid size-8 place-items-center rounded-full text-[13px] leading-none font-medium",
+                active ? "bg-paillette text-sucre" : "text-paillette group-hover:bg-dragee",
+                // System font for the lone "ع": avoids pulling the 22 KB Arabic Readex
+                // slice into FR/EN pages for one glyph.
+                l === "ar" && "pb-0.5 font-[system-ui,sans-serif] text-[15px]"
+              )}
+            >
+              {langs[l].short}
+            </span>
+            <span className="sr-only">{`${langs[l].short} ${langs[l].name}`}</span>
+          </a>
         );
       })}
     </nav>
