@@ -18,6 +18,8 @@ import { dirname, join } from "path";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const T = join(ROOT, "public/images/tiramisu");
+// Raw letter strips are build inputs only — kept out of public/ (not deployed).
+const RAW = join(ROOT, "assets-src/tiramisu");
 
 const STRIPS = [
   { file: "ABCDEFG.png", chars: "ABCDEFG" },
@@ -55,7 +57,7 @@ const SETS = {
 };
 
 async function segmentStrip(set, file, chars) {
-  const { data, info } = await sharp(join(T, set.rawDir, file))
+  const { data, info } = await sharp(join(RAW, set.rawDir, file))
     .raw()
     .toBuffer({ resolveWithObject: true });
   const { width: W, height: H, channels: C } = info;

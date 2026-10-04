@@ -9,7 +9,7 @@ exact folders. I cut, segment, colour/light-match and composite them into the li
 ```
 public/images/tiramisu/
 ├─ base/        cocoa.jpg   cream.jpg
-├─ letters-raw/ ABCDEFG.png HIJKLMN.png OPQRSTU.png VWXYZ.png 01234.png 56789.png
+├─ (raw strips now live in assets-src/tiramisu/letters-raw/ and letters-cacao-raw/, not public/)
 ├─ letters/     (I generate — transparent cut-out glyphs)
 └─ hero/        hero-1.jpg  hero-2.jpg  hero-3.jpg
 ```
