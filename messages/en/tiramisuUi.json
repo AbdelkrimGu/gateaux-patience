@@ -4,7 +4,12 @@
   "chrome": {
     "home": "Gateaux Patience, back to the site",
     "back": "Back",
-    "progress": "Step {n} of {total}"
+    "progress": "Step {n} of {total}",
+    "lang_label": "Language",
+    "lang_fr": "FR, Français",
+    "lang_ar": "ع, العربية",
+    "lang_en": "EN, English",
+    "whatsapp": "Message us on WhatsApp"
   },
   "mode": {
     "title": "Your tiramisu, your message",
@@ -18,22 +23,22 @@
   },
   "boxes": {
     "title": "Choose your boxes",
-    "lead_custom": "Add each box; you'll personalize them next.",
+    "lead_custom": "Add each box; you’ll personalize them next.",
     "lead_simple": "Add as many as you like.",
     "sizes": "Box size",
     "add": "Add",
     "add_aria": "Add: {box}",
-    "in_bucket": "{n} in your basket",
+    "in_bucket": "{n} in your cart",
     "cta_empty": "Add a box",
-    "cta": "View basket",
+    "cta": "View cart",
     "cta_count": "{n} · {total}"
   },
   "bucket": {
-    "title": "Your basket",
+    "title": "Your cart",
     "lead_custom": "Personalize your boxes, or leave them plain.",
     "lead_simple": "Adjust quantities.",
     "add_more": "Add a box",
-    "empty": "Your basket is empty.",
+    "empty": "Your cart is empty.",
     "remove": "Remove: {box}",
     "less": "One box fewer",
     "more": "One more box",
@@ -53,7 +58,7 @@
   },
   "howmany": {
     "title": "How many to personalize?",
-    "body": "You can write on up to {max}. We'll guide you one by one.",
+    "body": "You can write on up to {max}. We’ll guide you one by one.",
     "cancel": "Cancel"
   },
   "gate": {
@@ -70,6 +75,7 @@
     "title": "Your order",
     "lead": "Check it before confirming.",
     "plain_more": "+ {n} without a message",
+    "label": "{label}:",
     "total": "Total",
     "confirm": "Confirm order"
   },
@@ -81,14 +87,14 @@
     "phone": "Your phone",
     "items_one": "{n} item",
     "items_other": "{n} items",
-    "no_payment": "No payment now: we'll call you back to confirm.",
+    "no_payment": "No payment now: we’ll call you back to confirm.",
     "submit": "Place my order",
     "sending": "Sending…",
     "error": "Sending failed. Check your connection and try again."
   },
   "success": {
     "title": "Order received!",
-    "body": "Thank you! We've received your order and will contact you very soon to confirm it.",
+    "body": "Thank you! We’ve received your order and will contact you very soon to confirm it.",
     "ref": "Reference",
     "again": "New order",
     "home": "Back home"
@@ -122,5 +128,14 @@
     "shape_square": "square",
     "shape_oval": "oval",
     "shape_round": "round"
+  },
+  "order_message": {
+    "head": "Tiramisu order",
+    "custom": "Personalized",
+    "simple": "Simple",
+    "plain": "plain",
+    "total": "Total",
+    "tiramisu": "Tiramisu",
+    "items": "item(s)"
   }
 }

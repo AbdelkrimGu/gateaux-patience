@@ -1,16 +1,16 @@
 {
   "brand": "Gateaux Patience",
-  "skip_to_content": "انتقل إلى المحتوى",
+  "skip_to_content": "الانتقال إلى المحتوى",
   "nav": {
     "primary_label": "القائمة الرئيسية",
     "home_aria": "Gateaux Patience، الصفحة الرئيسية",
     "creations": "إبداعاتنا",
     "tiramisu": "تيراميسو",
     "weddings": "الأعراس",
-    "how_to_order": "كيف تطلب",
+    "how_to_order": "كيف تطلبون",
     "contact": "اتصل بنا",
-    "menu_open": "افتح القائمة",
-    "menu_close": "أغلق القائمة",
+    "menu_open": "فتح القائمة",
+    "menu_close": "إغلاق القائمة",
     "menu_title": "القائمة"
   },
   "lang": {
@@ -23,10 +23,10 @@
     "en_name": "English"
   },
   "order": {
-    "cta": "اطلب عبر واتساب",
-    "cta_short": "اطلب الآن",
-    "bar_label": "اطلب",
-    "call_aria": "اتصل بالرقم {phone}",
+    "cta": "اطلبوا عبر واتساب",
+    "cta_short": "اطلبوا الآن",
+    "bar_label": "الطلب",
+    "call_aria": "اتصلوا بالرقم {phone}",
     "opens_whatsapp": "يفتح واتساب"
   },
   "name_field": {
@@ -43,9 +43,9 @@
   "footer": {
     "label": "تذييل الصفحة",
     "tagline": "كعكات مخصّصة مصنوعة يدويًا في سيدي بلعباس منذ 2018.",
-    "explore_title": "تصفّح",
-    "contact_title": "راسلنا",
-    "follow_title": "تابعنا",
+    "explore_title": "اكتشفوا",
+    "contact_title": "راسلونا",
+    "follow_title": "تابعونا",
     "whatsapp": "واتساب",
     "phone": "الهاتف",
     "instagram": "إنستغرام",
@@ -57,9 +57,10 @@
   "not_found": {
     "meta_title": "الصفحة غير موجودة",
     "ring": "الصفحة غير موجودة",
+    "plate_label": "الرقم 404 بحروف من الشوكولاتة البيضاء على تيراميسو",
     "title": "هذه الصفحة ليست على قائمتنا.",
-    "text": "ربما الرابط قديم أو نُسخ بشكل خاطئ. أمّا الكعكات فما زالت هنا.",
-    "gallery": "شاهد إبداعاتنا",
+    "text": "ربما يكون الرابط قديمًا أو منسوخًا بشكل خاطئ. أمّا الكعكات فما زالت هنا.",
+    "gallery": "شاهدوا إبداعاتنا",
     "home": "العودة إلى الرئيسية"
   }
 }

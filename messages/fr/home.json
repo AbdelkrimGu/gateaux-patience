@@ -1,10 +1,10 @@
 {
   "meta_title": "Gateaux Patience | Gâteaux personnalisés à Sidi Bel Abbès",
-  "meta_desc": "Gâteaux personnalisés faits main à Sidi Bel Abbès depuis {year} : anniversaires, fiançailles, mariages, naissances et tiramisu au prénom. Commande sur WhatsApp.",
+  "meta_desc": "Gâteaux personnalisés faits main à Sidi Bel Abbès depuis {year} : anniversaires, fiançailles, mariages, naissances et tiramisu au prénom. Commande sur WhatsApp.",
   "hero": {
     "title": "Le gâteau qui porte son prénom.",
     "lead": "Des gâteaux faits main à Sidi Bel Abbès depuis {year}, pour les anniversaires, les fiançailles, les mariages et les naissances.",
-    "caption": "Le message et le prénom tapé sont écrits autour du plateau du gâteau.",
+    "caption": "Le message et le prénom tapé sont écrits autour du gâteau.",
     "ref_aria": "Voir ce gâteau, réf. {ref}",
     "note": "Le prénom part avec votre message.",
     "see_creations": "Voir les créations"
@@ -12,14 +12,14 @@
   "make": {
     "title": "Ce qu’on prépare",
     "cakes_title": "Gâteaux sur mesure",
-    "cakes_text": "Personnages, chiffres, prénoms : on part de votre idée ou d’une photo, et on la réalise en sucre.",
+    "cakes_text": "Personnages, chiffres, prénoms : on part de votre idée ou d’une photo, et on la réalise en sucre.",
     "cakes_action": "Voir la galerie",
     "tiramisu_title": "Tiramisu personnalisé",
     "tiramisu_text": "Le prénom en lettres de chocolat blanc, dans une boîte cœur, ovale ou carrée.",
     "tiramisu_action": "Composer ma boîte",
     "tiramisu_sample": "MAMAN",
     "wedding_title": "Mariages & fiançailles",
-    "wedding_text": "Pour la demande, les fiançailles ou le mariage : un gâteau à vos couleurs, avec les mots que vous choisissez.",
+    "wedding_text": "Pour la demande en mariage, les fiançailles ou le mariage : un gâteau à vos couleurs, avec les mots que vous choisissez.",
     "wedding_action": "Voir les gâteaux de mariage"
   },
   "creations": {
@@ -35,7 +35,8 @@
     "cta": "Écrire sur WhatsApp"
   },
   "instagram": {
-    "title": "Les dernières créations, sur Instagram",
+    "title": "Suivez-nous sur Instagram",
+    "text": "Nos gâteaux, au fil des fêtes de Sidi Bel Abbès.",
     "cta": "Suivre {handle} sur Instagram"
   }
 }

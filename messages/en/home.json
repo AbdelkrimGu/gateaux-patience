@@ -1,10 +1,10 @@
 {
   "meta_title": "Gateaux Patience | Custom cakes in Sidi Bel Abbès",
-  "meta_desc": "Handmade custom cakes in Sidi Bel Abbès since {year}: birthdays, engagements, weddings, new babies and name tiramisu. Order on WhatsApp.",
+  "meta_desc": "Handmade custom cakes in Sidi Bel Abbès since {year}: birthdays, engagements, weddings, new babies and tiramisu with a name on it. Order on WhatsApp.",
   "hero": {
     "title": "The cake with their name on it.",
     "lead": "Handmade in Sidi Bel Abbès since {year}, for birthdays, engagements, weddings and new babies.",
-    "caption": "The greeting and the name you type are written around the cake board.",
+    "caption": "The greeting and the name you type are written around the cake.",
     "ref_aria": "See this cake, ref. {ref}",
     "note": "The name goes into your message.",
     "see_creations": "See the cakes"
@@ -14,16 +14,16 @@
     "cakes_title": "Custom cakes",
     "cakes_text": "Characters, numbers, names: we start from your idea or a photo and make it in sugar.",
     "cakes_action": "See the gallery",
-    "tiramisu_title": "Name tiramisu",
+    "tiramisu_title": "Tiramisu with their name",
     "tiramisu_text": "The name in white-chocolate letters, in a heart, oval or square box.",
     "tiramisu_action": "Design my box",
     "tiramisu_sample": "MOM",
     "wedding_title": "Weddings & engagements",
-    "wedding_text": "For the proposal, the engagement or the wedding: a cake in your colours, with the words you choose.",
+    "wedding_text": "For the proposal, the engagement or the wedding: a cake in your colors, with the words you choose.",
     "wedding_action": "See wedding cakes"
   },
   "creations": {
-    "title": "Already celebrated in Sidi Bel Abbès",
+    "title": "Celebrated in Sidi Bel Abbès",
     "all": "See all our cakes"
   },
   "steps": {
@@ -35,7 +35,8 @@
     "cta": "Message us on WhatsApp"
   },
   "instagram": {
-    "title": "Our latest cakes, on Instagram",
+    "title": "Follow us on Instagram",
+    "text": "Our cakes, one celebration at a time in Sidi Bel Abbès.",
     "cta": "Follow {handle} on Instagram"
   }
 }

@@ -1,10 +1,15 @@
 {
   "meta_title": "Tiramisu personnalisé | Gateaux Patience",
-  "meta_desc": "Commandez votre tiramisu : boîtes gourmandes ou personnalisées, écrivez votre message et visualisez le résultat en direct. Sidi Bel Abbès.",
+  "meta_desc": "Commandez votre tiramisu : boîtes gourmandes ou personnalisées, écrivez votre message et visualisez le résultat en direct. Sidi Bel Abbès.",
   "chrome": {
     "home": "Gateaux Patience, retour au site",
     "back": "Retour",
-    "progress": "Étape {n} sur {total}"
+    "progress": "Étape {n} sur {total}",
+    "lang_label": "Langue",
+    "lang_fr": "FR, Français",
+    "lang_ar": "ع, العربية",
+    "lang_en": "EN, English",
+    "whatsapp": "Écrire sur WhatsApp"
   },
   "mode": {
     "title": "Votre tiramisu, votre message",
@@ -13,7 +18,7 @@
     "custom_desc": "Écrivez votre message et voyez-le en direct.",
     "simple_title": "Tiramisu simple",
     "simple_desc": "Nos boîtes gourmandes, prêtes à savourer.",
-    "stage_label": "Exemple : le mot « {word} » en lettres de chocolat blanc sur le cacao",
+    "stage_label": "Exemple : le mot « {word} » en lettres de chocolat blanc sur le cacao",
     "sample": "BRAVO"
   },
   "boxes": {
@@ -22,7 +27,7 @@
     "lead_simple": "Ajoutez-en autant que vous voulez.",
     "sizes": "Taille de la boîte",
     "add": "Ajouter",
-    "add_aria": "Ajouter : {box}",
+    "add_aria": "Ajouter : {box}",
     "in_bucket": "{n} dans le panier",
     "cta_empty": "Ajoutez une boîte",
     "cta": "Voir le panier",
@@ -34,10 +39,10 @@
     "lead_simple": "Ajustez les quantités.",
     "add_more": "Ajouter une boîte",
     "empty": "Votre panier est vide.",
-    "remove": "Retirer : {box}",
+    "remove": "Retirer : {box}",
     "less": "Une boîte de moins",
     "more": "Une boîte de plus",
-    "qty": "Quantité : {n}",
+    "qty": "Quantité : {n}",
     "personalize_one": "Personnaliser ce tiramisu",
     "personalize_n": "Personnaliser ({n})",
     "custom_one": "{n} personnalisé",
@@ -46,18 +51,18 @@
     "plain_other": "{n} simples",
     "plain_count": "{n} sans message",
     "edit": "Modifier",
-    "remove_message": "Supprimer le message « {msg} »",
+    "remove_message": "Supprimer le message « {msg} »",
     "personalize": "Personnaliser",
     "total": "Total",
     "continue": "Continuer"
   },
   "howmany": {
-    "title": "Combien en personnaliser ?",
-    "body": "Vous pouvez en écrire jusqu'à {max}. On vous guide une par une.",
+    "title": "Combien en personnaliser ?",
+    "body": "Vous pouvez en écrire jusqu’à {max}. On vous guide une par une.",
     "cancel": "Annuler"
   },
   "gate": {
-    "title": "Envie de personnaliser ?",
+    "title": "Envie de personnaliser ?",
     "body_simple": "Écrivez un prénom, un âge ou un petit mot sur vos tiramisus, gratuitement.",
     "body_custom": "Touchez une boîte pour y écrire un message.",
     "write": "Écrire",
@@ -70,6 +75,7 @@
     "title": "Votre commande",
     "lead": "Vérifiez avant de confirmer.",
     "plain_more": "+ {n} sans message",
+    "label": "{label} :",
     "total": "Total",
     "confirm": "Confirmer la commande"
   },
@@ -81,17 +87,17 @@
     "phone": "Votre téléphone",
     "items_one": "{n} article",
     "items_other": "{n} articles",
-    "no_payment": "Aucun paiement maintenant : nous vous rappelons pour confirmer.",
+    "no_payment": "Aucun paiement maintenant : nous vous rappelons pour confirmer.",
     "submit": "Enregistrer ma commande",
     "sending": "Envoi…",
-    "error": "Échec de l'envoi. Vérifiez votre connexion et réessayez."
+    "error": "Échec de l’envoi. Vérifiez votre connexion et réessayez."
   },
   "success": {
-    "title": "Commande enregistrée !",
-    "body": "Merci ! Nous avons bien reçu votre commande et nous vous contactons très vite pour la confirmer.",
+    "title": "Commande enregistrée !",
+    "body": "Merci ! Nous avons bien reçu votre commande et nous vous contactons très vite pour la confirmer.",
     "ref": "Référence",
     "again": "Nouvelle commande",
-    "home": "Retour à l'accueil"
+    "home": "Retour à l’accueil"
   },
   "custom": {
     "progress": "Boîte {n} sur {total}",
@@ -102,12 +108,12 @@
     "type_here": "Tapez ici…",
     "line_aria": "Ligne {n} du message",
     "count": "{n} caractères sur {max}",
-    "too_long": "Ce message est un peu long pour cette boîte : les lettres seront plus petites.",
+    "too_long": "Ce message est un peu long pour cette boîte : les lettres seront plus petites.",
     "cancel": "Annuler",
     "save": "Enregistrer"
   },
   "preview": {
-    "mode": "Type d'aperçu",
+    "mode": "Type d’aperçu",
     "label_2d": "Aperçu 2D",
     "label_3d": "Aperçu 3D",
     "views": "Angle de vue",
@@ -115,12 +121,21 @@
     "hero": "3/4",
     "side": "Côté",
     "reset": "Réinitialiser la vue",
-    "loading": "Chargement de l'aperçu",
+    "loading": "Chargement de l’aperçu",
     "scene": "Aperçu 3D de votre boîte {shape}",
-    "scene_msg": "Aperçu 3D de votre boîte {shape} avec le message « {msg} »",
+    "scene_msg": "Aperçu 3D de votre boîte {shape} avec le message « {msg} »",
     "shape_heart": "cœur",
     "shape_square": "carrée",
     "shape_oval": "ovale",
     "shape_round": "ronde"
+  },
+  "order_message": {
+    "head": "Commande Tiramisu",
+    "custom": "Personnalisé",
+    "simple": "Simple",
+    "plain": "sans message",
+    "total": "Total",
+    "tiramisu": "Tiramisu",
+    "items": "article(s)"
   }
 }
