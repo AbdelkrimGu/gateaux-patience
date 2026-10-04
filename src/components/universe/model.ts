@@ -26,7 +26,7 @@ export function universeOfPath(pathname: string): Universe | null {
 
 export const isUniverse = (v: unknown): v is Universe => typeof v === "string" && (UNIVERSES as readonly string[]).includes(v);
 
-/** Transition types (Link `transitionTypes`), read by universe.css. */
+/** Transition types (Link `transitionTypes`), read by transitions-css.ts. */
 export const VT_FORWARD = "gp-universe-forward";
 export const VT_BACK = "gp-universe-back";
 export const VT_GATE = "gp-gate";

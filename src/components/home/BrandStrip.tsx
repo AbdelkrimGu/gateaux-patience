@@ -21,7 +21,7 @@ export async function BrandStrip({ locale }: { locale: Locale }) {
             {t("title")}
           </h2>
         </div>
-        <p className="type-lead desk:pb-1">{t("text", { year: CONTACT.founded })}</p>
+        <p className="type-lead desk:pb-1">{t("text")}</p>
       </div>
     </section>
   );

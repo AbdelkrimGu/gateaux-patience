@@ -16,7 +16,7 @@ import { HeaderNav } from "./HeaderNav";
   to the wordmark, then "Mariages", "Comment commander" and the
   "Commander" pill.
   Named for view transitions (gp-site-header): it stays put while pages
-  slide under it (universe-transitions.css).
+  slide under it (universe/transitions-css.ts).
 */
 
 export function Header({ orderHref }: { orderHref?: string }) {

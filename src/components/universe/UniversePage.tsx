@@ -1,6 +1,6 @@
 import { ViewTransition, type ReactNode } from "react";
 import { VT_BACK, VT_FORWARD, VT_GATE } from "./model";
-import "./universe-transitions.css";
+import { UNIVERSE_TRANSITIONS_CSS } from "./transitions-css";
 
 /*
   Wrap the content of the home page and of every universe page in this
@@ -26,8 +26,14 @@ const CLASSES = {
 
 export function UniversePage({ children }: { children: ReactNode }) {
   return (
-    <ViewTransition enter={CLASSES} exit={CLASSES} default="none">
-      {children}
-    </ViewTransition>
+    <>
+      {/* React hoists this to <head> once per document (href + precedence). */}
+      <style href="gp-universe-transitions" precedence="gp-universe">
+        {UNIVERSE_TRANSITIONS_CSS}
+      </style>
+      <ViewTransition enter={CLASSES} exit={CLASSES} default="none">
+        {children}
+      </ViewTransition>
+    </>
   );
 }

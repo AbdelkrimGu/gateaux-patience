@@ -20,7 +20,7 @@ import styles from "./universe.module.css";
     own switcher (site chrome -> the tiramisu wizard) it glides from one
     position to the other inside the page transition.
   - Each link tags its navigation forward/back by switcher order
-    (Link transitionTypes); universe-transitions.css slides the page that
+    (Link transitionTypes); transitions-css.ts slides the page that
     way, mirrored in RTL.
   - RTL: the track flips with `dir`; the indicator's travel is mirrored in CSS.
 */
