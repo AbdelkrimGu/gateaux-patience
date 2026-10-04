@@ -1,21 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePublicCatalog } from "@/lib/revalidate";
-import { cookies } from "next/headers";
+import { isAdmin } from "@/lib/admin-auth";
 import { deleteCategory, updateCategory, type CategoryPatch } from "@/lib/categories-data";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-async function isAuthed() {
-  const c = await cookies();
-  return c.get("admin_session")?.value === "authenticated";
-}
-
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!(await isAuthed())) {
+  if (!(await isAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
@@ -45,7 +40,7 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!(await isAuthed())) {
+  if (!(await isAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;

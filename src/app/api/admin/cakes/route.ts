@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePublicCatalog } from "@/lib/revalidate";
-import { cookies } from "next/headers";
+import { isAdmin } from "@/lib/admin-auth";
 import { createCake, getCakes, type CakeInput } from "@/lib/admin-data";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-async function isAuthed() {
-  const c = await cookies();
-  return c.get("admin_session")?.value === "authenticated";
-}
-
 export async function GET() {
-  if (!(await isAuthed())) {
+  if (!(await isAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const cakes = await getCakes();
@@ -20,7 +15,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await isAuthed())) {
+  if (!(await isAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {

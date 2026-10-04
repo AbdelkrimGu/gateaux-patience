@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/admin-auth";
 import Link from "next/link";
 import { getCakes } from "@/lib/admin-data";
 import AdminShell from "@/components/admin/AdminShell";
@@ -7,8 +6,7 @@ import DeleteCakeButton from "@/components/admin/DeleteCakeButton";
 import { Plus, Pencil } from "lucide-react";
 
 export default async function AdminCakesPage() {
-  const cookieStore = await cookies();
-  if (cookieStore.get("admin_session")?.value !== "authenticated") redirect("/admin/login");
+  await requireAdmin();
 
   const cakes = await getCakes();
 

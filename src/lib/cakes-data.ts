@@ -1,17 +1,26 @@
+import { cache } from "react";
 import { getCakesCollection } from "./mongodb";
 import { getCategories } from "./categories-data";
 import type { Cake, Category } from "./db-types";
 
 export type { Cake, Locale, CakeTranslation, CategoryLabel } from "./db-types";
 
+/*
+  Public catalogue reads (ISR pages). A database error is LOGGED AND RETHROWN,
+  never turned into [] / null: when a revalidation throws, Next keeps serving
+  the last good page instead of caching an empty gallery or a 404 for 5 min.
+  `[]` / `null` only ever mean "no rows". Reads are wrapped in React cache()
+  so generateMetadata and the page share one query per request.
+*/
+
 const PROJECT_NO_ID = { _id: 0 } as const;
 
-function logAndEmpty<T>(label: string, err: unknown): T[] {
+function fail(label: string, err: unknown): never {
   console.error(`[cakes-data:${label}]`, err instanceof Error ? err.message : err);
-  return [];
+  throw err instanceof Error ? err : new Error(String(err));
 }
 
-export async function getAllPublishedCakes(): Promise<Cake[]> {
+export const getAllPublishedCakes = cache(async function getAllPublishedCakes(): Promise<Cake[]> {
   try {
     const col = await getCakesCollection();
     const docs = await col
@@ -20,11 +29,11 @@ export async function getAllPublishedCakes(): Promise<Cake[]> {
       .toArray();
     return docs as unknown as Cake[];
   } catch (err) {
-    return logAndEmpty<Cake>("getAllPublishedCakes", err);
+    fail("getAllPublishedCakes", err);
   }
-}
+});
 
-export async function getCakeBySlug(slug: string): Promise<Cake | null> {
+export const getCakeBySlug = cache(async function getCakeBySlug(slug: string): Promise<Cake | null> {
   try {
     const col = await getCakesCollection();
     const doc = await col.findOne(
@@ -33,10 +42,9 @@ export async function getCakeBySlug(slug: string): Promise<Cake | null> {
     );
     return (doc as unknown as Cake) || null;
   } catch (err) {
-    console.error("[cakes-data:getCakeBySlug]", err instanceof Error ? err.message : err);
-    return null;
+    fail("getCakeBySlug", err);
   }
-}
+});
 
 export async function getCakesByCategory(category: string): Promise<Cake[]> {
   try {
@@ -48,7 +56,7 @@ export async function getCakesByCategory(category: string): Promise<Cake[]> {
       .toArray();
     return docs as unknown as Cake[];
   } catch (err) {
-    return logAndEmpty<Cake>("getCakesByCategory", err);
+    fail("getCakesByCategory", err);
   }
 }
 
@@ -69,7 +77,7 @@ export async function getHeroCakes(limit = 5): Promise<Cake[]> {
     if (flagged.length > 0) return flagged;
     return getFeaturedCakes(limit);
   } catch (err) {
-    return logAndEmpty<Cake>("getHeroCakes", err);
+    fail("getHeroCakes", err);
   }
 }
 
@@ -97,7 +105,7 @@ export async function getFeaturedCakes(limit = 6): Promise<Cake[]> {
 
     return [...featured, ...fillers];
   } catch (err) {
-    return logAndEmpty<Cake>("getFeaturedCakes", err);
+    fail("getFeaturedCakes", err);
   }
 }
 
@@ -118,7 +126,7 @@ export async function getSimilarCakes(cake: Cake, count = 3): Promise<Cake[]> {
       .toArray();
     return docs as unknown as Cake[];
   } catch (err) {
-    return logAndEmpty<Cake>("getSimilarCakes", err);
+    fail("getSimilarCakes", err);
   }
 }
 
@@ -151,8 +159,7 @@ export async function getCategoryImageGroups(
     }
     return groups;
   } catch (err) {
-    console.error("[cakes-data:getCategoryImageGroups]", err instanceof Error ? err.message : err);
-    return [];
+    fail("getCategoryImageGroups", err);
   }
 }
 
@@ -164,6 +171,6 @@ export async function getAllPublishedSlugs(): Promise<{ slug: string }[]> {
       .toArray();
     return docs.map((d) => ({ slug: (d as { slug: string }).slug }));
   } catch (err) {
-    return logAndEmpty<{ slug: string }>("getAllPublishedSlugs", err);
+    fail("getAllPublishedSlugs", err);
   }
 }
