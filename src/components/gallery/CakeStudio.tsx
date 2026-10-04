@@ -6,7 +6,7 @@ import { NameField } from "@/components/ui/NameField";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { StickyOrderBarView } from "@/components/layout/StickyOrderBar";
-import { useRememberCake } from "./CardTransitionScope";
+import { useCardArrivalScroll, useRememberCake } from "./CardTransitionScope";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
 
@@ -88,6 +88,7 @@ export function CakeStudio({
   const [guests, setGuests] = useState("");
   const id = useId();
   useRememberCake(slug);
+  useCardArrivalScroll(slug);
 
   // Re-pipe the ring once typing pauses (the text itself updates live).
   useEffect(() => {
@@ -153,9 +154,15 @@ export function CakeStudio({
             onChange={setName}
             label={labels.nameLabel}
             placeholder={labels.namePlaceholder}
+            tone={ecrin ? "ecrin" : "sucre"}
             className="max-w-[440px]"
           />
           <p className={cn("type-meta mt-2 ps-5", ecrin ? "text-sucre/75" : "text-ink-muted")}>{labels.nameHint}</p>
+          {/* The cake-specific order, in the first viewport (same brief as below). */}
+          <Button href={waHref} icon="whatsapp" className="mt-5 w-full max-w-[440px] desk:w-auto">
+            {labels.cta}
+            <span className="sr-only"> ({labels.opensWhatsApp})</span>
+          </Button>
         </div>
 
         <div className="[grid-area:info]">

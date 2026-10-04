@@ -3,7 +3,11 @@
 import { Suspense, useCallback, useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { chipClasses } from "@/components/ui/Chip";
-import { PIPING, type PipingName } from "@/lib/piping";
+import { Button } from "@/components/ui/Button";
+import { EcrinSurface } from "@/components/ui/EcrinSurface";
+import { PIPING, isWedding, type PipingName } from "@/lib/piping";
+import { cn } from "@/lib/utils";
+import styles from "./gallery.module.css";
 
 /*
   Gallery filter (B §7 chips, B §8 "chip filtering is instant, no animation").
@@ -19,6 +23,11 @@ import { PIPING, type PipingName } from "@/lib/piping";
   into useSearchParams, so back/forward also drive the filter. The page stays
   static: `?c=` is read on the client only (inside <Suspense>), and an inline
   script applies it before first paint for deep links (no flash of all cakes).
+
+  Wedding view (?c=wedding, DESIGN.md amendment 1): the chip row turns into
+  the écrin surface and an écrin intro with a wedding WhatsApp brief appears.
+  It keys off `data-c` on the scope (Tailwind group/scope), not React state,
+  so a deep link is already dark before hydration.
 */
 
 export interface FilterChip {
@@ -31,7 +40,21 @@ export interface FilterChip {
   dot?: PipingName;
 }
 
+/** The wedding view's intro + brief (all strings pre-translated). */
+export interface WeddingView {
+  title: string;
+  text: string;
+  cta: string;
+  opensWhatsApp: string;
+  /** buildWhatsAppUrl(…) with the wedding context. */
+  href: string;
+}
+
 export const GRID_ID = "gp-gallery-grid";
+const SCOPE_ID = "gp-gallery-scope";
+
+// Wedding styling uses the literal variant `group-data-[c=wedding]/scope:`
+// (Tailwind only sees literal class names; the wedding slug is "wedding").
 
 function SearchParamSync({ onChange }: { onChange: (c: string | null) => void }) {
   const params = useSearchParams();
@@ -44,12 +67,17 @@ export function GalleryFilter({
   chips,
   filterLabel,
   countLabels,
+  wedding,
+  bars,
   children,
 }: {
   chips: FilterChip[];
   filterLabel: string;
   /** Pre-translated "N créations" per slug ("" key = all). */
   countLabels: Record<string, string>;
+  wedding?: WeddingView;
+  /** Sticky order bars: the generic one, and the wedding one shown for ?c=wedding. */
+  bars?: { general: ReactNode; wedding: ReactNode };
   children: ReactNode;
 }) {
   const [active, setActive] = useState<string | null>(null);
@@ -93,14 +121,19 @@ export function GalleryFilter({
   };
 
   const count = countLabels[active ?? ""] ?? countLabels[""];
+  const weddingActive = isWedding(active ?? undefined);
 
   return (
-    <div ref={scopeRef}>
+    <div ref={scopeRef} id={SCOPE_ID} data-c={active ?? ""} suppressHydrationWarning className="group/scope">
       <Suspense fallback={null}>
         <SearchParamSync onChange={apply} />
       </Suspense>
 
-      <nav aria-label={filterLabel} className="sticky top-0 z-20 bg-sucre py-3">
+      <nav
+        aria-label={filterLabel}
+        // `ecrin` turns the focus ring dragée on paillette (globals.css).
+        className={cn("sticky top-0 z-20 bg-sucre py-3 group-data-[c=wedding]/scope:sequin", weddingActive && "ecrin")}
+      >
         <div
           ref={rowRef}
           className="wrap flex snap-x gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -114,7 +147,15 @@ export function GalleryFilter({
                 onClick={(e) => onChipClick(e, chip)}
                 aria-current={selected ? "true" : undefined}
                 data-chip={chip.slug ?? ""}
-                className={chipClasses(selected, "h-11 desk:h-10")}
+                className={chipClasses(
+                  selected,
+                  cn(
+                    "h-11 desk:h-10",
+                    selected
+                      ? "group-data-[c=wedding]/scope:bg-sucre group-data-[c=wedding]/scope:text-paillette"
+                      : "group-data-[c=wedding]/scope:bg-sucre/10 group-data-[c=wedding]/scope:text-sucre group-data-[c=wedding]/scope:hover:bg-sucre/20"
+                  )
+                )}
               >
                 {chip.dot && (
                   <span
@@ -133,13 +174,37 @@ export function GalleryFilter({
         </div>
       </nav>
 
-      <p role="status" className="wrap type-meta mt-2 mb-4 text-ink-muted desk:mb-6">
+      {wedding && (
+        // Continues the dark chip row into one full-bleed écrin band.
+        <EcrinSurface className="hidden pt-3 pb-10 group-data-[c=wedding]/scope:block desk:pt-6 desk:pb-14">
+          <div className="wrap grid gap-6 desk:grid-cols-[minmax(0,1fr)_auto] desk:items-end desk:gap-16">
+            <div>
+              <span aria-hidden="true" className="mb-5 block h-px w-12 bg-cuivre" />
+              <h2 className={cn(styles.ecrinTitle, "text-sucre")}>{wedding.title}</h2>
+              <p className="mt-3 max-w-[52ch] text-sucre/85">{wedding.text}</p>
+            </div>
+            <Button href={wedding.href} icon="whatsapp" className="w-full desk:w-auto">
+              {wedding.cta}
+              <span className="sr-only"> ({wedding.opensWhatsApp})</span>
+            </Button>
+          </div>
+        </EcrinSurface>
+      )}
+
+      <p role="status" className="wrap type-meta mt-2 mb-4 text-ink-muted group-data-[c=wedding]/scope:mt-6 desk:mb-6">
         {count}
       </p>
 
       <div id={GRID_ID} data-c={active ?? ""} suppressHydrationWarning className="wrap">
         {children}
       </div>
+
+      {bars && (
+        <>
+          <div className="group-data-[c=wedding]/scope:hidden">{bars.general}</div>
+          <div className="hidden group-data-[c=wedding]/scope:block">{bars.wedding}</div>
+        </>
+      )}
     </div>
   );
 }
@@ -153,7 +218,7 @@ export function GalleryFilterStyles({ slugs }: { slugs: string[] }) {
   const safe = slugs.filter((s) => /^[a-z0-9-]+$/.test(s));
   const css = safe.map((s) => `#${GRID_ID}[data-c="${s}"] [data-cat]:not([data-cat="${s}"]){display:none}`).join("");
   const list = JSON.stringify(safe);
-  const js = `(function(){try{var c=new URLSearchParams(location.search).get("c");if(c&&${list}.indexOf(c)>-1)document.getElementById("${GRID_ID}").setAttribute("data-c",c)}catch(e){}})()`;
+  const js = `(function(){try{var c=new URLSearchParams(location.search).get("c");if(c&&${list}.indexOf(c)>-1){document.getElementById("${GRID_ID}").setAttribute("data-c",c);var s=document.getElementById("${SCOPE_ID}");if(s)s.setAttribute("data-c",c)}}catch(e){}})()`;
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: css }} />
