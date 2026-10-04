@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePublicCatalog } from "@/lib/revalidate";
 import { cookies } from "next/headers";
 import { createCake, getCakes, type CakeInput } from "@/lib/admin-data";
 
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest) {
       hero: Boolean(body.hero),
       published: body.published ?? true,
     });
+    revalidatePublicCatalog();
     return NextResponse.json(cake, { status: 201 });
   } catch (err) {
     console.error("[POST /api/admin/cakes]", err);

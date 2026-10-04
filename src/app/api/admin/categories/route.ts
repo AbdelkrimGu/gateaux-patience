@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePublicCatalog } from "@/lib/revalidate";
 import { cookies } from "next/headers";
 import { createCategory, getCategories, type CategoryInput } from "@/lib/categories-data";
 
@@ -41,6 +42,7 @@ export async function POST(req: NextRequest) {
       image: typeof body.image === "string" && body.image.length > 0 ? body.image : undefined,
       order: typeof body.order === "number" ? body.order : undefined,
     });
+    revalidatePublicCatalog();
     return NextResponse.json(cat, { status: 201 });
   } catch (err) {
     console.error("[POST /api/admin/categories]", err);

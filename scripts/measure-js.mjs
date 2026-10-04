@@ -7,6 +7,11 @@
 // Needs a production server: `npm run build && npx next start -p 3123`.
 // `next start` gzips responses, so "wire" = gzip bytes (CDP encodedDataLength,
 // headers excluded). Kaspersky's injected script is blocked (see 05 §7).
+//
+// "initial" = scripts referenced by the server HTML (what the page itself
+// needs to hydrate). "later" = everything fetched afterwards: router
+// prefetches of linked routes (their JS!) and lazy chunks. Budgets apply to
+// "initial"; "later" is reported so prefetch weight stays visible.
 
 import { chromium } from "playwright";
 
@@ -40,19 +45,25 @@ for (const locale of LOCALES) {
     cdp.on("Network.responseReceived", (e) => reqs.set(e.requestId, { url: e.response.url, type: e.type }));
     const sizes = new Map();
     cdp.on("Network.loadingFinished", (e) => sizes.set(e.requestId, e.encodedDataLength));
-    await page.goto(url(locale, route), { waitUntil: "load", timeout: 60000 });
+    const res = await page.goto(url(locale, route), { waitUntil: "load", timeout: 60000 });
+    const html = (await res?.text()) ?? "";
     await page.waitForTimeout(2500);
-    let js = 0, css = 0, font = 0, img = 0, doc = 0;
+    let js = 0, later = 0, css = 0, font = 0, img = 0, doc = 0;
     const scripts = [];
     for (const [id, r] of reqs) {
       const n = sizes.get(id) ?? 0;
-      if (r.type === "Script") { js += n; scripts.push([n, r.url.replace(BASE, "")]); }
+      if (r.type === "Script") {
+        const path = r.url.replace(BASE, "");
+        const initial = html.includes(path);
+        if (initial) js += n; else later += n;
+        scripts.push([n, (initial ? "" : "(later) ") + path]);
+      }
       else if (r.type === "Stylesheet") css += n;
       else if (r.type === "Font") font += n;
       else if (r.type === "Image") img += n;
       else if (r.type === "Document") doc += n;
     }
-    console.log(`${locale} ${route}  JS ${kb(js)} KB  CSS ${kb(css)}  fonts ${kb(font)}  img ${kb(img)}  html ${kb(doc)}  (${scripts.length} scripts)`);
+    console.log(`${locale} ${route}  JS initial ${kb(js)} KB (+${kb(later)} later) CSS ${kb(css)}  fonts ${kb(font)}  img ${kb(img)}  html ${kb(doc)}  (${scripts.length} scripts)`);
     if (args.verbose) for (const [n, u] of scripts.sort((a, b) => b[0] - a[0])) console.log(`   ${kb(n).padStart(6)}  ${u}`);
     await ctx.close();
   }

@@ -1,23 +1,34 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
+import { setRequestLocale } from "next-intl/server";
+import { asLocale } from "@/i18n/locale";
+import { IntlIsland } from "@/components/layout/IntlIsland";
+import { StickyOrderBar } from "@/components/layout/StickyOrderBar";
 import CakeDetailClient from "@/components/gallery/CakeDetailClient";
-import { getCakeBySlug, getSimilarCakes, type Locale } from "@/lib/cakes-data";
+import { getAllPublishedSlugs, getCakeBySlug, getSimilarCakes } from "@/lib/cakes-data";
+import { cakeRef } from "@/lib/cake-ref";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
-export const dynamic = "force-dynamic";
+// ISR: every published cake is prerendered at build (× 3 locales from the
+// [locale] layout); new slugs render on first visit, then stay cached.
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+  return getAllPublishedSlugs();
+}
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ locale: string; slug: string }>;
 }): Promise<Metadata> {
-  const { locale, slug } = await params;
+  const { locale: raw, slug } = await params;
+  const locale = asLocale(raw);
   const cake = await getCakeBySlug(slug);
   if (!cake) return {};
-  const t = cake.translations[locale as Locale] ?? cake.translations.fr;
+  const t = cake.translations[locale] ?? cake.translations.fr;
   return {
-    title: `${t.title} | Gateaux Patience`,
+    title: `${t.title.trim()} | Gateaux Patience`,
     description: t.description.slice(0, 160),
     alternates: {
       canonical: locale === "fr" ? `/galerie/${slug}` : `/${locale}/galerie/${slug}`,
@@ -27,21 +38,33 @@ export async function generateMetadata({
   };
 }
 
+// WAVE 2b (detail agent): CakeDetailClient is the OLD detail. Replace it.
 export default async function CakeDetailPage({
   params,
 }: {
   params: Promise<{ locale: string; slug: string }>;
 }) {
-  const { slug } = await params;
+  const { locale: raw, slug } = await params;
+  const locale = asLocale(raw);
+  setRequestLocale(locale);
   const cake = await getCakeBySlug(slug);
   if (!cake) notFound();
   const similar = await getSimilarCakes(cake);
+  const title = (cake.translations[locale]?.title || cake.translations.fr.title).trim();
 
   return (
-    <main>
-      <Header />
-      <CakeDetailClient cake={cake} similar={similar} />
-      <Footer />
-    </main>
+    <>
+      <IntlIsland namespaces={[]}>
+        <CakeDetailClient cake={cake} similar={similar} />
+      </IntlIsland>
+      <StickyOrderBar
+        waHref={buildWhatsAppUrl({
+          locale,
+          kind: "cake",
+          cake: { title, ref: cakeRef(cake.id) },
+          page: `/galerie/${slug}`,
+        })}
+      />
+    </>
   );
 }

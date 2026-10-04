@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { asLocale } from "@/i18n/locale";
+import { IntlIsland } from "@/components/layout/IntlIsland";
 import TiramisuWizard from "@/components/tiramisu/TiramisuWizard";
 
 const META: Record<string, { title: string; desc: string }> = {
@@ -42,5 +43,10 @@ export default async function TiramisuPage({
 }) {
   const { locale } = await params;
   setRequestLocale(asLocale(locale));
-  return <TiramisuWizard />;
+  // The wizard calls useLocale(): it needs a client intl provider.
+  return (
+    <IntlIsland namespaces={[]}>
+      <TiramisuWizard />
+    </IntlIsland>
+  );
 }

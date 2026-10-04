@@ -1,14 +1,18 @@
-import { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
+import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { asLocale } from "@/i18n/locale";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
+import { IntlIsland } from "@/components/layout/IntlIsland";
+import { StickyOrderBar } from "@/components/layout/StickyOrderBar";
 import GalleryClient from "@/components/gallery/GalleryClient";
 import { getAllPublishedCakes } from "@/lib/cakes-data";
 import { getCategories } from "@/lib/categories-data";
-import { unstable_noStore as noStore } from "next/cache";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
-export const dynamic = "force-dynamic";
+// ISR (see src/lib/revalidate.ts). Keep this page static: read the ?c=
+// filter on the client (useSearchParams inside <Suspense>), not from the
+// `searchParams` prop, which would make every request dynamic.
+export const revalidate = 300;
 
 export async function generateMetadata({
   params,
@@ -27,14 +31,19 @@ export async function generateMetadata({
   };
 }
 
-export default async function GalleriePage() {
-  noStore();
+// WAVE 2b (gallery agent): GalleryClient is the OLD gallery. Replace it.
+export default async function GalleriePage({ params }: { params: Promise<{ locale: string }> }) {
+  const locale = asLocale((await params).locale);
+  setRequestLocale(locale);
   const [cakes, categories] = await Promise.all([getAllPublishedCakes(), getCategories()]);
   return (
-    <main>
-      <Header />
-      <GalleryClient cakes={cakes} categories={categories} />
-      <Footer />
-    </main>
+    <>
+      <IntlIsland namespaces={[]}>
+        <Suspense>
+          <GalleryClient cakes={cakes} categories={categories} />
+        </Suspense>
+      </IntlIsland>
+      <StickyOrderBar waHref={buildWhatsAppUrl({ locale, kind: "general", page: "/galerie" })} />
+    </>
   );
 }

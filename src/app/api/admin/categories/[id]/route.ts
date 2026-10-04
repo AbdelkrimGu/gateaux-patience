@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePublicCatalog } from "@/lib/revalidate";
 import { cookies } from "next/headers";
 import { deleteCategory, updateCategory, type CategoryPatch } from "@/lib/categories-data";
 
@@ -32,6 +33,7 @@ export async function PUT(
     if (!result.category) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
+    revalidatePublicCatalog();
     return NextResponse.json(result);
   } catch (err) {
     console.error(`[PUT /api/admin/categories/${id}]`, err);
@@ -49,5 +51,6 @@ export async function DELETE(
   const { id } = await params;
   const result = await deleteCategory(id);
   if (!result.ok) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  revalidatePublicCatalog();
   return NextResponse.json(result);
 }

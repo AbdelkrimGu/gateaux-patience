@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePublicCatalog } from "@/lib/revalidate";
 import { cookies } from "next/headers";
 import { deleteCake, getCakeById, updateCake, type CakePatch } from "@/lib/admin-data";
 import { deleteS3Objects } from "@/lib/s3";
@@ -48,6 +49,7 @@ export async function PUT(
       }
     }
 
+    revalidatePublicCatalog();
     return NextResponse.json(updated);
   } catch (err) {
     console.error(`[PUT /api/admin/cakes/${id}]`, err);
@@ -70,5 +72,6 @@ export async function DELETE(
   if (deleted.images?.length) {
     await deleteS3Objects(deleted.images);
   }
+  revalidatePublicCatalog();
   return NextResponse.json({ ok: true });
 }

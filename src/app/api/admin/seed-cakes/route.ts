@@ -9,6 +9,7 @@
 // editing each cake in /admin/cakes.
 
 import { NextResponse } from "next/server";
+import { revalidatePublicCatalog } from "@/lib/revalidate";
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
 import { getCakesCollection, getCategoriesCollection } from "@/lib/mongodb";
@@ -670,6 +671,7 @@ export async function GET() {
   }
   try {
     const result = await run();
+    revalidatePublicCatalog();
     return NextResponse.json(result);
   } catch (err) {
     console.error("[seed-cakes]", err);
