@@ -10,6 +10,12 @@
   "cake": "Je voudrais un gâteau comme « {title} » (réf. {ref}).",
   "tiramisu": "Je voudrais commander un tiramisu personnalisé.",
   "sweets": "Je voudrais des douceurs de fête (cakesicles, cupcakes, cake pops).",
+  "sweet": {
+    "cupcakes": "Je voudrais des cupcakes personnalisés.",
+    "cake_pops": "Je voudrais des cake pops personnalisés.",
+    "cakesicles": "Je voudrais des popsicles (cakesicles) personnalisés.",
+    "desserts": "Je voudrais des desserts pour une fête."
+  },
   "name": "Prénom à écrire : {name}",
   "date": "Date de l’événement : {date}",
   "guests": "Nombre d’invités : {guests}",

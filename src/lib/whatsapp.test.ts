@@ -123,3 +123,18 @@ test("piping: weddings are or, others never or; occasions map", () => {
   assert.equal(occasionFor("graduation"), "success");
   assert.equal(occasionFor("birthday-kids"), "birthday");
 });
+
+test("sweets: a menu tile names its sweet type, in every locale", () => {
+  const fr = buildWhatsAppMessage({ locale: "fr", kind: "sweets", sweet: "cake_pops", page: "/douceurs" }).split("\n");
+  assert.equal(fr[1], "Je voudrais des cake pops personnalisés.");
+  assert.equal(fr[2], "Date de l’événement : …");
+  assert.equal(fr.at(-1), "Vu ici : https://gateauxpatience.com/douceurs");
+  assert.match(buildWhatsAppMessage({ locale: "ar", kind: "sweets", sweet: "cupcakes" }), /كب كيك/);
+  assert.match(
+    buildWhatsAppMessage({ locale: "en", kind: "sweets", sweet: "cakesicles", page: "/douceurs" }),
+    /cakesicles[\s\S]*\/en\/douceurs$/
+  );
+  // Generic line without a type; `sweet` is ignored for other kinds.
+  assert.match(buildWhatsAppMessage({ locale: "fr", kind: "sweets" }), /douceurs de fête/);
+  assert.doesNotMatch(buildWhatsAppMessage({ locale: "fr", kind: "general", sweet: "cupcakes" }), /cupcakes/);
+});

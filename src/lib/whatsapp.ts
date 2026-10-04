@@ -23,6 +23,9 @@ import en from "../../messages/en/whatsapp.json";
 
 export type WhatsAppLocale = "fr" | "ar" | "en";
 export type WhatsAppKind = "general" | "cake" | "tiramisu" | "sweets";
+/** kind "sweets": one sweet type (a /douceurs menu tile). */
+export type SweetType = "cupcakes" | "cake_pops" | "cakesicles" | "desserts";
+export const SWEET_TYPES: readonly SweetType[] = ["cupcakes", "cake_pops", "cakesicles", "desserts"];
 
 export interface WhatsAppOptions {
   locale: WhatsAppLocale | string;
@@ -32,6 +35,9 @@ export interface WhatsAppOptions {
    *  without a known occasion keep the generic sentence. */
   occasion?: Occasion;
   category?: string | null;
+  /** kind "sweets" only: the sweet type asked for (a /douceurs menu tile);
+   *  without it, the generic sweets sentence. */
+  sweet?: SweetType;
   /** Required for kind "cake" (falls back to "general" without it). */
   cake?: { title: string; ref: string };
   /** Name to pipe on the cake / letters on the tiramisu. */
@@ -105,7 +111,9 @@ export function buildWhatsAppMessage(opts: WhatsAppOptions): string {
       ? fill(t.cake, { title: opts.cake.title.trim(), ref: opts.cake.ref }, rtl)
       : occasion
         ? t.occasion[occasion]
-        : t[kind]
+        : kind === "sweets" && opts.sweet && t.sweet[opts.sweet]
+          ? t.sweet[opts.sweet]
+          : t[kind]
   );
 
   const name = opts.name?.trim();
