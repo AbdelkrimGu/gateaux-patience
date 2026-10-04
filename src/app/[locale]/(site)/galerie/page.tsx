@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { CakeCard } from "@/components/ui/CakeCard";
 import { GalleryFilter, GalleryFilterStyles, type FilterChip } from "@/components/gallery/GalleryFilter";
 import { CardTransitionScope } from "@/components/gallery/CardTransitionScope";
-import { categoriesWithCakes } from "@/components/gallery/catalog";
+import { byPhotoQuality, categoriesWithCakes } from "@/components/gallery/catalog";
 import { getAllPublishedCakes } from "@/lib/cakes-data";
 import { getCategories } from "@/lib/categories-data";
 import { assertUniqueRefs } from "@/lib/cake-ref";
@@ -42,12 +42,15 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function GalleriePage({ params }: { params: Promise<{ locale: string }> }) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
-  const [cakes, categories, t] = await Promise.all([
+  const [catalogue, categories, t, tc] = await Promise.all([
     getAllPublishedCakes(),
     getCategories(),
     getTranslations({ locale, namespace: "gallery" }),
+    getTranslations({ locale, namespace: "common" }),
   ]);
-  assertUniqueRefs(cakes);
+  assertUniqueRefs(catalogue);
+  // Clean, crisp photos open the grid (and every filter); see catalog.ts.
+  const cakes = byPhotoQuality(catalogue);
 
   const cats = categoriesWithCakes(cakes, categories, locale);
   const listed = new Set(cats.map((c) => c.slug));
@@ -70,6 +73,10 @@ export default async function GalleriePage({ params }: { params: Promise<{ local
     "": t("count", { count: cakes.length }),
   };
   for (const c of cats) countLabels[c.slug] = t("count", { count: c.count });
+
+  const generalHref = buildWhatsAppUrl({ locale, kind: "general", page: "/galerie" });
+  // Wedding brief for ?c=wedding ("un gâteau de mariage / fiançailles").
+  const weddingHref = buildWhatsAppUrl({ locale, kind: "general", category: "wedding", page: "/galerie?c=wedding" });
 
   // The first card is the phone LCP: preload it at high priority with the
   // exact srcset CakeCard's next/image will request (CakeCard itself only
@@ -99,7 +106,26 @@ export default async function GalleriePage({ params }: { params: Promise<{ local
           <p className="type-lead mt-3 desk:mt-5">{t("intro")}</p>
         </header>
 
-        <GalleryFilter chips={chips} filterLabel={t("filter_label")} countLabels={countLabels}>
+        <GalleryFilter
+          chips={chips}
+          filterLabel={t("filter_label")}
+          countLabels={countLabels}
+          wedding={
+            listed.has("wedding")
+              ? {
+                  title: t("wedding_title"),
+                  text: t("wedding_text"),
+                  cta: t("wedding_cta"),
+                  opensWhatsApp: tc("order.opens_whatsapp"),
+                  href: weddingHref,
+                }
+              : undefined
+          }
+          bars={{
+            general: <StickyOrderBar waHref={generalHref} />,
+            wedding: <StickyOrderBar waHref={weddingHref} />,
+          }}
+        >
           <CardTransitionScope>
             <ul className="grid grid-cols-2 gap-x-3 gap-y-6 desk:grid-cols-4 desk:gap-x-6 desk:gap-y-10">
               {cakes.map((cake, i) => (
@@ -127,25 +153,20 @@ export default async function GalleriePage({ params }: { params: Promise<{ local
             </div>
             <div className="flex flex-col items-start gap-4">
               <Button
-                href={buildWhatsAppUrl({
-                  locale,
-                  kind: "general",
-                  page: "/galerie",
-                })}
+                href={generalHref}
                 icon="whatsapp"
                 className="w-full desk:w-auto"
               >
                 {t("closing_cta")}
               </Button>
               <p className="type-meta mt-2 text-ink-soft">{t("closing_tiramisu_text")}</p>
-              <Button href="/tiramisu" variant="ghost" size="sm" iconEnd="chevron" className="-mt-1">
+              <Button href="/tiramisu" variant="ghost" size="sm" className="-mt-1">
                 {t("closing_tiramisu")}
               </Button>
             </div>
           </div>
         </section>
       </div>
-      <StickyOrderBar waHref={buildWhatsAppUrl({ locale, kind: "general", page: "/galerie" })} />
     </ViewTransition>
   );
 }

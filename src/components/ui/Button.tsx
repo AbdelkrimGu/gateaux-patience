@@ -47,6 +47,18 @@ const VARIANTS: Record<ButtonVariant, string> = {
   ghost: "bg-transparent text-paillette shadow-[inset_0_0_0_2px_var(--color-paillette)] hover:bg-paillette hover:text-sucre",
   "on-dark": "bg-transparent text-sucre shadow-[inset_0_0_0_2px_var(--color-sucre)] hover:bg-sucre hover:text-paillette",
 };
+/*
+  Disabled reads as "not yet", not as "broken": an empty dashed slot in
+  ink-muted (7.2:1 on sucre for both the outline and the label), instead of
+  a washed-out CTA. On the écrin surface it simply dims.
+*/
+const DISABLED: Record<ButtonVariant, string> = {
+  primary:
+    "disabled:bg-transparent disabled:text-ink-muted disabled:shadow-none disabled:outline-2 disabled:outline-dashed disabled:-outline-offset-2 disabled:outline-ink-muted",
+  ghost:
+    "disabled:bg-transparent disabled:text-ink-muted disabled:shadow-none disabled:outline-2 disabled:outline-dashed disabled:-outline-offset-2 disabled:outline-ink-muted",
+  "on-dark": "disabled:opacity-50",
+};
 const SIZES: Record<ButtonSize, string> = {
   lg: "min-h-14 px-6 text-base gap-2.5",
   md: "min-h-[52px] px-5 text-base gap-2.5",
@@ -61,8 +73,9 @@ export function buttonClasses({
 }: Pick<CommonProps, "variant" | "size" | "block" | "className">) {
   return cn(
     "press inline-flex items-center justify-center rounded-pill font-semibold leading-none no-underline",
-    "select-none text-center disabled:pointer-events-none disabled:opacity-50",
+    "select-none text-center disabled:pointer-events-none",
     VARIANTS[variant],
+    DISABLED[variant],
     SIZES[size],
     block && "w-full",
     className

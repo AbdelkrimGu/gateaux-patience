@@ -35,15 +35,17 @@ export function Footer() {
 
   return (
     <EcrinSurface as="footer" className="pb-[calc(96px+env(safe-area-inset-bottom))] desk:pb-0">
-      <div className="wrap grid gap-x-10 gap-y-10 pt-14 pb-10 desk:grid-cols-[1.3fr_1fr_1fr_1fr] desk:pt-20">
-        <div className="max-w-[34ch]">
+      {/* Phone: logo, then Explorer | Suivre side by side, then contact: about
+          one screen instead of 1.6. Desktop: four columns. */}
+      <div className="wrap grid grid-cols-2 gap-x-6 gap-y-8 pt-10 pb-8 desk:grid-cols-[1.3fr_1fr_1fr_1fr] desk:gap-x-10 desk:gap-y-10 desk:pt-20 desk:pb-10">
+        <div className="col-span-2 max-w-[34ch] desk:col-span-1">
           <Image
             src="/Logo/logo-footer.webp"
             alt={t("footer.logo_alt")}
             width={560}
             height={391}
-            sizes="(min-width: 900px) 280px, 240px"
-            className="-ms-2 w-[240px] desk:w-[280px]"
+            sizes="(min-width: 900px) 280px, 200px"
+            className="-ms-2 w-[200px] desk:w-[280px]"
           />
           <p className="mt-2 text-sucre/85">{t("footer.tagline")}</p>
         </div>
@@ -77,7 +79,7 @@ export function Footer() {
           </ul>
         </nav>
 
-        <div>
+        <div className="order-4 col-span-2 desk:order-none desk:col-span-1">
           <h2 className="type-meta mb-2 font-semibold text-cuivre">{t("footer.contact_title")}</h2>
           <ul className="grid">
             <ExternalItem href={buildWhatsAppUrl({ locale, kind: "general" })} icon="whatsapp">
@@ -93,11 +95,13 @@ export function Footer() {
           </ul>
         </div>
 
-        <div>
+        {/* Second on phones (beside Explorer), last on desktop. */}
+        <div className="order-3 desk:order-last">
           <h2 className="type-meta mb-2 font-semibold text-cuivre">{t("footer.follow_title")}</h2>
           <ul className="grid">
             <ExternalItem href={CONTACT.instagram} icon="instagram">
-              <bdi className="ltr">{CONTACT.instagramHandle}</bdi>
+              <span className="desk:hidden">{t("footer.instagram")}</span>
+              <bdi className="ltr hidden desk:inline">{CONTACT.instagramHandle}</bdi>
             </ExternalItem>
             <ExternalItem href={CONTACT.facebook} icon="facebook">
               {t("footer.facebook")}

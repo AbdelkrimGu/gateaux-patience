@@ -1,14 +1,17 @@
 {
-  "meta_title": "Nos créations : gâteaux personnalisés à Sidi Bel Abbès | Gateaux Patience",
-  "meta_desc": "Les gâteaux faits main par Gateaux Patience : anniversaires enfants et adultes, fiançailles, mariages, naissances, réussites. Choisissez une idée, on l’adapte à votre fête.",
+  "meta_title": "Nos créations : gâteaux personnalisés à Sidi Bel Abbès | Gateaux Patience",
+  "meta_desc": "Les gâteaux faits main par Gateaux Patience : anniversaires enfants et adultes, fiançailles, mariages, naissances, réussites. Choisissez une idée, on l’adapte à votre fête.",
   "title": "Nos créations",
-  "intro": "Chaque gâteau ici a été fait pour quelqu’un : un prénom, une date, une fête. Choisissez une idée, on l’adapte à la vôtre.",
+  "intro": "Chaque gâteau ici a été fait pour quelqu’un : un prénom, une date, une fête. Choisissez une idée, on l’adapte à la vôtre.",
   "filter_label": "Filtrer par occasion",
   "all": "Tout",
   "count": "{count, plural, =0 {Aucune création} one {# création} other {# créations}}",
-  "closing_title": "Votre idée n’est pas encore ici ?",
-  "closing_text": "Racontez-nous la fête : le thème, le prénom, la date. On vous répond sur WhatsApp avec une proposition.",
+  "closing_title": "Votre idée n’est pas encore ici ?",
+  "closing_text": "Racontez-nous la fête : le thème, le prénom, la date. On vous répond sur WhatsApp avec une proposition.",
   "closing_cta": "Décrire mon gâteau",
   "closing_tiramisu": "Un tiramisu à son prénom",
-  "closing_tiramisu_text": "Ou composez un tiramisu personnalisé, lettre par lettre."
+  "closing_tiramisu_text": "Ou composez un tiramisu personnalisé, lettre par lettre.",
+  "wedding_title": "Mariages & fiançailles",
+  "wedding_text": "Pour la demande, les fiançailles ou le mariage : un gâteau à vos couleurs, avec les mots que vous choisissez. Donnez-nous la date et le nombre d’invités, on vous propose un dessin.",
+  "wedding_cta": "Demander un gâteau de mariage"
 }

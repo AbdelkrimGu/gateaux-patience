@@ -52,11 +52,12 @@
     "facebook": "Facebook",
     "city": "Sidi Bel Abbès, Algérie",
     "rights": "© {year} Gateaux Patience. Tous droits réservés.",
-    "logo_alt": "Logo Gateaux Patience : un gâteau couronné et un phénix cuivré"
+    "logo_alt": "Logo Gateaux Patience : un gâteau couronné et un phénix cuivré"
   },
   "not_found": {
     "meta_title": "Page introuvable",
     "ring": "Page introuvable",
+    "plate_label": "Le nombre 404 écrit en lettres de chocolat blanc sur un tiramisu",
     "title": "Cette page n’est pas au menu.",
     "text": "Le lien est peut-être ancien ou mal recopié. Les gâteaux, eux, sont toujours là.",
     "gallery": "Voir les créations",

@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { CSSProperties, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { fnv1a } from "@/lib/hash";
+import { ARABIC, hasArabic } from "./script";
 import styles from "./LetteredBoard.module.css";
 
 /*
@@ -38,10 +39,12 @@ export interface LetteredBoardProps {
   /** Visitor's name, appended after the message. */
   name?: string;
   tone?: "sucre" | "ecrin";
-  /** Omit for an empty plate (404, placeholders): the tint mat shows. */
+  /** Omit for an empty plate (placeholders): the tint mat shows. */
   image?: LetteredBoardImage;
   /** Small overlay at the plate's top-start corner, e.g. <RefTag />. */
   tag?: ReactNode;
+  /** Plate content instead of a photo (e.g. an illustration on the 404). */
+  children?: ReactNode;
   /** Visually hidden figcaption (the ring itself is aria-hidden). */
   caption?: string;
   /** "pipe" draws the lettering (CSS, reduced-motion aware). */
@@ -65,18 +68,21 @@ const SCALLOP =
 
 /** Bottom arc the lettering sits on (radius 172 → ~540 units long). */
 const ARC = "M -22 251 A 172 172 0 0 0 322 251";
+/** Arabic pages: 13 units further out, so Lalezar's tall alifs clear the plate. */
+const ARC_AR = "M -35 251 A 185 185 0 0 0 335 251";
 const ARC_BUDGET = 500; // usable length, leaves a margin at both ends
+/** An Arabic name inside a Latin ring is set in Lalezar at this scale (CSS .arName). */
+const AR_NAME_SCALE = 1.3;
 
-const ARABIC = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
 const FSI = "⁨";
 const PDI = "⁩";
 
 /** Width estimate in em, calibrated on Dela Gothic One / Lalezar outlines. */
-function estimateEm(text: string, tracking: number) {
+function estimateEm(text: string, tracking: number, arabicScale: number) {
   let em = 0;
   for (const ch of text) {
     if (ch === " ") em += 0.3;
-    else if (ARABIC.test(ch)) em += 0.42;
+    else if (ARABIC.test(ch)) em += 0.42 * arabicScale;
     else if (ch === FSI || ch === PDI) continue;
     else em += 0.95 + tracking;
   }
@@ -84,11 +90,12 @@ function estimateEm(text: string, tracking: number) {
 }
 
 export function ringLayout(text: string, opts: { arabicPage: boolean; ecrin: boolean }) {
-  const arabicRun = ARABIC.test(text);
-  const tracking = arabicRun || opts.arabicPage ? 0 : 0.06;
-  let fontSize = opts.arabicPage ? 33 : 23;
+  // Tracking only ever applies to Latin capitals: an Arabic run inside a
+  // Latin ring is its own <tspan> and resets it (CSS).
+  const tracking = opts.arabicPage ? 0 : 0.06;
+  let fontSize = opts.arabicPage ? 36 : 23;
   if (opts.ecrin) fontSize *= 0.8;
-  const width = estimateEm(text, tracking) * fontSize;
+  const width = estimateEm(text, tracking, opts.arabicPage ? 1 : AR_NAME_SCALE) * fontSize;
   if (width > ARC_BUDGET) fontSize *= ARC_BUDGET / width;
   return { fontSize: Math.round(fontSize * 10) / 10, tracking };
 }
@@ -99,6 +106,7 @@ export function LetteredBoard({
   tone = "sucre",
   image,
   tag,
+  children,
   caption,
   animate = "pipe",
   pipeKey,
@@ -111,6 +119,9 @@ export function LetteredBoard({
   const cleanName = name?.trim();
   const text = cleanName ? `${upper(message)} ${FSI}${upper(cleanName)}${PDI}` : upper(message);
   const arabicPage = lang?.startsWith("ar") ?? false;
+  // An Arabic name typed on a FR/EN page gets its own run, tagged lang="ar",
+  // so CSS sets it in Lalezar without tracking (never split into letters).
+  const arabicName = !!cleanName && !arabicPage && hasArabic(cleanName);
   const { fontSize, tracking } = ringLayout(text, { arabicPage, ecrin: tone === "ecrin" });
   const arcId = `gp-arc-${fnv1a(`${text}|${image?.src ?? ""}|${tone}`).toString(36)}`;
 
@@ -135,18 +146,28 @@ export function LetteredBoard({
             src={image.src}
             alt={image.alt}
             fill
-            priority={image.priority}
+            preload={image.priority}
+            fetchPriority={image.priority ? "high" : undefined}
+            loading={image.priority ? "eager" : undefined}
             sizes={image.sizes ?? "(min-width: 900px) 380px, min(58vw, 300px)"}
             style={image.position ? { objectPosition: image.position } : undefined}
           />
         )}
+        {children}
       </div>
 
       <svg className={styles.ring} viewBox="-40 0 380 446" aria-hidden="true" focusable="false">
-        <path id={arcId} d={ARC} fill="none" />
+        <path id={arcId} d={arabicPage ? ARC_AR : ARC} fill="none" />
         <text key={pipeKey ?? text} fontSize={fontSize} letterSpacing={tracking ? `${tracking}em` : undefined}>
           <textPath href={`#${arcId}`} startOffset="50%" textAnchor="middle">
-            {text}
+            {arabicName ? (
+              <>
+                {`${upper(message)} `}
+                <tspan lang="ar" className={styles.arName}>{`${FSI}${cleanName}${PDI}`}</tspan>
+              </>
+            ) : (
+              text
+            )}
           </textPath>
         </text>
       </svg>

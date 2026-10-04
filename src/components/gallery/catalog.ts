@@ -12,6 +12,44 @@ export const cakeDescription = (cake: Pick<Cake, "translations">, locale: Locale
 export const categoryLabel = (cake: Pick<Cake, "categoryLabel">, locale: Locale) =>
   cake.categoryLabel?.[locale] || cake.categoryLabel?.fr || "";
 
+/*
+  Photo-quality order (08-review M3), checked by eye on every cake's first
+  photo on 2026-10-04: studio light, sharp, no visible watermark first; the
+  heaviest-watermarked or low-resolution shots last. Cakes not listed keep
+  their catalogue order in between. Ordering only: nothing is hidden, and
+  an owner-flagged `hero` still wins the home hero.
+*/
+const CLEAN_FIRST = [
+  "gateau-princesse-couronnee",
+  "gateau-luxe-blanc-ivoire",
+  "gateau-pastel-douceur",
+  "gateau-personnalise-special",
+  "gateau-degrade-pastel",
+  "gateau-cocomelon",
+  "gateau-floral-romantique",
+  "gateau-romantique-fleurs",
+  "gateau-remise-diplome",
+  "tarte-boite-de-montre-festina",
+  "gateau-chocolat-luxe",
+  "gateau-simple-quotidien",
+];
+const WATERMARKED_LAST = ["gateau-grande-celebration", "tarte-cocomelon-lighting-bus", "gateau-creation-coloree"];
+
+function photoRank(slug: string): number {
+  const clean = CLEAN_FIRST.indexOf(slug);
+  if (clean > -1) return clean - CLEAN_FIRST.length;
+  const last = WATERMARKED_LAST.indexOf(slug);
+  return last > -1 ? 1 + last : 0;
+}
+
+/** Stable sort: clean photos first, heavy watermarks last, the rest as given. */
+export function byPhotoQuality<T extends { slug: string }>(cakes: T[]): T[] {
+  return cakes
+    .map((c, i) => ({ c, i, r: photoRank(c.slug) }))
+    .sort((a, b) => a.r - b.r || a.i - b.i)
+    .map((x) => x.c);
+}
+
 export interface CategoryCount {
   slug: string;
   label: string;

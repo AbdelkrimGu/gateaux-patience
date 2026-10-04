@@ -34,6 +34,25 @@ export function useRememberCake(slug: string) {
   );
 }
 
+// Set when a card in a scope is tapped. The App Router skips its scroll-to-top
+// when the new page's first node is already inside the viewport (a gallery
+// scrolled by a few px), so the plate would land with the header hidden.
+let arrivingFromCard = false;
+
+/**
+ * Called by the detail page: after a card tap, land at the very top (header
+ * visible). Runs as a layout effect, i.e. inside the view-transition update
+ * and before the router's own scroll handling, so nothing jumps afterwards.
+ * Back/forward and other links keep the router's behaviour.
+ */
+export function useCardArrivalScroll(slug: string) {
+  useLayoutEffect(() => {
+    if (!arrivingFromCard) return;
+    arrivingFromCard = false;
+    window.scrollTo(0, 0);
+  }, [slug]);
+}
+
 const MAT = ":scope > :first-child";
 
 function slugOf(a: HTMLAnchorElement): string | null {
@@ -79,6 +98,7 @@ export function CardTransitionScope({ children, className }: { children: ReactNo
         if (!root || !a) return;
         const slug = slugOf(a);
         if (!slug) return;
+        arrivingFromCard = e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
         clearAll(root);
         nameMat(a, slug);
       }}

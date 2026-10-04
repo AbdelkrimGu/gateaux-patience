@@ -85,8 +85,13 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
       label: t("dimensions"),
       value: t("dimensions_value", { value: dims }),
     },
-    cake.pieces ? { label: t("pieces"), value: String(cake.pieces) } : null,
-    cake.persons ? { label: t("persons"), value: String(cake.persons) } : null,
+    // One serving line: "parts" and "personnes" side by side read as a
+    // contradiction (14 vs 10), so persons win and parts are the fallback.
+    cake.persons
+      ? { label: t("persons"), value: t("persons_value", { count: cake.persons }) }
+      : cake.pieces
+        ? { label: t("pieces"), value: t("pieces_value", { count: cake.pieces }) }
+        : null,
   ].filter((f): f is { label: string; value: string } => !!f);
 
   const soft = ecrin ? "text-sucre/85" : "text-ink-soft";
@@ -94,10 +99,12 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
   const titleBlock = (
     <div>
       <h1 className={ecrin ? cn(styles.ecrinTitle, "text-sucre") : "type-h2 text-piping"}>{title}</h1>
-      <p className={cn("type-meta mt-3 flex flex-wrap gap-x-4 gap-y-1", soft)}>
-        <span>{category}</span>
-        <span>
-          {t("ref_label")} <bdi className="ltr font-medium">{ref}</bdi>
+      <p className={cn("type-meta mt-3", soft)}>
+        {category}
+        {/* The ref is shown once, on the plate badge; screen readers get it here. */}
+        <span className="sr-only">
+          {" · "}
+          {t("ref_label")} <bdi>{ref}</bdi>
         </span>
       </p>
     </div>
@@ -148,6 +155,7 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
     </>
   );
 
+  const briefParts = t("brief_text", { ref: "\u0001" }).split("\u0001");
   const studio = (
     <CakeStudio
       locale={locale}
@@ -165,8 +173,15 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
         namePlaceholder: t("name_placeholder"),
         nameHint: t("name_hint"),
         briefTitle: t("brief_title"),
-        // Isolated + non-breaking hyphen: the ref never splits or reorders in Arabic.
-        briefText: t("brief_text", { ref: `⁨${ref.replace("-", "‑")}⁩` }),
+        // The ref in a nowrap <bdi> with a plain hyphen: it never splits or
+        // reorders in Arabic, and no U+2011 pulls the Arabic font on FR/EN.
+        briefText: (
+          <>
+            {briefParts[0]}
+            <bdi className="ltr whitespace-nowrap">{ref}</bdi>
+            {briefParts[1]}
+          </>
+        ),
         dateLabel: t("date_label"),
         guestsLabel: t("guests_label"),
         guestsPlaceholder: t("guests_placeholder"),
@@ -276,7 +291,7 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
             <h2 id="cake-related" className="type-h2">
               {t("related_title")}
             </h2>
-            <Button href="/galerie" variant="ghost" size="sm" iconEnd="chevron" className="hidden desk:inline-flex">
+            <Button href="/galerie" variant="ghost" size="sm" className="hidden desk:inline-flex">
               {t("related_more")}
             </Button>
           </div>
@@ -289,7 +304,7 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
               ))}
             </ul>
           </CardTransitionScope>
-          <Button href="/galerie" variant="ghost" size="sm" iconEnd="chevron" className="mt-8 desk:hidden">
+          <Button href="/galerie" variant="ghost" size="sm" className="mt-8 desk:hidden">
             {t("related_more")}
           </Button>
         </section>
