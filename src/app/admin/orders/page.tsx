@@ -104,11 +104,11 @@ export default function AdminOrdersPage() {
 
         {/* Content */}
         {loading ? (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-xs p-12 text-center">
             <div className="animate-spin w-8 h-8 border-2 border-rose-500 border-t-transparent rounded-full mx-auto" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-xs p-12 text-center">
             <div className="text-4xl mb-3">📭</div>
             <h2 className="font-semibold text-gray-700 mb-1">Aucune commande</h2>
             <p className="text-sm text-gray-400">
@@ -118,7 +118,7 @@ export default function AdminOrdersPage() {
         ) : (
           <div className="space-y-3">
             {filtered.map((order) => (
-              <div key={order.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div key={order.id} className="bg-white rounded-2xl border border-gray-100 shadow-xs p-5">
                 <div className="flex items-start gap-4">
                   {/* Status dot */}
                   <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${

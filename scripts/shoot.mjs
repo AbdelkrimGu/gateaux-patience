@@ -107,10 +107,10 @@ async function shoot(page, name) {
   await page.evaluate(async () => {
     const h = document.documentElement.scrollHeight;
     for (let y = 0; y < h; y += Math.round(window.innerHeight * 0.8)) {
-      window.scrollTo(0, y);
+      window.scrollTo({ top: y, behavior: "instant" });
       await new Promise((r) => setTimeout(r, 200));
     }
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: "instant" });
   });
   await page.waitForTimeout(600);
   await snap(page, { path: full, fullPage: true });

@@ -150,7 +150,7 @@ export default function TiramisuPreview({ style, template, text }: Props) {
   return (
     <div
       ref={wrapRef}
-      className="relative aspect-square w-full overflow-hidden rounded-[2rem] shadow-[0_24px_70px_rgba(40,20,8,0.4)] ring-1 ring-black/5"
+      className="relative aspect-square w-full overflow-hidden rounded-4xl shadow-[0_24px_70px_rgba(40,20,8,0.4)] ring-1 ring-black/5"
       style={{
         background: "radial-gradient(120% 120% at 50% 20%, #FBF1E6 0%, #F3E2D2 55%, #E9D2BE 100%)",
       }}
@@ -175,15 +175,15 @@ export default function TiramisuPreview({ style, template, text }: Props) {
 
       {/* 2D ⇄ 3D toggle (only when 3D is possible). */}
       {ready && webgl && (
-        <div className="absolute end-2 top-2 z-10 flex rounded-full bg-white/85 p-0.5 shadow-sm ring-1 ring-black/5 backdrop-blur-sm">
+        <div className="absolute inset-e-2 top-2 z-10 flex rounded-full bg-white/85 p-0.5 shadow-xs ring-1 ring-black/5 backdrop-blur-xs">
           <button
             onClick={() => choose("2d")}
             aria-label={t("Aperçu 2D", "معاينة 2D", "2D preview")}
             aria-pressed={mode === "2d"}
             className={cn(
               "flex min-h-[40px] min-w-[44px] items-center justify-center gap-1 rounded-full px-3 py-2 text-[11px] font-semibold transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-1",
-              mode === "2d" ? "bg-rose text-white shadow" : "text-charcoal-light"
+              "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-1",
+              mode === "2d" ? "bg-rose text-white shadow-sm" : "text-charcoal-light"
             )}
           >
             <Square size={12} /> 2D
@@ -194,8 +194,8 @@ export default function TiramisuPreview({ style, template, text }: Props) {
             aria-pressed={mode === "3d"}
             className={cn(
               "flex min-h-[40px] min-w-[44px] items-center justify-center gap-1 rounded-full px-3 py-2 text-[11px] font-semibold transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-1",
-              mode === "3d" ? "bg-rose text-white shadow" : "text-charcoal-light"
+              "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-1",
+              mode === "3d" ? "bg-rose text-white shadow-sm" : "text-charcoal-light"
             )}
           >
             <Box size={12} /> 3D
@@ -206,7 +206,7 @@ export default function TiramisuPreview({ style, template, text }: Props) {
       {/* Preset angles + reset (3D only). */}
       {show3D && (
         <div className="absolute inset-x-0 bottom-2 z-10 flex items-center justify-center gap-1.5">
-          <div className="flex items-center gap-1 rounded-full bg-white/85 p-0.5 shadow-sm ring-1 ring-black/5 backdrop-blur-sm">
+          <div className="flex items-center gap-1 rounded-full bg-white/85 p-0.5 shadow-xs ring-1 ring-black/5 backdrop-blur-xs">
             {presets.map((p) => (
               <button
                 key={p.key}
@@ -214,9 +214,9 @@ export default function TiramisuPreview({ style, template, text }: Props) {
                 aria-pressed={activePreset === p.key}
                 className={cn(
                   "flex min-h-[40px] min-w-[44px] items-center justify-center rounded-full px-3 py-2 text-[11px] font-semibold transition-colors",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-1",
+                  "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-1",
                   activePreset === p.key
-                    ? "bg-rose text-white shadow"
+                    ? "bg-rose text-white shadow-sm"
                     : "text-charcoal-light hover:bg-rose/10 hover:text-rose"
                 )}
               >
@@ -228,7 +228,7 @@ export default function TiramisuPreview({ style, template, text }: Props) {
               aria-label={t("Réinitialiser la vue", "إعادة الضبط", "Reset view")}
               className={cn(
                 "flex min-h-[40px] min-w-[44px] items-center justify-center rounded-full px-3 py-2 text-charcoal-light transition-colors hover:bg-rose/10 hover:text-rose",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-1"
+                "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-1"
               )}
             >
               <RotateCcw size={12} />

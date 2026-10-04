@@ -152,7 +152,7 @@ export default function ItemCustomizer({
                 onClick={() => setStyle(s)}
                 className={cn(
                   "rounded-xl border px-3 py-2 text-start transition-all",
-                  active ? "border-rose bg-rose/5 shadow-sm" : "border-border bg-white"
+                  active ? "border-rose bg-rose/5 shadow-xs" : "border-border bg-white"
                 )}
               >
                 <span className="text-lg">{STYLE_META[s].emoji}</span>
@@ -192,9 +192,9 @@ export default function ItemCustomizer({
                       : t("Tapez ici…", "اكتب هنا…", "Type here…")
                   }
                   dir={isRTL ? "rtl" : "ltr"}
-                  className="w-full rounded-xl border border-border bg-white px-3 py-2.5 pe-12 font-playfair text-base uppercase text-charcoal outline-none transition-colors focus:border-rose focus:ring-2 focus:ring-rose/20"
+                  className="w-full rounded-xl border border-border bg-white px-3 py-2.5 pe-12 font-playfair text-base uppercase text-charcoal outline-hidden transition-colors focus:border-rose focus:ring-2 focus:ring-rose/20"
                 />
-                <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-[10px] tabular-nums text-charcoal-lighter">
+                <span className="pointer-events-none absolute inset-e-3 top-1/2 -translate-y-1/2 text-[10px] tabular-nums text-charcoal-lighter">
                   {val.length}/{perLine}
                 </span>
               </div>
@@ -228,7 +228,7 @@ export default function ItemCustomizer({
         </button>
         <button
           onClick={() => onSave({ style, sizeId, lines })}
-          className="flex flex-[2] items-center justify-center gap-1.5 rounded-full bg-rose py-3 text-sm font-semibold text-white shadow-cake transition-all hover:bg-rose-dark active:scale-[0.98]"
+          className="flex flex-2 items-center justify-center gap-1.5 rounded-full bg-rose py-3 text-sm font-semibold text-white shadow-cake transition-all hover:bg-rose-dark active:scale-[0.98]"
         >
           <Check size={16} />
           {t("Enregistrer", "حفظ", "Save")}

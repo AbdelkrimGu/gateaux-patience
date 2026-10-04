@@ -57,14 +57,14 @@ function CakeCard({ cake, locale }: { cake: Cake; locale: string }) {
 
         {/* Category badge */}
         <div className="absolute top-3 left-3 z-10 pointer-events-none">
-          <span className="px-2.5 py-1 rounded-full bg-white/90 text-rose text-xs font-medium backdrop-blur-sm shadow-sm">
+          <span className="px-2.5 py-1 rounded-full bg-white/90 text-rose text-xs font-medium backdrop-blur-xs shadow-xs">
             {cake.categoryLabel[locale as Locale] ?? cake.categoryLabel.fr}
           </span>
         </div>
 
         {/* Multi-image indicator */}
         {cake.images.length > 1 && (
-          <div className="absolute top-3 right-3 z-10 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full pointer-events-none">
+          <div className="absolute top-3 right-3 z-10 bg-black/50 backdrop-blur-xs text-white text-xs px-2 py-1 rounded-full pointer-events-none">
             +{cake.images.length}
           </div>
         )}
@@ -128,7 +128,7 @@ export default function GalleryClient({
   return (
     <>
       {/* Page hero */}
-      <div className="pt-28 pb-10 bg-gradient-to-br from-[#FFF8F3] via-[#FFF0E8] to-[#FDE8E8] border-b border-border">
+      <div className="pt-28 pb-10 bg-linear-to-br/srgb from-[#FFF8F3] via-[#FFF0E8] to-[#FDE8E8] border-b border-border">
         <div className="container-custom">
           <div className={cn("flex flex-col gap-2", isRTL ? "items-end text-right" : "items-start")}>
             <span className="section-badge">
@@ -149,7 +149,7 @@ export default function GalleryClient({
       </div>
 
       {/* Filter bar */}
-      <div className="sticky top-16 z-40 bg-white/95 backdrop-blur-md border-b border-border shadow-sm">
+      <div className="sticky top-16 z-40 bg-white/95 backdrop-blur-md border-b border-border shadow-xs">
         <div className="container-custom py-3">
           <div className={cn("flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1", isRTL && "flex-row-reverse")}>
             <SlidersHorizontal size={15} className="text-charcoal-light shrink-0" />
@@ -159,7 +159,7 @@ export default function GalleryClient({
               className={cn(
                 "shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap",
                 activeCategory === "all"
-                  ? "bg-rose text-white shadow-sm"
+                  ? "bg-rose text-white shadow-xs"
                   : "bg-surface-alt text-charcoal-light hover:text-rose hover:bg-rose/5 border border-border"
               )}
             >
@@ -172,7 +172,7 @@ export default function GalleryClient({
                 className={cn(
                   "shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap",
                   activeCategory === c.slug
-                    ? "bg-rose text-white shadow-sm"
+                    ? "bg-rose text-white shadow-xs"
                     : "bg-surface-alt text-charcoal-light hover:text-rose hover:bg-rose/5 border border-border"
                 )}
               >

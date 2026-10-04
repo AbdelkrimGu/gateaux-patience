@@ -159,7 +159,7 @@ export default function CakeDetailClient({
                 </div>
 
                 {/* Subtle zoom hint */}
-                <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white text-[10px] font-medium pointer-events-none z-10">
+                <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-black/40 backdrop-blur-xs text-white text-[10px] font-medium pointer-events-none z-10">
                   <ZoomIn size={11} />
                   {lbl("zoom")}
                 </div>
@@ -170,14 +170,14 @@ export default function CakeDetailClient({
                     <button
                       onClick={prevImage}
                       aria-label="Image précédente"
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm shadow flex items-center justify-center hover:bg-white transition-colors z-10"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 backdrop-blur-xs shadow-sm flex items-center justify-center hover:bg-white transition-colors z-10"
                     >
                       <ChevronLeft size={18} className="text-charcoal" />
                     </button>
                     <button
                       onClick={nextImage}
                       aria-label="Image suivante"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm shadow flex items-center justify-center hover:bg-white transition-colors z-10"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 backdrop-blur-xs shadow-sm flex items-center justify-center hover:bg-white transition-colors z-10"
                     >
                       <ChevronRight size={18} className="text-charcoal" />
                     </button>
@@ -209,7 +209,7 @@ export default function CakeDetailClient({
                       aria-label={`Image ${i + 1}`}
                       className={cn(
                         "relative aspect-square rounded-xl overflow-hidden border-2 transition-all",
-                        i === activeImage ? "border-rose shadow-sm" : "border-transparent hover:border-rose/40"
+                        i === activeImage ? "border-rose shadow-xs" : "border-transparent hover:border-rose/40"
                       )}
                     >
                       <Image src={img} alt={`${t.title} ${i + 1}`} fill className="object-cover" sizes="80px" />
@@ -237,7 +237,7 @@ export default function CakeDetailClient({
               </div>
 
               {/* Title */}
-              <h1 className="font-playfair text-3xl md:text-4xl font-bold text-charcoal leading-tight">
+              <h1 className="font-playfair text-3xl md:text-4xl font-bold text-charcoal leading-tight md:leading-10">
                 {t.title}
               </h1>
 
@@ -356,7 +356,7 @@ export default function CakeDetailClient({
                         className="object-cover transition-transform duration-700 group-hover:scale-110"
                         sizes="(max-width: 1024px) 50vw, 33vw"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute inset-0 bg-linear-to-t/srgb from-charcoal/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <div className="absolute bottom-3 left-0 right-0 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <span className="px-4 py-1.5 bg-white text-rose text-xs font-medium rounded-full">
                           {lbl("view")}
@@ -433,7 +433,7 @@ function Lightbox({
 
   return (
     <div
-      className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center animate-fade-in"
+      className="fixed inset-0 z-100 bg-black/95 flex items-center justify-center animate-fade-in"
       role="dialog"
       aria-modal="true"
       aria-label={alt}
@@ -443,14 +443,14 @@ function Lightbox({
         type="button"
         onClick={onClose}
         aria-label="Fermer"
-        className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-colors"
+        className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-xs flex items-center justify-center text-white transition-colors"
       >
         <X size={18} />
       </button>
 
       {/* Counter */}
       {images.length > 1 && (
-        <div className="absolute top-4 left-4 z-20 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm text-white text-xs font-medium">
+        <div className="absolute top-4 left-4 z-20 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-xs text-white text-xs font-medium">
           {index + 1} / {images.length}
         </div>
       )}
@@ -499,7 +499,7 @@ function Lightbox({
             type="button"
             onClick={prev}
             aria-label="Précédent"
-            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-colors"
+            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-xs flex items-center justify-center text-white transition-colors"
           >
             <ChevronLeft size={20} />
           </button>
@@ -507,7 +507,7 @@ function Lightbox({
             type="button"
             onClick={next}
             aria-label="Suivant"
-            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-colors"
+            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-xs flex items-center justify-center text-white transition-colors"
           >
             <ChevronRight size={20} />
           </button>
@@ -515,7 +515,7 @@ function Lightbox({
       )}
 
       {/* Hint */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm text-white/80 text-xs font-medium pointer-events-none">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-xs text-white/80 text-xs font-medium pointer-events-none">
         {hint}
       </div>
     </div>

@@ -28,7 +28,7 @@ export default function HowToOrderSection() {
   ];
 
   return (
-    <section className="section-padding bg-gradient-to-br from-[#FFF8F3] to-[#FDE8E8] relative overflow-hidden">
+    <section className="section-padding bg-linear-to-br/srgb from-[#FFF8F3] to-[#FDE8E8] relative overflow-hidden">
       {/* Decorative */}
       <div
         className="absolute top-0 right-0 w-72 h-72 rounded-full opacity-10 blur-3xl"
@@ -81,7 +81,7 @@ export default function HowToOrderSection() {
                   <Icon size={28} />
                 </div>
                 {/* Step number */}
-                <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-rose text-white text-xs font-bold flex items-center justify-center z-20 shadow">
+                <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-rose text-white text-xs font-bold flex items-center justify-center z-20 shadow-sm">
                   {number}
                 </div>
               </div>

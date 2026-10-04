@@ -54,14 +54,14 @@ function CategoryCard({
             />
           ) : (
             <div
-              className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}
+              className={`w-full h-full bg-linear-to-br/srgb ${gradient} flex items-center justify-center`}
             >
               <Tag size={42} className="text-white/70" />
             </div>
           )}
 
           {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-charcoal/20 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t/srgb from-charcoal/70 via-charcoal/20 to-transparent" />
 
           {/* Content */}
           <div
@@ -74,7 +74,7 @@ function CategoryCard({
               <h3 className="font-playfair font-bold text-white text-lg leading-tight">
                 {label}
               </h3>
-              <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 border border-white/30 hover:bg-rose transition-colors">
+              <div className="bg-white/20 backdrop-blur-xs rounded-full p-2 border border-white/30 hover:bg-rose transition-colors">
                 <ArrowRight size={14} className={cn("text-white", isRTL && "rotate-180")} />
               </div>
             </div>

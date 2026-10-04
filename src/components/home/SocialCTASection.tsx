@@ -58,7 +58,7 @@ export default function SocialCTASection() {
       name: t("instagram"),
       href: CONTACT.instagram,
       icon: <InstagramIcon className="w-5 h-5" />,
-      color: "bg-gradient-to-br from-[#F77737] via-[#C32AA3] to-[#4F5BD5] hover:opacity-90",
+      color: "bg-linear-to-br/srgb from-[#F77737] via-[#C32AA3] to-[#4F5BD5] hover:opacity-90",
     },
     {
       name: t("whatsapp"),

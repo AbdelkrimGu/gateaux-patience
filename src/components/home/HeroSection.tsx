@@ -112,7 +112,7 @@ function Satellite({
       onClick={onOpen}
       title={label}
       aria-label={label}
-      className="absolute z-20 group focus:outline-none"
+      className="absolute z-20 group focus:outline-hidden"
       style={slotStyle(index)}
     >
       <motion.div
@@ -121,7 +121,7 @@ function Satellite({
         transition={{ delay, duration: 0.75, ease: EASE }}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.92 }}
-        className="relative w-[68px] h-[68px] md:w-[118px] md:h-[118px] rounded-full overflow-hidden ring-[2.5px] ring-[#D4AF37] group-hover:ring-[#E5C158] shadow-[0_10px_26px_-8px_rgba(99,40,52,0.5)] group-hover:shadow-[0_14px_30px_-8px_rgba(201,114,122,0.55)] transition-[box-shadow] bg-rose/10"
+        className="relative w-[68px] h-[68px] md:w-[118px] md:h-[118px] rounded-full overflow-hidden ring-[2.5px] ring-[#D4AF37] group-hover:ring-[#E5C158] shadow-[0_10px_26px_-8px_rgba(99,40,52,0.5)] group-hover:shadow-[0_14px_30px_-8px_rgba(201,114,122,0.55)] transition-shadow bg-rose/10"
       >
         <CyclingImage images={group.images} alt={label} />
       </motion.div>
@@ -174,14 +174,14 @@ function CategoryPickerModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 z-100 flex items-center justify-center p-4 animate-fade-in"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label={title}
     >
       <div
-        className="absolute inset-0 bg-charcoal/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-charcoal/60 backdrop-blur-xs"
         aria-hidden="true"
       />
       <div
@@ -191,7 +191,7 @@ function CategoryPickerModal({
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm shadow flex items-center justify-center text-charcoal hover:bg-rose hover:text-white transition-colors"
+          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-xs shadow-sm flex items-center justify-center text-charcoal hover:bg-rose hover:text-white transition-colors"
           aria-label="Fermer"
         >
           <X size={16} />
@@ -236,9 +236,9 @@ function CategoryPickerModal({
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-charcoal/85 via-charcoal/15 to-transparent" />
+                  <div className="absolute inset-0 bg-linear-to-t/srgb from-charcoal/85 via-charcoal/15 to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 p-3">
-                    <h3 className="font-playfair text-white font-semibold text-sm md:text-base leading-tight drop-shadow-md line-clamp-2">
+                    <h3 className="font-playfair text-white font-semibold text-sm md:text-base leading-tight md:leading-6 drop-shadow-md line-clamp-2">
                       {label}
                     </h3>
                   </div>
@@ -296,7 +296,7 @@ function LogoModal({
       label: "Instagram",
       href: CONTACT.instagram,
       icon: Instagram,
-      bg: "bg-gradient-to-br from-[#FEDA75]/15 via-[#FA7E1E]/15 to-[#D62976]/15 text-[#D62976] hover:from-[#FEDA75] hover:via-[#FA7E1E] hover:to-[#D62976] hover:text-white",
+      bg: "bg-linear-to-br/srgb from-[#FEDA75]/15 via-[#FA7E1E]/15 to-[#D62976]/15 text-[#D62976] hover:from-[#FEDA75] hover:via-[#FA7E1E] hover:to-[#D62976] hover:text-white",
     },
     {
       label: "WhatsApp",
@@ -314,13 +314,13 @@ function LogoModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 z-100 flex items-center justify-center p-4 animate-fade-in"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="absolute inset-0 bg-charcoal/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-charcoal/60 backdrop-blur-xs"
         aria-hidden="true"
       />
       <div
@@ -329,14 +329,14 @@ function LogoModal({
       >
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm shadow flex items-center justify-center text-charcoal hover:bg-rose hover:text-white transition-colors"
+          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-xs shadow-sm flex items-center justify-center text-charcoal hover:bg-rose hover:text-white transition-colors"
           aria-label="Fermer"
         >
           <X size={16} />
         </button>
 
         <div className="flex flex-col items-center pt-8 px-6">
-          <div className="w-44 h-44 rounded-3xl overflow-hidden ring-4 ring-white shadow-[0_15px_40px_rgba(201,114,122,0.25)] bg-gradient-to-br from-[#FFF8F3] to-[#FDE8E8]">
+          <div className="w-44 h-44 rounded-3xl overflow-hidden ring-4 ring-white shadow-[0_15px_40px_rgba(201,114,122,0.25)] bg-linear-to-br/srgb from-[#FFF8F3] to-[#FDE8E8]">
             <Image
               src="/Logo/Logo-Photoroom.png"
               alt="Gateaux Patience"
@@ -499,7 +499,7 @@ export default function HeroSection({ hero, floatingGroups }: Props) {
   return (
     <section
       ref={sectionRef}
-      className="relative flex flex-col overflow-hidden bg-gradient-to-b from-[#FBF5EE] via-[#FAF1E8] to-[#F8E9DD]"
+      className="relative flex flex-col overflow-hidden bg-linear-to-b/srgb from-[#FBF5EE] via-[#FAF1E8] to-[#F8E9DD]"
     >
       {/* Ambient glow */}
       <div
@@ -538,7 +538,7 @@ export default function HeroSection({ hero, floatingGroups }: Props) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.8, ease: EASE }}
         >
-          <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/65 backdrop-blur-sm ring-1 ring-rose/15 text-charcoal-light text-[10px] md:text-[11px] tracking-[0.28em] uppercase">
+          <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/65 backdrop-blur-xs ring-1 ring-rose/15 text-charcoal-light text-[10px] md:text-[11px] tracking-[0.28em] uppercase">
             <motion.span
               className="w-1 h-1 rounded-full bg-gold"
               animate={{ scale: [1, 1.6, 1], opacity: [0.6, 1, 0.6] }}
@@ -630,7 +630,7 @@ export default function HeroSection({ hero, floatingGroups }: Props) {
               initial={{ opacity: 0, scale: 0.85 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5, duration: 1.0, ease: EASE }}
-              className="relative z-10 rounded-full focus:outline-none focus-visible:ring-4 focus-visible:ring-rose/30"
+              className="relative z-10 rounded-full focus:outline-hidden focus-visible:ring-4 focus-visible:ring-rose/30"
               aria-label={socialTitle}
             >
               <div className="w-[200px] h-[200px] md:w-[320px] md:h-[320px] rounded-full overflow-hidden ring-4 ring-white shadow-[0_25px_55px_-15px_rgba(201,114,122,0.5)] cursor-pointer transition-transform hover:scale-[1.04]">
@@ -665,7 +665,7 @@ export default function HeroSection({ hero, floatingGroups }: Props) {
             isRTL && "lg:items-end lg:text-right"
           )}
         >
-          <h1 className="font-playfair text-4xl md:text-5xl lg:text-6xl leading-[1.05] tracking-tight text-charcoal text-balance">
+          <h1 className="font-playfair text-4xl md:text-5xl lg:text-6xl leading-[1.05] md:leading-none tracking-tight text-charcoal text-balance">
             {titleWords.map((word, i) => (
               <motion.span
                 key={`t-${i}`}
@@ -716,7 +716,7 @@ export default function HeroSection({ hero, floatingGroups }: Props) {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 2.1, duration: 0.9, ease: EASE }}
-            className="text-charcoal-light text-base md:text-lg leading-relaxed"
+            className="text-charcoal-light text-base md:text-lg leading-relaxed md:leading-7"
           >
             {t("subtitle")}
           </motion.p>
@@ -732,7 +732,7 @@ export default function HeroSection({ hero, floatingGroups }: Props) {
               initial={{ opacity: 0, scale: 1.04 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 2.2, duration: 1.1, ease: EASE }}
-              className="relative aspect-[4/5] md:aspect-[3/4] rounded-[26px] overflow-hidden shadow-[0_45px_90px_-30px_rgba(99,40,52,0.55)] ring-1 ring-white/60 bg-rose/10"
+              className="relative aspect-4/5 md:aspect-3/4 rounded-[26px] overflow-hidden shadow-[0_45px_90px_-30px_rgba(99,40,52,0.55)] ring-1 ring-white/60 bg-rose/10"
             >
               <AnimatePresence initial={false} mode="popLayout">
                 {active && (
@@ -767,8 +767,8 @@ export default function HeroSection({ hero, floatingGroups }: Props) {
                         />
                       </motion.div>
 
-                      <div className="absolute inset-0 bg-gradient-to-t from-charcoal/75 via-charcoal/5 to-transparent pointer-events-none" />
-                      <div className="absolute inset-0 bg-gradient-to-b from-charcoal/20 via-transparent to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 bg-linear-to-t/srgb from-charcoal/75 via-charcoal/5 to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 bg-linear-to-b/srgb from-charcoal/20 via-transparent to-transparent pointer-events-none" />
 
                       <div
                         className={cn(
@@ -779,7 +779,7 @@ export default function HeroSection({ hero, floatingGroups }: Props) {
                         <span className="text-[9px] md:text-[10px] tracking-[0.32em] uppercase text-white/75">
                           {featuredLabel}
                         </span>
-                        <h3 className="font-playfair text-white text-xl md:text-2xl lg:text-3xl font-semibold leading-tight drop-shadow-lg line-clamp-2">
+                        <h3 className="font-playfair text-white text-xl md:text-2xl lg:text-3xl font-semibold leading-tight md:leading-8 lg:leading-9 drop-shadow-lg line-clamp-2">
                           {activeTr?.title}
                         </h3>
                         <span
@@ -854,10 +854,10 @@ export default function HeroSection({ hero, floatingGroups }: Props) {
         >
           <Link
             href={`${prefix}/galerie`}
-            className="group relative inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-br from-rose to-[#B05161] text-white font-medium shadow-[0_15px_40px_-12px_rgba(201,114,122,0.65)] hover:shadow-[0_22px_55px_-12px_rgba(201,114,122,0.85)] active:scale-[0.98] transition-shadow overflow-hidden"
+            className="group relative inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-linear-to-br/srgb from-rose to-[#B05161] text-white font-medium shadow-[0_15px_40px_-12px_rgba(201,114,122,0.65)] hover:shadow-[0_22px_55px_-12px_rgba(201,114,122,0.85)] active:scale-[0.98] transition-shadow overflow-hidden"
           >
             <span
-              className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent group-hover:translate-x-full transition-transform duration-[1100ms] ease-out"
+              className="absolute inset-0 -translate-x-full bg-linear-to-r/srgb from-transparent via-white/25 to-transparent group-hover:translate-x-full transition-transform duration-1100 ease-out"
               aria-hidden="true"
             />
             <span className="relative">{t("cta_primary")}</span>

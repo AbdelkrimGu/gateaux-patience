@@ -125,7 +125,7 @@ export default function AboutSection() {
                     isRTL && "flex-row-reverse"
                   )}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-white shadow-xs flex items-center justify-center shrink-0">
                     {icon}
                   </div>
                   <div className={isRTL ? "text-right" : ""}>

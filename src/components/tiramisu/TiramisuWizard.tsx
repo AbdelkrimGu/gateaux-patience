@@ -309,7 +309,7 @@ export default function TiramisuWizard() {
         {step === "mode" ? (
           <Link
             href={homeHref}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/70 text-charcoal-light ring-1 ring-border backdrop-blur-sm transition-colors hover:text-rose"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/70 text-charcoal-light ring-1 ring-border backdrop-blur-xs transition-colors hover:text-rose"
             aria-label={t("Accueil", "الرئيسية", "Home")}
           >
             <ArrowLeft size={18} className={isRTL ? "rotate-180" : ""} />
@@ -317,7 +317,7 @@ export default function TiramisuWizard() {
         ) : (
           <button
             onClick={goBack}
-            className="flex h-9 items-center gap-1.5 rounded-full bg-white/70 px-3 text-sm font-medium text-charcoal ring-1 ring-border backdrop-blur-sm transition-colors hover:text-rose"
+            className="flex h-9 items-center gap-1.5 rounded-full bg-white/70 px-3 text-sm font-medium text-charcoal ring-1 ring-border backdrop-blur-xs transition-colors hover:text-rose"
           >
             <ArrowLeft size={16} className={isRTL ? "rotate-180" : ""} />
             {t("Retour", "رجوع", "Back")}
@@ -468,7 +468,7 @@ function Shell({ children, isRTL }: { children: React.ReactNode; isRTL: boolean 
   return (
     <div
       dir={isRTL ? "rtl" : "ltr"}
-      className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-gradient-to-b from-[#FBF5EE] via-[#FAF1E8] to-[#F8E9DD]"
+      className="relative flex h-dvh w-full flex-col overflow-hidden bg-linear-to-b/srgb from-[#FBF5EE] via-[#FAF1E8] to-[#F8E9DD]"
     >
       <div className="pointer-events-none absolute inset-0 pattern-dots opacity-20" aria-hidden="true" />
       <div
@@ -483,7 +483,7 @@ function Shell({ children, isRTL }: { children: React.ReactNode; isRTL: boolean 
 
 function FooterBar({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative z-10 shrink-0 border-t border-border/70 bg-white/80 px-4 py-3 backdrop-blur-sm">
+    <div className="relative z-10 shrink-0 border-t border-border/70 bg-white/80 px-4 py-3 backdrop-blur-xs">
       {children}
     </div>
   );
@@ -496,7 +496,7 @@ function PrimaryButton({ onClick, disabled, children }: { onClick: () => void; d
       disabled={disabled}
       className={cn(
         "flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-semibold text-white transition-all",
-        disabled ? "cursor-not-allowed bg-charcoal/25" : "bg-gradient-to-br from-rose to-[#B05161] shadow-cake hover:shadow-cake-hover active:scale-[0.99]"
+        disabled ? "cursor-not-allowed bg-charcoal/25" : "bg-linear-to-br/srgb from-rose to-[#B05161] shadow-cake hover:shadow-cake-hover active:scale-[0.99]"
       )}
     >
       {children}
@@ -609,7 +609,7 @@ function BoxesStep({
             <div key={o.id} className="flex w-[62vw] max-w-[260px] shrink-0 snap-center flex-col overflow-hidden rounded-3xl border border-border bg-white shadow-cake">
               <div className="relative aspect-square w-full bg-[#F6ECE0]">
                 <Image src={o.image} alt={o.shapeLabel[locale]} fill sizes="260px" className="object-cover" />
-                <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-charcoal shadow">
+                <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-charcoal shadow-sm">
                   {o.shapeLabel[locale]}
                 </span>
               </div>
@@ -693,7 +693,7 @@ function BucketStep({
                 ].filter(Boolean).join(" · ");
 
           return (
-            <div key={b.uid} className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+            <div key={b.uid} className="overflow-hidden rounded-2xl border border-border bg-white shadow-xs">
               {/* main row */}
               <div className="flex gap-3 p-2.5">
                 <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#F6ECE0]">
@@ -733,7 +733,7 @@ function BucketStep({
                     <div className="p-2.5">
                       <button
                         onClick={() => onStartPersonalize(b.uid)}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-rose/50 bg-rose/[0.04] py-2.5 text-sm font-semibold text-rose transition-colors hover:bg-rose/10"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-rose/50 bg-rose/4 py-2.5 text-sm font-semibold text-rose transition-colors hover:bg-rose/10"
                       >
                         <WandSparkles size={16} />
                         {b.qty > 1
@@ -765,7 +765,7 @@ function BucketStep({
                           >
                             <div className="space-y-1.5 px-3 pb-3">
                               {b.personalizations.map((p, i) => (
-                                <div key={i} className="flex items-center gap-2 rounded-xl bg-rose/[0.05] px-2.5 py-1.5">
+                                <div key={i} className="flex items-center gap-2 rounded-xl bg-rose/5 px-2.5 py-1.5">
                                   <span className="text-sm">{STYLE_META[p.style].emoji}</span>
                                   <span className="min-w-0 flex-1 truncate font-playfair text-sm font-semibold text-charcoal">
                                     “{personalizationText(p).replace(/\n/g, " · ") || "…"}”
@@ -846,7 +846,7 @@ function HowManyModal({
           <button
             key={k}
             onClick={() => onConfirm(k)}
-            className="flex h-12 min-w-[3rem] items-center justify-center rounded-2xl border border-rose/30 bg-white px-4 text-lg font-bold text-rose shadow-sm transition-all hover:-translate-y-0.5 hover:bg-rose hover:text-white active:scale-95"
+            className="flex h-12 min-w-12 items-center justify-center rounded-2xl border border-rose/30 bg-white px-4 text-lg font-bold text-rose shadow-xs transition-all hover:-translate-y-0.5 hover:bg-rose hover:text-white active:scale-95"
           >
             {k}
           </button>
@@ -922,7 +922,7 @@ function GateModal({
         {mode === "simple" && (
           <button
             onClick={onUpgrade}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-br from-rose to-[#B05161] py-3.5 font-semibold text-white shadow-cake transition-all hover:shadow-cake-hover active:scale-[0.99]"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-linear-to-br/srgb from-rose to-[#B05161] py-3.5 font-semibold text-white shadow-cake transition-all hover:shadow-cake-hover active:scale-[0.99]"
           >
             <WandSparkles size={18} />
             {t("Oui, je personnalise", "نعم، أريد التخصيص", "Yes, personalize")}
@@ -946,7 +946,7 @@ function Sheet({ children, onClose }: { children: React.ReactNode; onClose: () =
       transition={{ duration: 0.2 }}
       className="absolute inset-0 z-50 flex items-end justify-center sm:items-center"
     >
-      <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
+      <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-xs" onClick={onClose} aria-hidden="true" />
       <motion.div
         initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -1037,7 +1037,7 @@ function ConfirmStep({
             onChange={(e) => setName(e.target.value)}
             placeholder={t("Nom et prénom", "الاسم الكامل", "Full name")}
             dir={isRTL ? "rtl" : "ltr"}
-            className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-charcoal outline-none transition-colors focus:border-rose focus:ring-2 focus:ring-rose/20"
+            className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-charcoal outline-hidden transition-colors focus:border-rose focus:ring-2 focus:ring-rose/20"
           />
         </div>
         <div>
@@ -1049,7 +1049,7 @@ function ConfirmStep({
             inputMode="tel"
             placeholder="05 00 00 00 00"
             dir="ltr"
-            className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-charcoal outline-none transition-colors focus:border-rose focus:ring-2 focus:ring-rose/20"
+            className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-charcoal outline-hidden transition-colors focus:border-rose focus:ring-2 focus:ring-rose/20"
           />
         </div>
 

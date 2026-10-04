@@ -76,7 +76,7 @@ function CakeCard({
         </Link>
 
         <div className="absolute top-3 left-3 z-10 pointer-events-none">
-          <span className="px-2.5 py-1 rounded-full bg-white/90 text-rose text-xs font-medium backdrop-blur-sm shadow-sm">
+          <span className="px-2.5 py-1 rounded-full bg-white/90 text-rose text-xs font-medium backdrop-blur-xs shadow-xs">
             {cake.categoryLabel[locale as Locale] ?? cake.categoryLabel.fr}
           </span>
         </div>

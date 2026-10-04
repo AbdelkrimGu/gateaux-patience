@@ -55,14 +55,14 @@ export default function Header() {
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
         isScrolled
-          ? "glass shadow-sm py-2"
+          ? "glass shadow-xs py-2"
           : "bg-transparent py-4"
       )}
     >
       <div className="container-custom flex items-center justify-between">
         {/* Logo */}
         <Link href={`/${locale === "fr" ? "" : locale}`} className="flex items-center shrink-0">
-          <span className="font-script text-3xl md:text-4xl text-rose leading-none">
+          <span className="font-script text-3xl md:text-4xl text-rose leading-none md:leading-10">
             Gateaux Patience
           </span>
         </Link>

@@ -241,7 +241,7 @@ export default function CategoriesManager({ initial }: Props) {
         <button
           onClick={startNew}
           disabled={editing.mode !== "none"}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500 text-white text-sm font-medium hover:bg-rose-600 disabled:opacity-50 transition shadow-sm"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500 text-white text-sm font-medium hover:bg-rose-600 disabled:opacity-50 transition shadow-xs"
         >
           <Plus size={15} />
           Nouvelle catégorie
@@ -254,7 +254,7 @@ export default function CategoriesManager({ initial }: Props) {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden">
         {editing.mode === "new" && (
           <EditorRow
             id={editorId}
@@ -521,7 +521,7 @@ function EditorRow({
                     e.stopPropagation();
                     onRemoveImage();
                   }}
-                  className="absolute top-1 right-1 p-1 bg-white/90 rounded-lg text-red-500 hover:bg-white shadow-sm"
+                  className="absolute top-1 right-1 p-1 bg-white/90 rounded-lg text-red-500 hover:bg-white shadow-xs"
                   title="Retirer l'image"
                 >
                   <X size={12} />
@@ -559,7 +559,7 @@ function EditorRow({
                 onClick={handleTranslate}
                 disabled={translating || !data.labels.fr.trim()}
                 title="Traduire en arabe + anglais avec l'IA"
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-violet-500 text-white hover:bg-violet-600 disabled:opacity-50 transition"
+                className="flex items-center gap-1 px-2 py-0.5 rounded-sm text-[10px] font-medium bg-violet-500 text-white hover:bg-violet-600 disabled:opacity-50 transition"
               >
                 {translating ? (
                   <Loader2 size={10} className="animate-spin" />
@@ -575,7 +575,7 @@ function EditorRow({
               onChange={(e) => onChangeLabel("fr", e.target.value)}
               placeholder="Ex: Mariage & Fiançailles"
               autoFocus
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm"
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-hidden text-sm"
             />
             {translateError && (
               <p className="text-[10px] text-red-500 mt-1">{translateError}</p>
@@ -589,7 +589,7 @@ function EditorRow({
               onChange={(e) => onChangeLabel("ar", e.target.value)}
               placeholder="مثل: زفاف وخطوبة"
               dir="rtl"
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm"
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-hidden text-sm"
             />
           </div>
           <div>
@@ -599,7 +599,7 @@ function EditorRow({
               value={data.labels.en}
               onChange={(e) => onChangeLabel("en", e.target.value)}
               placeholder="Ex: Wedding & Engagement"
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm"
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-hidden text-sm"
             />
           </div>
         </div>

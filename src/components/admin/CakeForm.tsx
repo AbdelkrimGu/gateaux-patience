@@ -75,19 +75,19 @@ function SortableImage({
 
       {/* Hover hint — tells the user the tile is clickable. */}
       <div className="absolute inset-0 bg-charcoal/0 group-hover:bg-charcoal/35 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
-        <div className="bg-white/95 rounded-full px-3 py-1.5 flex items-center gap-1.5 text-[11px] font-medium text-charcoal shadow">
+        <div className="bg-white/95 rounded-full px-3 py-1.5 flex items-center gap-1.5 text-[11px] font-medium text-charcoal shadow-sm">
           <Eye size={12} />
           Aperçu
         </div>
       </div>
 
       {/* Position badge (always visible) — 01, 02, 03… */}
-      <div className="absolute top-1 left-1 bg-white/95 text-gray-700 text-[9px] px-1.5 py-0.5 rounded font-semibold tracking-wider shadow-sm pointer-events-none">
+      <div className="absolute top-1 left-1 bg-white/95 text-gray-700 text-[9px] px-1.5 py-0.5 rounded-sm font-semibold tracking-wider shadow-xs pointer-events-none">
         {index === 0 ? "PRINCIPALE" : String(index + 1).padStart(2, "0")}
       </div>
 
       {/* Drag handle — always visible (no hover required) */}
-      <div className="absolute top-1 right-1 bg-white/90 text-gray-500 p-1 rounded shadow-sm pointer-events-none">
+      <div className="absolute top-1 right-1 bg-white/90 text-gray-500 p-1 rounded-sm shadow-xs pointer-events-none">
         <GripVertical size={12} />
       </div>
 
@@ -103,7 +103,7 @@ function SortableImage({
           e.stopPropagation();
           onRemove();
         }}
-        className="absolute bottom-1 right-1 p-1.5 bg-white/95 rounded-lg text-red-500 hover:bg-red-50 shadow-sm"
+        className="absolute bottom-1 right-1 p-1.5 bg-white/95 rounded-lg text-red-500 hover:bg-red-50 shadow-xs"
         title="Supprimer"
         aria-label="Supprimer la photo"
       >
@@ -145,7 +145,7 @@ function ImagePreviewModal({
 
   return (
     <div
-      className="fixed inset-0 z-[200] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 z-200 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -156,13 +156,13 @@ function ImagePreviewModal({
           e.stopPropagation();
           onClose();
         }}
-        className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-sm"
+        className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-xs"
         aria-label="Fermer"
       >
         <X size={20} />
       </button>
 
-      <div className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-full bg-white/10 text-white text-sm backdrop-blur-sm pointer-events-none">
+      <div className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-full bg-white/10 text-white text-sm backdrop-blur-xs pointer-events-none">
         {index + 1} / {images.length}
       </div>
 
@@ -174,7 +174,7 @@ function ImagePreviewModal({
               e.stopPropagation();
               onNavigate((index - 1 + images.length) % images.length);
             }}
-            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-10 w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-sm"
+            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-10 w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-xs"
             aria-label="Précédent"
           >
             <ChevronLeft size={22} />
@@ -185,7 +185,7 @@ function ImagePreviewModal({
               e.stopPropagation();
               onNavigate((index + 1) % images.length);
             }}
-            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-10 w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-sm"
+            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-10 w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-xs"
             aria-label="Suivant"
           >
             <ChevronRight size={22} />
@@ -565,7 +565,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
               )}
             >
               <div className={cn(
-                "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform",
+                "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform",
                 published ? "translate-x-5" : "translate-x-0"
               )} />
             </div>
@@ -574,7 +574,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
           <button
             onClick={handleSave}
             disabled={saving || !translations.fr.title || uploading || noCategories}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-500 text-white text-sm font-semibold hover:bg-rose-600 disabled:opacity-50 transition shadow-sm"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-500 text-white text-sm font-semibold hover:bg-rose-600 disabled:opacity-50 transition shadow-xs"
           >
             {saving ? <Loader2 size={15} className="animate-spin" /> : saved ? <Check size={15} /> : <Save size={15} />}
             {saving ? "Enregistrement..." : saved ? "Enregistré !" : "Enregistrer"}
@@ -593,7 +593,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
         {/* Left col — images + category */}
         <div className="lg:col-span-1 space-y-4">
           {/* Images */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-xs p-4">
             <h3 className="font-semibold text-gray-700 mb-3 text-sm">Photos</h3>
 
             <div
@@ -658,14 +658,14 @@ export default function CakeForm({ cake, mode, categories }: Props) {
           </div>
 
           {/* Category */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-xs p-4">
             <h3 className="font-semibold text-gray-700 mb-3 text-sm">Catégorie</h3>
             <div className="relative">
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 disabled={noCategories}
-                className="w-full px-3 py-2.5 pr-8 rounded-xl border border-gray-200 text-sm focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none appearance-none bg-white disabled:bg-gray-50 disabled:text-gray-400"
+                className="w-full px-3 py-2.5 pr-8 rounded-xl border border-gray-200 text-sm focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-hidden appearance-none bg-white disabled:bg-gray-50 disabled:text-gray-400"
               >
                 {categoryOptions.map((c) => (
                   <option key={c.id} value={c.slug}>
@@ -681,7 +681,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
           </div>
 
           {/* Dimensions */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-xs p-4">
             <h3 className="font-semibold text-gray-700 mb-3 text-sm">Dimensions & Portions</h3>
             <div className="grid grid-cols-3 gap-2 mb-3">
               {[
@@ -696,7 +696,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                     min="0"
                     value={dims[key as keyof typeof dims]}
                     onChange={(e) => setDims((d) => ({ ...d, [key]: e.target.value }))}
-                    className="w-full px-2 py-2 rounded-lg border border-gray-200 text-sm focus:border-rose-400 focus:ring-1 focus:ring-rose-100 outline-none text-center"
+                    className="w-full px-2 py-2 rounded-lg border border-gray-200 text-sm focus:border-rose-400 focus:ring-1 focus:ring-rose-100 outline-hidden text-center"
                     placeholder="—"
                   />
                 </div>
@@ -714,7 +714,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                     min="0"
                     value={dims[key as keyof typeof dims]}
                     onChange={(e) => setDims((d) => ({ ...d, [key]: e.target.value }))}
-                    className="w-full px-2 py-2 rounded-lg border border-gray-200 text-sm focus:border-rose-400 focus:ring-1 focus:ring-rose-100 outline-none text-center"
+                    className="w-full px-2 py-2 rounded-lg border border-gray-200 text-sm focus:border-rose-400 focus:ring-1 focus:ring-rose-100 outline-hidden text-center"
                     placeholder="—"
                   />
                 </div>
@@ -723,7 +723,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
           </div>
 
           {/* Featured */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-xs p-4">
             <label className="flex items-center justify-between cursor-pointer">
               <div>
                 <p className="font-semibold text-gray-700 text-sm">Gâteau à la une</p>
@@ -737,7 +737,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                 )}
               >
                 <div className={cn(
-                  "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform",
+                  "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform",
                   featured ? "translate-x-5" : "translate-x-0"
                 )} />
               </div>
@@ -745,7 +745,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
           </div>
 
           {/* Hero showcase */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-xs p-4">
             <label className="flex items-center justify-between cursor-pointer">
               <div>
                 <p className="font-semibold text-gray-700 text-sm flex items-center gap-1.5">
@@ -762,7 +762,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                 )}
               >
                 <div className={cn(
-                  "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform",
+                  "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform",
                   hero ? "translate-x-5" : "translate-x-0"
                 )} />
               </div>
@@ -772,7 +772,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
 
         {/* Right col — titles + descriptions */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-xs p-4">
             <div className="flex items-center gap-2 mb-4">
               <Globe size={15} className="text-gray-400" />
               <span className="text-sm font-semibold text-gray-700">Titres & Descriptions</span>
@@ -786,7 +786,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                   className={cn(
                     "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-all",
                     activeLang === l.code
-                      ? "bg-white text-gray-800 shadow-sm"
+                      ? "bg-white text-gray-800 shadow-xs"
                       : "text-gray-500 hover:text-gray-700"
                   )}
                 >
@@ -814,7 +814,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                     }))
                   }
                   placeholder={activeLang === "fr" ? "Ex: Gâteau Princesse" : activeLang === "ar" ? "عنوان الكعكة" : "Cake title"}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm transition"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-hidden text-sm transition"
                 />
               </div>
 
@@ -852,7 +852,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                       ? "وصف الكعكة..."
                       : "Cake description..."
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm transition resize-none"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-hidden text-sm transition resize-none"
                 />
                 {aiError && (
                   <p className="text-xs text-red-500 mt-1">{aiError}</p>
@@ -869,7 +869,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
 
           {/* Preview card */}
           {(images[0] || translations.fr.title) && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-xs p-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">Aperçu</h3>
               <div className="flex gap-4 items-start">
                 {images[0] && (

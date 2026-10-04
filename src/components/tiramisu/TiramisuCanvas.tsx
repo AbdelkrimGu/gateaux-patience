@@ -41,7 +41,7 @@ export default function TiramisuCanvas({ style, template, text }: Props) {
   }, [ready, style, template, text]);
 
   return (
-    <div className="relative aspect-square w-full overflow-hidden rounded-[2rem] shadow-[0_24px_70px_rgba(40,20,8,0.4)] ring-1 ring-black/5">
+    <div className="relative aspect-square w-full overflow-hidden rounded-4xl shadow-[0_24px_70px_rgba(40,20,8,0.4)] ring-1 ring-black/5">
       {!ready && <div className="absolute inset-0 shimmer" />}
       <canvas
         ref={canvasRef}

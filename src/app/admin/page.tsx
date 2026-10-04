@@ -32,7 +32,7 @@ export default async function AdminDashboard() {
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((s) => (
-            <div key={s.label} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+            <div key={s.label} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-xs">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${s.color}`}>
                 <s.icon size={18} />
               </div>
@@ -44,7 +44,7 @@ export default async function AdminDashboard() {
 
         {/* Quick actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-xs p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-semibold text-gray-700">Dernières commandes</h2>
               <Link href="/admin/orders" className="text-xs text-rose-500 hover:text-rose-600 font-medium">
@@ -75,7 +75,7 @@ export default async function AdminDashboard() {
             )}
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-xs p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-semibold text-gray-700">Derniers gâteaux</h2>
               <Link href="/admin/cakes" className="text-xs text-rose-500 hover:text-rose-600 font-medium">
