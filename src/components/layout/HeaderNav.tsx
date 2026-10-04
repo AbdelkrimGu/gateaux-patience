@@ -19,10 +19,15 @@ import styles from "./HeaderNav.module.css";
 export interface NavItem {
   href: string;
   label: string;
+  /** Desktop only: shown from 1200px (room next to the switcher). */
+  wide?: boolean;
 }
 
 export interface HeaderNavProps {
+  /** Mobile menu sheet. */
   items: NavItem[];
+  /** Desktop links (after the universe switcher). */
+  deskItems: NavItem[];
   langLabel: string;
   langs: Record<"fr" | "ar" | "en", { short: string; name: string }>;
   menuOpen: string;
@@ -116,13 +121,16 @@ export function HeaderNav(props: HeaderNavProps) {
 
   return (
     <>
-      <nav aria-label={props.navLabel} className="hidden desk:me-6 desk:flex desk:gap-7">
-        {props.items.map((item) => (
+      <nav aria-label={props.navLabel} className="hidden desk:me-4 desk:flex desk:gap-7">
+        {props.deskItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
             aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
-            className="text-[15px] font-medium no-underline decoration-framboise decoration-2 underline-offset-[6px] hover:underline aria-[current=page]:underline"
+            className={cn(
+              "text-[15px] font-medium whitespace-nowrap no-underline decoration-framboise decoration-2 underline-offset-[6px] hover:underline aria-[current=page]:underline",
+              item.wide && "hidden min-[1200px]:inline"
+            )}
           >
             {item.label}
           </Link>

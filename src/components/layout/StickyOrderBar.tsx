@@ -17,16 +17,19 @@ import styles from "./StickyOrderBar.module.css";
   for the page's context (cake ref, tiramisu, the typed name…).
 
   <StickyOrderBar waHref={buildWhatsAppUrl({ locale, kind: "cake", cake, page })} />
-  <StickyOrderBar waHref={…} reveal="scroll" />   home: slides in between
-     420 and 520px of scroll (CSS scroll timeline) so it doesn't duplicate the
-     hero CTA; without support / with reduced motion it is always visible.
+  <StickyOrderBar waHref={…} reveal="scroll" />   slides in between 420 and
+     520px of scroll (CSS scroll timeline); without support / with reduced
+     motion it is always visible.
+  <StickyOrderBar waHref={…} reveal="gate" />     home intent gate: same
+     reveal, but never over the third card: without scroll-timeline support
+     or with reduced motion it stays hidden.
 
   The footer already reserves room for it on phones.
 */
 
 export interface StickyOrderBarViewProps {
   waHref: string;
-  reveal?: "always" | "scroll";
+  reveal?: "always" | "scroll" | "gate";
   /** common.order.cta */
   label: string;
   /** common.order.cta_short: shown instead of `label` on phones narrower than 380px. */
@@ -39,7 +42,7 @@ export interface StickyOrderBarViewProps {
 
 export function StickyOrderBarView({ waHref, reveal = "always", label, shortLabel, navLabel, callLabel }: StickyOrderBarViewProps) {
   return (
-    <nav aria-label={navLabel} className={cn(styles.bar, reveal === "scroll" && styles.reveal)}>
+    <nav aria-label={navLabel} className={cn(styles.bar, reveal === "scroll" && styles.reveal, reveal === "gate" && styles.gate)}>
       <a
         href={waHref}
         target="_blank"
@@ -73,7 +76,7 @@ export function StickyOrderBar({
   label,
 }: {
   waHref: string;
-  reveal?: "always" | "scroll";
+  reveal?: StickyOrderBarViewProps["reveal"];
   /** Defaults to common.order.cta ("Commander sur WhatsApp"). */
   label?: string;
 }) {
