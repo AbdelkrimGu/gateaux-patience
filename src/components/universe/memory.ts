@@ -141,6 +141,8 @@ export function parseWizardSnapshot(raw: unknown): WizardSnapshot | null {
   // A later step without boxes makes no sense: back to choosing boxes.
   if (unique.length === 0 && (step === "bucket" || step === "review")) step = "boxes";
   if (unique.length === 0 && step === "mode") return null;
+  // Left from the first step with boxes waiting: come back to the basket.
+  if (unique.length > 0 && step === "mode") step = "bucket";
   return { step, mode, bucket: unique, activeCat };
 }
 

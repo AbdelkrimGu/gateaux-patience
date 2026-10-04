@@ -49,7 +49,7 @@ export function UniverseImage({ universe, sizes, cakes, word = "BRAVO", priority
         <span
           dir="ltr"
           className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-end justify-center gap-[1.5cqw]"
-          style={{ height: `min(26cqh, ${(76 / (sumAspect + chars.length * 0.02)).toFixed(2)}cqw)` }}
+          style={{ height: `min(26cqh, ${(66 / (sumAspect + chars.length * 0.02)).toFixed(2)}cqw)` }}
         >
           {chars.map((c, i) => (
             <Image

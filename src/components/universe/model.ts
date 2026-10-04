@@ -47,10 +47,16 @@ export const heroName = (u: Universe) => `gp-hero-${u}`;
   SWEETS_HERO_IMAGE (src/lib/universes.ts, /douceurs branch) after merge.
 */
 
-/** Real photo from the owner: the "KENZA" cakesicles (Cake10). */
+/**
+ * Real photo from the owner (Cake10: cake pops, "KENZA" cakesicles,
+ * chocolate cakesicles), portrait 718×960. Same file and crop as
+ * SWEETS_HERO_IMAGE (src/lib/universes-core.ts on the /douceurs branch), so
+ * the home card morphs into the identical /douceurs hero.
+ * INTEGRATOR: replace with `import { SWEETS_HERO_IMAGE } from "@/lib/universes-core"`.
+ */
 export const SWEETS_CARD_IMAGE = {
-  src: "/images/Cake10/FB_IMG_1778413276696.jpg",
-  position: "50% 30%",
+  src: "/images/Cake10/FB_IMG_1778413270396.jpg",
+  position: "50% 45%",
 } as const;
 
 /** The cocoa-topped box of the /tiramisu stage (same pixels: the hero morph lands on it). */

@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { stripLocale } from "@/i18n/paths";
+import { cn } from "@/lib/utils";
 import { universeOfPath, type Universe } from "./model";
 import { UniverseSwitcher } from "./UniverseSwitcher";
 import styles from "./universe.module.css";
@@ -19,8 +20,28 @@ import styles from "./universe.module.css";
 export function UniverseBar({ labels, label }: { labels: Record<Universe, string>; label: string }) {
   const current = universeOfPath(stripLocale(usePathname()));
   if (!current) return null;
+  return <UniverseStrip current={current} labels={labels} label={label} />;
+}
+
+/**
+ * The strip itself (phones only, hidden ≥900px). Also used by the tiramisu
+ * wizard's first step, at the same height on screen: both carry the
+ * `gp-switch-bar` view-transition name, so moving between /galerie and
+ * /tiramisu the strip stays put and only the indicator glides.
+ */
+export function UniverseStrip({
+  current,
+  labels,
+  label,
+  className,
+}: {
+  current: Universe;
+  labels: Record<Universe, string>;
+  label: string;
+  className?: string;
+}) {
   return (
-    <div className={styles.bar}>
+    <div className={cn(styles.bar, className)}>
       <UniverseSwitcher current={current} labels={labels} label={label} />
     </div>
   );

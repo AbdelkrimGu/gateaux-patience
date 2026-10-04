@@ -2,10 +2,10 @@ import { getTranslations } from "next-intl/server";
 import { LocaleLink as Link } from "@/i18n/LocaleLink";
 import { Icon } from "@/components/ui/Icon";
 import { UniverseImage } from "@/components/universe/UniverseImage";
+import { IntentScope } from "@/components/universe/IntentScope";
 import { UNIVERSES, UNIVERSE_HREF, VT_GATE, type Universe } from "@/components/universe/model";
 import type { Locale } from "@/lib/db-types";
 import { cn } from "@/lib/utils";
-import { GateScope } from "./GateScope";
 import { ResumeChip } from "./ResumeChip";
 import s from "./gate.module.css";
 
@@ -48,17 +48,17 @@ export async function IntentGate({
         {t("title")}
       </h1>
       <div className={s.slot}>
-        <ResumeChip strings={resume} fallback={<p className="type-meta text-ink-soft desk:text-[17px]">{t("subline")}</p>} />
+        <ResumeChip strings={resume} fallback={<p className={s.subline}>{t("subline")}</p>} />
       </div>
 
-      <GateScope className="contents">
+      <IntentScope from="home" className="contents">
         <ul aria-label={t("choices_label")} className={s.list}>
           {UNIVERSES.map((u, i) => (
             <li key={u}>
               <Link
                 href={UNIVERSE_HREF[u]}
                 transitionTypes={[VT_GATE]}
-                data-gate={u}
+                data-universe={u}
                 className={cn(s.card, s[u])}
               >
                 <span className={s.copy}>
@@ -68,7 +68,7 @@ export async function IntentGate({
                 <span aria-hidden="true" className={s.arrow}>
                   <Icon name="arrow" size={22} />
                 </span>
-                <span className={s.media} data-gate-media="">
+                <span className={s.media} data-universe-media="">
                   <UniverseImage
                     universe={u}
                     cakes={cakesPhoto}
@@ -82,7 +82,7 @@ export async function IntentGate({
             </li>
           ))}
         </ul>
-      </GateScope>
+      </IntentScope>
     </section>
   );
 }

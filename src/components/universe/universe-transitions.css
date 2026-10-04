@@ -38,29 +38,35 @@
 /* ---- Universe -> universe: a short directional slide in switcher order.
    Forward = towards the inline end, so in LTR the old page leaves to the
    left and the new one comes from the right; RTL mirrors it. */
-::view-transition-old(.gp-forward) {
-  animation: gp-vt-out-start 200ms cubic-bezier(0.4, 0, 1, 1) both;
+::view-transition-old(.gp-forward),
+::view-transition-old(.gp-back) {
+  animation:
+    gp-vt-fade-out 160ms linear both,
+    gp-vt-to-start 260ms cubic-bezier(0.4, 0, 1, 1) both;
 }
-::view-transition-new(.gp-forward) {
-  animation: gp-vt-in-end 340ms cubic-bezier(0.2, 0.8, 0.2, 1) 60ms both;
+::view-transition-new(.gp-forward),
+::view-transition-new(.gp-back) {
+  animation:
+    gp-vt-fade-in 220ms linear 40ms both,
+    gp-vt-from-end 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 ::view-transition-old(.gp-back) {
-  animation: gp-vt-out-end 200ms cubic-bezier(0.4, 0, 1, 1) both;
+  animation-name: gp-vt-fade-out, gp-vt-to-end;
 }
 ::view-transition-new(.gp-back) {
-  animation: gp-vt-in-start 340ms cubic-bezier(0.2, 0.8, 0.2, 1) 60ms both;
+  animation-name: gp-vt-fade-in, gp-vt-from-start;
 }
 html[dir="rtl"]::view-transition-old(.gp-forward) {
-  animation-name: gp-vt-out-end;
+  animation-name: gp-vt-fade-out, gp-vt-to-end;
 }
 html[dir="rtl"]::view-transition-new(.gp-forward) {
-  animation-name: gp-vt-in-start;
+  animation-name: gp-vt-fade-in, gp-vt-from-start;
 }
 html[dir="rtl"]::view-transition-old(.gp-back) {
-  animation-name: gp-vt-out-start;
+  animation-name: gp-vt-fade-out, gp-vt-to-start;
 }
 html[dir="rtl"]::view-transition-new(.gp-back) {
-  animation-name: gp-vt-in-end;
+  animation-name: gp-vt-fade-in, gp-vt-from-end;
 }
 
 /* ---- Gate -> universe: the gate steps back, the universe settles in,
@@ -81,29 +87,37 @@ html[dir="rtl"]::view-transition-new(.gp-back) {
   height: 100%;
   object-fit: cover;
 }
+/* Hand the picture over early: less double image mid-flight. */
+::view-transition-old(.gp-hero) {
+  animation: gp-vt-fade-out 240ms linear both;
+}
+::view-transition-new(.gp-hero) {
+  animation: gp-vt-fade-in 260ms linear 60ms both;
+}
 
-@keyframes gp-vt-out-start {
+@keyframes gp-vt-to-start {
   to {
-    opacity: 0;
-    transform: translateX(-36px);
+    transform: translateX(-32px);
   }
 }
-@keyframes gp-vt-out-end {
+@keyframes gp-vt-to-end {
   to {
-    opacity: 0;
-    transform: translateX(36px);
+    transform: translateX(32px);
   }
 }
-@keyframes gp-vt-in-end {
+@keyframes gp-vt-from-end {
   from {
-    opacity: 0;
     transform: translateX(48px);
   }
 }
-@keyframes gp-vt-in-start {
+@keyframes gp-vt-from-start {
+  from {
+    transform: translateX(-48px);
+  }
+}
+@keyframes gp-vt-fade-in {
   from {
     opacity: 0;
-    transform: translateX(-48px);
   }
 }
 @keyframes gp-vt-fade-out {

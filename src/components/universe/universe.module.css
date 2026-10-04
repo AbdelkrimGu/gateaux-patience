@@ -76,7 +76,7 @@
     .indicator {
       transition:
         transform var(--d-base) var(--ease-out),
-        background-color var(--d-base) var(--ease-out);
+        background-color 120ms linear 120ms;
     }
   }
 
