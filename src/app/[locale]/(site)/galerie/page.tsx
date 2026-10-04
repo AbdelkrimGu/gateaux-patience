@@ -11,8 +11,8 @@ import { CakeCard } from "@/components/ui/CakeCard";
 import { GalleryFilter, GalleryFilterStyles, type FilterChip } from "@/components/gallery/GalleryFilter";
 import { CardTransitionScope } from "@/components/gallery/CardTransitionScope";
 import { byPhotoQuality, categoriesWithCakes } from "@/components/gallery/catalog";
-import { getAllPublishedCakes } from "@/lib/cakes-data";
-import { getCategories } from "@/lib/categories-data";
+// Cakes universe only: sweets-universe categories are listed on /douceurs.
+import { getCakesCategories, getCakesUniverseCakes } from "@/lib/universes";
 import { assertUniqueRefs } from "@/lib/cake-ref";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { ogImage, pageMetadata } from "@/lib/seo";
@@ -29,7 +29,7 @@ const EAGER = 4;
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const locale = asLocale((await params).locale);
-  const [t, cakes] = await Promise.all([getTranslations({ locale, namespace: "gallery" }), getAllPublishedCakes()]);
+  const [t, cakes] = await Promise.all([getTranslations({ locale, namespace: "gallery" }), getCakesUniverseCakes()]);
   return pageMetadata({
     locale,
     path: "/galerie",
@@ -43,8 +43,8 @@ export default async function GalleriePage({ params }: { params: Promise<{ local
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
   const [catalogue, categories, t, tc] = await Promise.all([
-    getAllPublishedCakes(),
-    getCategories(),
+    getCakesUniverseCakes(),
+    getCakesCategories(),
     getTranslations({ locale, namespace: "gallery" }),
     getTranslations({ locale, namespace: "common" }),
   ]);

@@ -1,0 +1,144 @@
+@layer components {
+  /* ---- La carte des douceurs ------------------------------------------ */
+
+  .menu {
+    display: grid;
+    gap: 16px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /*
+    A tile = one WhatsApp link on the sweet's own colour field (Milk Bar
+    colour blocking, B §12), with a scalloped top edge: the board scallop,
+    the only shape motif (B §9).
+  */
+  .tile {
+    --scallop: 12px;
+    position: relative;
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    column-gap: 16px;
+    align-items: start;
+    height: 100%;
+    padding: calc(20px + var(--scallop)) 20px 20px;
+    background: var(--tint, var(--color-dragee));
+    color: var(--color-ink);
+    text-decoration: none;
+    border-radius: 0 0 28px 28px;
+    -webkit-mask:
+      radial-gradient(circle var(--scallop) at 50% var(--scallop), #000 97%, #0000) 0 0 / calc(var(--scallop) * 2)
+        calc(var(--scallop) * 2) repeat-x,
+      linear-gradient(#000 0 0) 0 var(--scallop) / 100% 100% no-repeat;
+    mask:
+      radial-gradient(circle var(--scallop) at 50% var(--scallop), #000 97%, #0000) 0 0 / calc(var(--scallop) * 2)
+        calc(var(--scallop) * 2) repeat-x,
+      linear-gradient(#000 0 0) 0 var(--scallop) / 100% 100% no-repeat;
+    transition: transform var(--d-fast) var(--ease-out);
+  }
+
+  .tile:active {
+    transform: scale(0.98);
+  }
+
+  /* The mask would clip an outline: draw focus inside the tile instead. */
+  .tile:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 3px var(--color-framboise);
+  }
+
+  .motif {
+    grid-row: span 3;
+    width: 76px;
+    height: 76px;
+  }
+
+  .name {
+    color: var(--piping, var(--color-framboise));
+  }
+
+  .text {
+    margin-top: 6px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--color-ink-soft);
+  }
+
+  .for {
+    margin-top: 6px;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--color-ink-muted);
+  }
+
+  :lang(ar) .text,
+  :lang(ar) .for {
+    font-size: 16px;
+    line-height: 1.75;
+  }
+
+  .action {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    margin-top: 10px;
+    font-weight: 600;
+    color: var(--color-framboise);
+  }
+
+  .action > span {
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--color-framboise) 35%, transparent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+  }
+
+  @media (hover: hover) {
+    .tile:hover .action > span {
+      text-decoration-color: currentColor;
+    }
+  }
+
+  @media (min-width: 900px) {
+    .menu {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .tile {
+      --scallop: 14px;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto auto auto 1fr auto;
+      padding: calc(24px + var(--scallop)) 24px 24px;
+      border-radius: 0 0 32px 32px;
+    }
+
+    .motif {
+      grid-row: auto;
+      width: 104px;
+      height: 104px;
+      margin-bottom: 18px;
+    }
+
+    .text {
+      font-size: 16px;
+    }
+
+    .action {
+      align-self: end;
+    }
+  }
+
+  /* ---- Make it a set --------------------------------------------------- */
+
+  .setPhoto {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    border-radius: var(--radius-tin);
+    background: var(--color-paillette);
+  }
+}

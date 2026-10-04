@@ -1,0 +1,57 @@
+{
+  "meta_title": "Douceurs de fête : cupcakes, cake pops, popsicles | Gateaux Patience",
+  "meta_desc": "Cupcakes, cake pops, popsicles (cakesicles) et desserts faits main à Sidi Bel Abbès, à vos couleurs et assortis à votre gâteau. Commande sur WhatsApp.",
+  "breadcrumb_home": "Accueil",
+  "hero": {
+    "title": "Les douceurs de la fête.",
+    "lead": "Cupcakes, cake pops et popsicles faits main à Sidi Bel Abbès : à vos couleurs, à votre thème, et même lettre par lettre à son prénom.",
+    "ring": "À chacun sa douceur",
+    "photo_alt": "Popsicles roses portant les lettres K, E, N, Z et A, popsicles au chocolat et cake pops de remise de diplôme 2020",
+    "caption": "Une vraie commande : des popsicles qui écrivent un prénom, et des cake pops coiffés d’une toque de diplômé.",
+    "cta": "Composer ma commande",
+    "note": "Dites-nous la date, le nombre d’invités et le thème, on vous répond sur WhatsApp.",
+    "see_menu": "Voir la carte"
+  },
+  "menu": {
+    "title": "La carte des douceurs",
+    "intro": "Choisissez une douceur : votre message WhatsApp est déjà écrit, il ne reste qu’à ajouter la date et le nombre d’invités.",
+    "cupcakes": {
+      "name": "Cupcakes",
+      "text": "Un petit gâteau moelleux coiffé de crème, décoré à votre thème : personnages, fleurs ou couleurs de la fête.",
+      "for": "Pour un goûter d’anniversaire, une naissance ou une table de mariage.",
+      "action": "Commander des cupcakes"
+    },
+    "cake_pops": {
+      "name": "Cake pops",
+      "text": "Une bouchée de gâteau sur bâtonnet, enrobée de chocolat et décorée une à une.",
+      "for": "Pour les cadeaux d’invités, un anniversaire ou une réussite.",
+      "action": "Commander des cake pops"
+    },
+    "cakesicles": {
+      "name": "Popsicles",
+      "text": "Un esquimau de gâteau enrobé de chocolat, qui peut porter une lettre, un chiffre ou un petit décor.",
+      "for": "Pour écrire un prénom lettre par lettre, une remise de diplôme ou des fiançailles.",
+      "action": "Commander des popsicles"
+    },
+    "desserts": {
+      "name": "Desserts",
+      "text": "Des desserts de fête à partager, préparés pour votre table et vos invités.",
+      "for": "Pour compléter un buffet, des fiançailles ou un mariage.",
+      "action": "Demander des desserts"
+    },
+    "other": "Une autre envie ? Envoyez-nous une photo ou une idée, on vous dit ce qu’on peut préparer.",
+    "other_cta": "Écrire sur WhatsApp"
+  },
+  "creations": {
+    "title": "Déjà préparées pour leurs fêtes",
+    "intro": "Des douceurs faites pour de vraies commandes."
+  },
+  "set": {
+    "title": "Le gâteau et ses douceurs, assortis.",
+    "text": "Même thème, mêmes couleurs : demandez des cupcakes ou des cake pops assortis à votre gâteau, et ajoutez des tiramisus au prénom pour compléter la table.",
+    "photo_alt": "Gâteau Raiponce entouré de six cupcakes décorés de princesses",
+    "caption": "Un gâteau Raiponce et ses cupcakes princesses, préparés pour la même fête.",
+    "cakes": "Choisir le gâteau",
+    "tiramisu": "Composer des tiramisus"
+  }
+}

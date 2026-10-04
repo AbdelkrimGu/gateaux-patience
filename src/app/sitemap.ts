@@ -3,7 +3,7 @@ import { getSitemapCakes } from "@/lib/cakes-data";
 import { absoluteUrl, type SeoLocale } from "@/lib/seo";
 
 // Public, indexable routes only (/ui-kit and /admin are not listed).
-const ROUTES = ["/", "/galerie", "/tiramisu", "/contact"] as const;
+const ROUTES = ["/", "/galerie", "/douceurs", "/tiramisu", "/contact"] as const;
 const LOCALES: SeoLocale[] = ["fr", "ar", "en"];
 
 // Regenerated like the catalogue pages; a DB error keeps the last good copy.

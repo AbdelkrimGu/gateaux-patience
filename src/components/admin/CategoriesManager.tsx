@@ -7,6 +7,9 @@ import {
 } from "lucide-react";
 import type { Category } from "@/lib/db-types";
 import { compressImage } from "@/lib/image-compress";
+import { categoryUniverse, type CategoryUniverse } from "@/lib/universes-core";
+
+const UNIVERSE_LABEL: Record<CategoryUniverse, string> = { cakes: "Gâteaux", sweets: "Douceurs" };
 
 interface Props {
   initial: Category[];
@@ -15,6 +18,7 @@ interface Props {
 interface EditorPayload {
   labels: { fr: string; ar: string; en: string };
   image: string;
+  universe: CategoryUniverse;
 }
 
 type EditingState =
@@ -50,7 +54,7 @@ export default function CategoriesManager({ initial }: Props) {
     setEditing({
       mode: "new",
       tempId: `new-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
-      data: { labels: { fr: "", ar: "", en: "" }, image: "" },
+      data: { labels: { fr: "", ar: "", en: "" }, image: "", universe: "cakes" },
     });
   }
 
@@ -60,7 +64,7 @@ export default function CategoriesManager({ initial }: Props) {
       mode: "edit",
       id: cat.id,
       originalImage: cat.image || "",
-      data: { labels: { ...cat.labels }, image: cat.image || "" },
+      data: { labels: { ...cat.labels }, image: cat.image || "", universe: categoryUniverse(cat) },
     });
   }
 
@@ -86,6 +90,13 @@ export default function CategoriesManager({ initial }: Props) {
     setEditing((e) => {
       if (e.mode === "none") return e;
       return { ...e, data: { ...e.data, labels: { ...e.data.labels, [field]: value } } };
+    });
+  }
+
+  function setUniverse(universe: CategoryUniverse) {
+    setEditing((e) => {
+      if (e.mode === "none") return e;
+      return { ...e, data: { ...e.data, universe } };
     });
   }
 
@@ -139,6 +150,7 @@ export default function CategoriesManager({ initial }: Props) {
           body: JSON.stringify({
             labels: editing.data.labels,
             image: editing.data.image || undefined,
+            universe: editing.data.universe,
           }),
         });
         if (!res.ok) {
@@ -162,6 +174,7 @@ export default function CategoriesManager({ initial }: Props) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             labels: editing.data.labels,
+            universe: editing.data.universe,
             ...(imageField !== undefined && { image: imageField }),
           }),
         });
@@ -261,6 +274,7 @@ export default function CategoriesManager({ initial }: Props) {
             data={editing.data}
             saving={saving}
             onChangeLabel={updateField}
+            onChangeUniverse={setUniverse}
             onImageUploaded={setImage}
             onRemoveImage={removeImageInEditor}
             onSave={saveEdit}
@@ -286,6 +300,7 @@ export default function CategoriesManager({ initial }: Props) {
                     data={editing.data}
                     saving={saving}
                     onChangeLabel={updateField}
+                    onChangeUniverse={setUniverse}
                     onImageUploaded={setImage}
                     onRemoveImage={removeImageInEditor}
                     onSave={saveEdit}
@@ -318,6 +333,14 @@ export default function CategoriesManager({ initial }: Props) {
                       <p className="text-gray-700 truncate">{cat.labels.en}</p>
                     </div>
                   </div>
+                  <span
+                    className={`hidden sm:inline-block shrink-0 px-2 py-0.5 rounded-md text-[10px] font-medium ${
+                      categoryUniverse(cat) === "sweets" ? "bg-rose-50 text-rose-600" : "bg-gray-100 text-gray-500"
+                    }`}
+                    title="Univers (page publique)"
+                  >
+                    {UNIVERSE_LABEL[categoryUniverse(cat)]}
+                  </span>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => startEdit(cat)}
@@ -400,6 +423,7 @@ function EditorRow({
   data,
   saving,
   onChangeLabel,
+  onChangeUniverse,
   onImageUploaded,
   onRemoveImage,
   onSave,
@@ -409,6 +433,7 @@ function EditorRow({
   data: EditorPayload;
   saving: boolean;
   onChangeLabel: (field: "fr" | "ar" | "en", value: string) => void;
+  onChangeUniverse: (universe: CategoryUniverse) => void;
   onImageUploaded: (url: string) => void;
   onRemoveImage: () => void;
   onSave: () => void;
@@ -605,7 +630,19 @@ function EditorRow({
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <label className="me-auto flex items-center gap-2 text-[10px] uppercase tracking-wide text-gray-500">
+          Univers
+          <select
+            value={data.universe}
+            onChange={(e) => onChangeUniverse(e.target.value === "sweets" ? "sweets" : "cakes")}
+            title="Gâteaux : page Créations (/galerie). Douceurs : page Douceurs (/douceurs)."
+            className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-hidden text-sm normal-case tracking-normal text-gray-700"
+          >
+            <option value="cakes">Gâteaux</option>
+            <option value="sweets">Douceurs (cupcakes, cake pops…)</option>
+          </select>
+        </label>
         <button
           onClick={onCancel}
           disabled={saving || uploading}

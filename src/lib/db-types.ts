@@ -32,6 +32,10 @@ export interface Category {
   slug: string;
   labels: { fr: string; ar: string; en: string };
   image?: string;
+  /** Which public universe lists it: /galerie ("cakes", the default when
+   *  absent) or /douceurs ("sweets"). Set by the owner in the admin; read-time
+   *  defaults live in src/lib/universes-core.ts. */
+  universe?: "cakes" | "sweets";
   order: number;
   createdAt: string;
   updatedAt: string;
