@@ -38,3 +38,8 @@ next-env.d.ts
 
 # screenshots (scripts/shoot.mjs)
 .shots/
+
+# design mockup screenshots (heavy) — keep only viewport shots in git
+design/**/shots/*
+!design/**/shots/*390-viewport.png
+!design/**/shots/*1440-viewport.png

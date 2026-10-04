@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gateaux Patience — Écrin (direction A, عربي)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Readex+Pro:wght@300..600&display=swap" rel="stylesheet">
+<style>
+/* ============ ÉCRIN — tokens ============ */
+:root{
+  --velours:#140F0E;      /* ground: her black sequin backdrop, the logo's textured black */
+  --ecrin:#221A18;        /* raised surface: mats, tiles, sheets */
+  --cuivre:#C8875E;       /* copper: wordmark, icons, bezels, small type */
+  --or-rose:#E8B591;      /* rose-gold highlight: display accents, focus ring */
+  --framboise:#BE1C45;    /* raspberry glaze: THE action colour + the glaze */
+  --creme:#F4E8DC;        /* text */
+  --sucre:#A39287;        /* muted text */
+  --glaze-deep:#7E0C2A;   /* glaze shadow (decorative only) */
+  --bezel:rgba(200,135,94,.42);
+  --line:rgba(200,135,94,.18);
+
+  --f-display:"Bodoni Moda", "Didot", serif;
+  --f-body:"Readex Pro", system-ui, sans-serif;
+
+  --ease-glaze:cubic-bezier(.22,.9,.18,1);   /* viscous: quick release, long settle */
+  --ease-out:cubic-bezier(.2,.7,.2,1);
+  --t-tap:140ms; --t-ui:240ms; --t-sheet:420ms; --t-pour:1400ms;
+
+  --gutter:16px;
+  --r-plate:6px; --r-pill:999px;
+  --bar-h:64px;
+}
+:lang(ar){
+  --f-display:"Aref Ruqaa", serif;
+  --f-body:"Readex Pro", system-ui, sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html{background:var(--velours);color-scheme:dark;-webkit-text-size-adjust:100%;overflow-x:clip}
+body{overflow-x:clip}
+body{
+  min-height:100vh;
+  background-color:var(--velours);
+  /* the logo's textured board: static noise tile (bake to a 3 KB PNG in prod) */
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .86 0 0 0 0 .78 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  color:var(--creme);
+  font:300 16px/1.55 var(--f-body);
+  padding-bottom:calc(var(--bar-h) + env(safe-area-inset-bottom));
+}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--or-rose);outline-offset:3px;border-radius:4px}
+.wrap{width:100%;max-width:1280px;margin-inline:auto;padding-inline:var(--gutter)}
+
+/* ============ header ============ */
+.top{position:relative;z-index:5}
+.top .wrap{display:flex;align-items:center;gap:12px;height:60px}
+.brand{display:flex;align-items:center;gap:9px;color:var(--cuivre);margin-inline-end:auto}
+.brand svg{width:26px;height:22px;flex:none}
+.brand b{font:italic 500 20px/1 var(--f-display);font-variation-settings:"opsz" 40;letter-spacing:.005em;color:var(--or-rose);white-space:nowrap}
+:lang(ar) .brand b{font:700 21px/1 var(--f-display)}
+.nav{display:none}
+.lang{display:flex;border:1px solid var(--line);border-radius:var(--r-pill);padding:2px}
+.lang a{min-width:34px;height:30px;display:grid;place-items:center;font:500 12.5px/1 var(--f-body);color:var(--sucre);border-radius:var(--r-pill)}
+.lang a[aria-current]{background:var(--ecrin);color:var(--creme);box-shadow:inset 0 0 0 1px var(--bezel)}
+.lang a.ar{font-size:16px}
+.lang a.ar span{display:block;transform:translateY(-3px)}
+.menu{width:44px;height:44px;display:grid;place-items:center;border:0;background:none;color:var(--creme);margin-inline-end:-10px}
+.menu svg{width:22px;height:22px}
+.top .top-cta{display:none}
+
+/* ============ hero ============ */
+.hero{position:relative}
+.hero .wrap{display:grid}
+.plate{position:relative;margin:4px 0 0;isolation:isolate}
+.plate .photo{
+  aspect-ratio:4/4.7;border-radius:var(--r-plate) var(--r-plate) 0 0;overflow:hidden;
+  -webkit-mask-image:linear-gradient(to bottom,#000 60%,transparent 98%);
+          mask-image:linear-gradient(to bottom,#000 60%,transparent 98%);
+}
+.plate .photo img{width:100%;height:100%;object-fit:cover;object-position:50% 6%;filter:saturate(1.06) contrast(1.05) brightness(.96)}
+/* the glaze — poured from the logo */
+.glaze{position:absolute;inset-inline:-4px;top:-3px;width:calc(100% + 8px);height:auto;z-index:2;overflow:visible;pointer-events:none;filter:drop-shadow(0 3px 3px rgba(40,4,14,.35))}
+.glaze .band{fill:url(#gl)}
+.glaze .drip path:first-child{fill:url(#gl)}
+.glaze .hl{stroke:rgba(255,214,224,.55);stroke-linecap:round;fill:none}
+.glaze .band-hl{stroke:rgba(255,214,224,.45);stroke-width:1.1;fill:none;stroke-linecap:round}
+.glaze .drip{transform-box:fill-box;transform-origin:50% 0;animation:pour var(--t-pour) var(--ease-glaze) calc(250ms + var(--i) * 70ms) both}
+.glaze .drip:nth-child(3n){animation-duration:1900ms}
+.glaze .drip:nth-child(4n+1){animation-duration:2300ms}
+@keyframes pour{from{transform:scaleY(.12)}}
+.hall{position:absolute;inset-inline-start:12px;top:auto;bottom:22%;z-index:3}
+
+.hero-copy{position:relative;z-index:3;margin-top:-30px}
+h1{font:400 46px/1.0 var(--f-display);font-variation-settings:"opsz" 96;letter-spacing:-.018em;color:var(--creme);text-wrap:balance;text-shadow:0 2px 18px var(--velours)}
+:lang(ar) h1{font:700 56px/1.25 var(--f-display);letter-spacing:0}
+.lede{margin-top:14px;max-width:34ch;color:var(--creme);opacity:.86;font-size:16px;line-height:1.55;text-wrap:pretty}
+:lang(ar) .lede{font-size:17px;line-height:1.8;max-width:36ch}
+.actions{margin-top:22px;display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:54px;padding-inline:22px 26px;border-radius:var(--r-pill);font:500 16px/1 var(--f-body);letter-spacing:.005em;transition:transform var(--t-tap) var(--ease-out),background-color var(--t-ui)}
+.btn svg{width:21px;height:21px;flex:none}
+.btn-glaze{background:var(--framboise);color:#FFF4EC;box-shadow:inset 0 1px 0 rgba(255,220,228,.28),inset 0 -2px 0 rgba(60,0,16,.35)}
+.btn-glaze:active{transform:scale(.97)}
+.link{font:400 15px/1 var(--f-body);color:var(--or-rose);border-bottom:1px solid var(--bezel);padding-block:6px}
+.reassure{margin-top:16px;font-size:13.5px;color:var(--sucre);line-height:1.5;max-width:36ch}
+
+/* ============ sections ============ */
+.sec{padding-block:72px 8px}
+.h2{font:400 34px/1.05 var(--f-display);font-variation-settings:"opsz" 72;letter-spacing:-.012em;color:var(--creme)}
+:lang(ar) .h2{font:700 34px/1.35 var(--f-display);letter-spacing:0}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:22px}
+.sec-head p{color:var(--sucre);font-size:14.5px}
+
+/* what we make */
+.make{display:grid;grid-template-columns:1fr 1fr;gap:14px 12px}
+.tile{position:relative;display:block}
+.tile .frame{aspect-ratio:4/5}
+.tile h3{margin-top:12px;font:400 21px/1.1 var(--f-display);font-variation-settings:"opsz" 40;color:var(--creme)}
+:lang(ar) .tile h3{font:700 21px/1.35 var(--f-display)}
+.tile p{margin-top:5px;font-size:13.5px;line-height:1.45;color:var(--sucre)}
+.tile.lead{grid-column:1/-1;display:grid;grid-template-columns:52% 1fr;gap:16px;align-items:end}
+.tile.lead h3{font-size:27px;margin-top:0}
+:lang(ar) .tile.lead h3{font-size:27px}
+.tile.lead p{font-size:14.5px}
+.tile.lead .go{margin-top:14px;display:inline-flex}
+
+/* the écrin frame (jewel case) */
+.frame{position:relative;border-radius:6px;padding:6px;background:linear-gradient(170deg,#2B211E,#1A1311 70%);box-shadow:0 0 0 1px #2E2421,0 22px 32px -20px rgba(0,0,0,.9)}
+.frame img{width:100%;height:100%;object-fit:cover;border-radius:2px;filter:saturate(1.06) contrast(1.05) brightness(.95)}
+.frame::after{content:"";position:absolute;inset:6px;border-radius:2px;pointer-events:none;box-shadow:0 0 0 1px var(--bezel)}
+/* hallmark = ref code poinçon */
+.mark{position:absolute;z-index:2;inset-inline-start:14px;bottom:14px;font:500 11px/1 var(--f-body);letter-spacing:.06em;color:var(--or-rose);background:rgba(20,15,14,.82);padding:6px 8px 5px;border-radius:3px;box-shadow:inset 0 0 0 1px var(--bezel);direction:ltr;unicode-bidi:isolate}
+.keep{position:absolute;z-index:2;inset-inline-end:12px;top:12px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(20,15,14,.72);color:var(--creme);border:0;box-shadow:inset 0 0 0 1px var(--bezel)}
+.keep svg{width:18px;height:18px}
+
+/* chips */
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-inline:calc(var(--gutter) * -1);padding-inline:var(--gutter);padding-bottom:4px;margin-bottom:18px}
+.chip{flex:none;height:38px;padding-inline:16px;display:inline-flex;align-items:center;border-radius:var(--r-pill);font:400 14px/1 var(--f-body);color:var(--creme);box-shadow:inset 0 0 0 1px var(--line);background:transparent}
+.chip[aria-pressed=true]{background:var(--creme);color:var(--velours);box-shadow:none;font-weight:500}
+
+/* cake cards */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:26px 12px}
+.card{position:relative}
+.card .frame{aspect-ratio:4/5}
+.card h3{margin-top:11px;font:400 19px/1.12 var(--f-display);font-variation-settings:"opsz" 30;color:var(--creme)}
+:lang(ar) .card h3{font:700 19px/1.4 var(--f-display)}
+.card p{margin-top:4px;font-size:13px;color:var(--sucre)}
+.more{display:flex;justify-content:center;margin-top:32px}
+.btn-ghost{color:var(--creme);box-shadow:inset 0 0 0 1px var(--bezel);height:50px;padding-inline:26px}
+
+/* signature block */
+.sign{padding-block:72px 40px;text-align:center}
+.sign img{width:min(340px,86%);height:auto;margin-inline:auto;mix-blend-mode:lighten;-webkit-mask-image:radial-gradient(closest-side,#000 70%,transparent);mask-image:radial-gradient(closest-side,#000 70%,transparent)}
+.sign p{margin-top:6px;font:italic 400 22px/1.3 var(--f-display);color:var(--or-rose)}
+:lang(ar) .sign p{font:400 23px/1.6 var(--f-display)}
+.sign small{display:block;margin-top:10px;color:var(--sucre);font-size:13.5px}
+
+/* ============ sticky order bar (mobile) ============ */
+.orderbar{position:fixed;z-index:20;inset-inline:0;bottom:0;padding:10px var(--gutter) calc(10px + env(safe-area-inset-bottom));
+  background:rgba(20,15,14,.96);box-shadow:0 -1px 0 var(--line);display:flex;gap:10px;
+  transform:translateY(110%);transition:transform var(--t-sheet) var(--ease-glaze)}
+.orderbar.on{transform:none}
+.orderbar .btn{height:50px;flex:1}
+.call{width:50px;height:50px;flex:none;border-radius:50%;display:grid;place-items:center;color:var(--or-rose);box-shadow:inset 0 0 0 1px var(--bezel)}
+.call svg{width:20px;height:20px}
+
+/* ============ desktop ============ */
+@media (min-width:900px){
+  :root{--gutter:48px}
+  body{padding-bottom:0;font-size:17px}
+  .orderbar{display:none}
+  .top .wrap{height:84px;gap:28px}
+  .brand svg{width:32px;height:27px}
+  .brand b{font-size:25px}
+  .nav{display:flex;gap:32px;margin-inline-end:8px}
+  .nav a{font:400 15px/1 var(--f-body);color:var(--creme);opacity:.82;padding-block:8px}
+  .nav a[aria-current]{opacity:1;box-shadow:0 1px 0 var(--framboise)}
+  .menu{display:none}
+  .top .top-cta{display:inline-flex;height:46px;font-size:15px;padding-inline:18px 22px}
+  .hero .wrap{grid-template-columns:repeat(12,1fr);column-gap:24px;align-items:center;padding-block:36px 0}
+  .hero-copy{grid-column:1/7;grid-row:1;margin-top:0;padding-inline-end:8px}
+  .plate{grid-column:7/13;grid-row:1;max-width:560px;justify-self:end;width:100%;margin-top:0}
+  h1{font-size:112px;line-height:.96;letter-spacing:-.03em}
+  :lang(ar) h1{font-size:92px;line-height:1.25}
+  .lede{font-size:19px;max-width:30ch;margin-top:26px}
+  :lang(ar) .lede{font-size:20px}
+  .actions{margin-top:36px;gap:30px}
+  .btn{height:58px;font-size:17px}
+  .reassure{font-size:14.5px}
+  .sec{padding-block:96px 0}
+  .h2{font-size:56px}
+  :lang(ar) .h2{font-size:54px}
+  .sec-head{margin-bottom:36px}
+  .make{grid-template-columns:repeat(3,1fr);gap:28px;align-items:start}
+  .tile.lead{grid-column:auto;display:block}
+  .tile.lead h3{font-size:34px;margin-top:16px}
+  .tile h3{font-size:26px;margin-top:16px}
+  .tile p{font-size:15px}
+  .grid{grid-template-columns:repeat(4,1fr);gap:28px}
+  .card h3{font-size:23px}
+  .card p{font-size:14px}
+  .chips{margin-inline:0;padding-inline:0}
+  .sign{padding-block:140px 80px}
+  .sign p{font-size:30px}
+}
+@media (hover:hover){
+  .btn-glaze:hover{background:#CC2550}
+  .card:hover .frame img{transform:scale(1.025)}
+  .card .frame img{transition:transform 700ms var(--ease-glaze)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gl" x1="0" y1="0" x2="0" y2="66" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8E0F31"/>
+      <stop offset=".18" stop-color="#C21F48"/>
+      <stop offset=".7" stop-color="#A8153C"/>
+      <stop offset="1" stop-color="#7E0C2A"/>
+    </linearGradient>
+    <linearGradient id="cu" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E8B591"/><stop offset=".5" stop-color="#C8875E"/><stop offset="1" stop-color="#9C6440"/>
+    </linearGradient>
+    <symbol id="crown" viewBox="0 0 32 27"><path d="M3 9.5l6.2 5.3L16 4.5l6.8 10.3L29 9.5l-2.6 11.2H5.6z" fill="url(#cu)"/><rect x="5.2" y="22.3" width="21.6" height="2.6" rx="1.3" fill="url(#cu)"/><circle cx="3" cy="8" r="2" fill="#E8B591"/><circle cx="16" cy="3" r="2.2" fill="#E8B591"/><circle cx="29" cy="8" r="2" fill="#E8B591"/><circle cx="16" cy="15.5" r="2" fill="#BE1C45"/></symbol>
+    <symbol id="wa" viewBox="0 0 24 24"><path d="M12 2.8a9.2 9.2 0 0 0-7.9 13.9L2.9 21.2l4.6-1.2A9.2 9.2 0 1 0 12 2.8z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.7 7.6c.3-.3.8-.3 1 .1l1 1.8c.2.3.1.6-.1.9l-.6.6c.6 1.2 1.6 2.2 2.8 2.8l.6-.6c.3-.2.6-.3.9-.1l1.8 1c.4.2.4.7.1 1-.7.9-1.7 1.3-2.7 1-2.6-.9-4.6-2.9-5.5-5.5-.3-1 .1-2 .7-2.6z" fill="currentColor"/></symbol>
+    <symbol id="tel" viewBox="0 0 24 24"><path d="M6.5 3.5h3l1.5 4-2 1.3a10.5 10.5 0 0 0 6.2 6.2l1.3-2 4 1.5v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4.5 5.7a2 2 0 0 1 2-2.2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="heart" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.6-7.5-10.1A4.3 4.3 0 0 1 12 7.3a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="menu" viewBox="0 0 24 24"><path d="M3.5 8h17M3.5 16h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#" aria-label="Gateaux Patience، الصفحة الرئيسية"><svg aria-hidden="true"><use href="#crown"/></svg><b>Gateaux Patience</b></a>
+    <nav class="nav" aria-label="القائمة الرئيسية">
+      <a href="#" aria-current="page">إبداعاتنا</a><a href="#">الأعراس</a><a href="#">تيراميسو</a><a href="#">كيف تطلبون</a>
+    </nav>
+    <div class="lang" aria-label="اللغة"><a href="mock.html" lang="fr">FR</a><a href="#" aria-current="true" class="ar" lang="ar"><span>ع</span></a><a href="#" lang="en">EN</a></div>
+    <a class="btn btn-glaze top-cta" href="#"><svg aria-hidden="true"><use href="#wa"/></svg>اطلبوا</a>
+    <button class="menu" aria-label="القائمة"><svg aria-hidden="true"><use href="#menu"/></svg></button>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <figure class="plate">
+        <svg class="glaze" viewBox="0 0 360 82" aria-hidden="true">
+          <path class="band" d="M0 0H360V10Q348 13 336 10Q324 9.2 312 10Q300 13 288 10Q276 9.2 264 10Q252 13 240 10Q228 9.2 216 10Q204 13 192 10Q180 9.2 168 10Q156 13 144 10Q132 9.2 120 10Q108 13 96 10Q84 9.2 72 10Q60 13 48 10Q36 9.2 24 10Q12 13 0 10Z"/>
+          <g class="drip" style="--i:3"><path d="M10 9Q16 10 17.6 15L16.6 21.3A6 6 0 1 0 27.4 21.3L26.4 15Q28 10 34 9Z"/><path class="hl" d="M19.7 14V23.4" stroke-width="1.8"/></g>
+          <g class="drip" style="--i:6"><path d="M44 9Q52 10 54.1 15L52.8 46.4A8 8 0 1 0 67.2 46.4L65.9 15Q68 10 76 9Z"/><path class="hl" d="M57 14V49.2" stroke-width="2.4"/></g>
+          <g class="drip" style="--i:1"><path d="M98.8 9Q105.4 10 107.1 15L106.1 27A6.6 6.6 0 1 0 117.9 27L116.9 15Q118.6 10 125.2 9Z"/><path class="hl" d="M109.5 14V29.3" stroke-width="2"/></g>
+          <g class="drip" style="--i:4"><path d="M140 9Q145 10 146.3 15L145.5 19.8A5 5 0 1 0 154.5 19.8L153.7 15Q155 10 160 9Z"/><path class="hl" d="M148.1 14V21.5" stroke-width="1.5"/></g>
+          <g class="drip" style="--i:0"><path d="M203.6 9Q208.8 10 210.2 15L209.3 22.7A5.2 5.2 0 1 0 218.7 22.7L217.8 15Q219.2 10 224.4 9Z"/><path class="hl" d="M212 14V24.5" stroke-width="1.6"/></g>
+          <g class="drip" style="--i:5"><path d="M237.2 9Q244.6 10 246.5 15L245.3 38.7A7.4 7.4 0 1 0 258.7 38.7L257.5 15Q259.4 10 266.8 9Z"/><path class="hl" d="M249.2 14V41.3" stroke-width="2.2"/></g>
+          <g class="drip" style="--i:2"><path d="M284.8 9Q293.4 10 295.6 15L294.3 60.1A8.6 8.6 0 1 0 309.7 60.1L308.4 15Q310.6 10 319.2 9Z"/><path class="hl" d="M298.7 14V63.1" stroke-width="2.6"/></g>
+          <g class="drip" style="--i:7"><path d="M330 9Q336 10 337.6 15L336.6 25.3A6 6 0 1 0 347.4 25.3L346.4 15Q348 10 354 9Z"/><path class="hl" d="M339.7 14V27.4" stroke-width="1.8"/></g>
+          <path class="band-hl" d="M8 3.2H352"/>
+        </svg>
+        <div class="photo">
+          <img src="../../public/images/Cake12/FB_IMG_1778413361638.jpg" alt="كعكة يونيكورن بقرن ذهبي وعُرف بألوان فاتحة واسم توتة، على قماش أسود لامع" width="718" height="960" fetchpriority="high">
+        </div>
+      </figure>
+      <div class="hero-copy">
+        <h1>للصبر مذاقٌ حلو.</h1>
+        <p class="lede">كعكات حسب الطلب في سيدي بلعباس منذ 2018. أعياد الميلاد، كعكات الأطفال، الخطوبة والأعراس: احكوا لنا فكرتكم ونحن نصنعها.</p>
+        <div class="actions">
+          <a class="btn btn-glaze" id="hero-cta" href="#"><svg aria-hidden="true"><use href="#wa"/></svg>اطلبوا عبر واتساب</a>
+          <a class="link" href="#">شاهدوا إبداعاتنا</a>
+        </div>
+        <p class="reassure">أرسلوا صورة للفكرة وتاريخ المناسبة، ونردّ عليكم في واتساب بعرض السعر.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head"><h2 class="h2">ما نصنعه</h2></div>
+      <div class="make">
+        <a class="tile lead" href="#">
+          <div class="frame"><img src="../../public/images/Cake4/FB_IMG_1778413022968.jpg" alt="كعكة على شكل قلب بورود وردية، عيد ميلاد سارة" loading="lazy"></div>
+          <div>
+            <h3>كعكات حسب الطلب</h3>
+            <p>موضوع، اسم، وألوانكم. من كعكة الأطفال إلى كعكة الخطوبة.</p>
+            <span class="link go">اختاروا المناسبة</span>
+          </div>
+        </a>
+        <a class="tile" href="#">
+          <div class="frame"><img src="../../public/images/Cake10/FB_IMG_1778413273812.jpg" alt="مثلجات كيك وردية وبالشوكولاتة بالحروف الأولى" loading="lazy" style="object-position:30% 50%"></div>
+          <h3>حلويات صغيرة</h3>
+          <p>كيك بوبس، مثلجات كيك وكب كيك على ذوق الحفلة.</p>
+        </a>
+        <a class="tile" href="#">
+          <div class="frame"><img src="../../public/images/tiramisu/hero/hero-1.png" alt="تيراميسو مرشوش بالكاكاو" loading="lazy" style="object-position:40% 50%"></div>
+          <h3>علبة تيراميسو</h3>
+          <p>صمّموا علبتكم بالاسم بالحروف، والسعر يظهر مباشرة.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head"><h2 class="h2">خرجت للتوّ من الورشة</h2><a class="link" href="#">عرض الكل</a></div>
+      <div class="chips" role="group" aria-label="تصفية حسب المناسبة">
+        <button class="chip" aria-pressed="true">الكل</button><button class="chip" aria-pressed="false">أطفال</button><button class="chip" aria-pressed="false">عيد ميلاد</button><button class="chip" aria-pressed="false">خطوبة</button><button class="chip" aria-pressed="false">تخرّج</button><button class="chip" aria-pressed="false">مولود</button>
+      </div>
+      <div class="grid">
+        <article class="card">
+          <a href="#"><div class="frame"><img src="../../public/images/Cake13/FB_IMG_1778413404351.jpg" alt="كعكة رابونزل والأميرات، 5 سنوات" loading="lazy"><span class="mark">GP-013</span></div>
+          <h3>رابونزل، 5 سنوات</h3><p>أطفال</p></a>
+          <button class="keep" aria-label="احفظوا GP-013 في اختياري"><svg aria-hidden="true"><use href="#heart"/></svg></button>
+        </article>
+        <article class="card">
+          <a href="#"><div class="frame"><img src="../../public/images/Cake16/FB_IMG_1778413554339.jpg" alt="كعكة قلب بالشوكولاتة وقلوب حمراء، عيد ميلاد سعيد مهدي" loading="lazy"><span class="mark">GP-016</span></div>
+          <h3>قلب مهدي</h3><p>عيد ميلاد</p></a>
+          <button class="keep" aria-label="احفظوا GP-016 في اختياري"><svg aria-hidden="true"><use href="#heart"/></svg></button>
+        </article>
+        <article class="card">
+          <a href="#"><div class="frame"><img src="../../public/images/Cake6/FB_IMG_1778413112277.jpg" alt="كعكة سبايدرمان زرقاء، ديدو 4 سنوات" loading="lazy"><span class="mark">GP-006</span></div>
+          <h3>سبايدر ديدو</h3><p>أطفال</p></a>
+          <button class="keep" aria-label="احفظوا GP-006 في اختياري"><svg aria-hidden="true"><use href="#heart"/></svg></button>
+        </article>
+        <article class="card">
+          <a href="#"><div class="frame"><img src="../../public/images/Cake18/FB_IMG_1778413600688.jpg" alt="كعكة تخرّج بطابقين، شريطة حمراء وقبعة، مبروك وسيم" loading="lazy"><span class="mark">GP-018</span></div>
+          <h3>مبروك وسيم</h3><p>تخرّج</p></a>
+          <button class="keep" aria-label="احفظوا GP-018 في اختياري"><svg aria-hidden="true"><use href="#heart"/></svg></button>
+        </article>
+      </div>
+      <div class="more"><a class="btn btn-ghost" href="#">كل الإبداعات</a></div>
+    </div>
+  </section>
+
+  <section class="sign">
+    <div class="wrap">
+      <img src="../../public/Logo/Logo.png" alt="شعار Gateaux Patience: كعكة متوّجة بصلصة التوت وطائر فينيق نحاسي" width="1024" height="1024">
+      <p>منذ 2018، في سيدي بلعباس.</p>
+      <small>كل كعكة تُصنع حسب الطلب، لفرحة واحدة.</small>
+    </div>
+  </section>
+</main>
+
+<nav class="orderbar" aria-label="اطلبوا">
+  <a class="btn btn-glaze" href="#"><svg aria-hidden="true"><use href="#wa"/></svg>اطلبوا عبر واتساب</a>
+  <a class="call" href="#" aria-label="اتصلوا بنا"><svg aria-hidden="true"><use href="#tel"/></svg></a>
+</nav>
+
+<script>
+/* sticky bar appears once the hero CTA leaves the screen (progressive; bar is optional sugar) */
+(function(){var b=document.querySelector('.orderbar'),c=document.getElementById('hero-cta');
+if(!('IntersectionObserver' in window)){b.classList.add('on');return}
+new IntersectionObserver(function(e){b.classList.toggle('on',!e[0].isIntersecting)}).observe(c)})();
+</script>
+</body>
+</html>
