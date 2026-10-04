@@ -1,6 +1,7 @@
 import type { Cake } from "@/lib/db-types";
 import { isWedding } from "@/lib/piping";
 import type { BandPhoto } from "./MakeBands";
+import { byPhotoQuality } from "@/components/gallery/catalog";
 
 /*
   Which real cakes the home page shows, from ONE catalogue query.
@@ -52,12 +53,16 @@ export function pickHomeCakes(cakes: Cake[]) {
     withPhoto[0] ??
     null;
 
-  // Featured first (same order as getFeaturedCakes), topped up with the
-  // newest others; the hero cake is not repeated right below itself.
-  const featured = withPhoto.filter((c) => c.id !== hero?.id).slice(0, FEATURED_MAX);
-
   const cakesPhoto = bandPhoto(withPhoto, CAKES_BAND_PICKS, (c) => !isWedding(c.category) && c.id !== hero?.id);
   const weddingPhoto = bandPhoto(withPhoto, WEDDING_BAND_PICKS, (c) => isWedding(c.category));
+
+  // Clean, crisp photos first (byPhotoQuality, 08-review M3), the rest in
+  // catalogue order (featured, newest). Neither the hero cake nor the band
+  // photos are repeated in the grid right below them.
+  const shown = new Set([cakesPhoto?.src, weddingPhoto?.src]);
+  const featured = byPhotoQuality(withPhoto)
+    .filter((c) => c.id !== hero?.id && !shown.has(c.images[0]))
+    .slice(0, FEATURED_MAX);
 
   return { hero, featured, cakesPhoto, weddingPhoto };
 }

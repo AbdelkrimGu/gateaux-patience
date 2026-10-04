@@ -19,31 +19,46 @@ export function LettersLand({
   label,
   className,
   priority,
+  surface = "box",
+  sizes = "(min-width: 900px) 280px, 62vw",
 }: {
   /** Latin A–Z / 0–9 only (other characters are skipped). */
   word: string;
   label: string;
   className?: string;
   priority?: boolean;
+  /**
+   * "box": a square boxed tiramisu tile (the /tiramisu stage).
+   * "cocoa": bare cocoa texture that fills its parent (e.g. a plate, the 404).
+   */
+  surface?: "box" | "cocoa";
+  sizes?: string;
 }) {
   const chars = [...word.toUpperCase()].filter((c) => GLYPHS[c]);
   const sumAspect = chars.reduce((n, c) => n + GLYPHS[c].aspect, 0) || 1;
-  // Letter height as a share of the tile: as big as fits in ~80% of its width.
-  const h = Math.min(0.24, 0.8 / (sumAspect * 1.04));
+  // Letter height as a share of the tile: as big as fits in ~80% of its width
+  // (the cocoa surface fills a 3:4 plate, so its width is 0.75 × its height).
+  const widthRatio = surface === "cocoa" ? 0.75 : 1;
+  const h = Math.min(0.24, (0.8 * widthRatio) / (sumAspect * 1.04));
+  const box = surface === "box";
 
   return (
     <div
       role="img"
       aria-label={label}
-      className={cn("relative aspect-square overflow-hidden rounded-[28px] bezel", className)}
+      className={cn(
+        "relative overflow-hidden",
+        box ? "aspect-square rounded-[28px] bezel" : "absolute inset-0",
+        className
+      )}
     >
       <Image
-        src="/images/tiramisu/boxes/cust-square.png"
+        src={box ? "/images/tiramisu/boxes/cust-square.png" : "/images/tiramisu/base/cacao.png"}
         alt=""
         fill
         priority={priority}
-        sizes="(min-width: 900px) 280px, 62vw"
-        className="scale-[1.2] object-cover"
+        sizes={sizes}
+        className={cn("object-cover", box && "scale-[1.2]")}
       />
       <div
         className={cn(s.word, "absolute inset-x-0 top-1/2 -translate-y-1/2")}
