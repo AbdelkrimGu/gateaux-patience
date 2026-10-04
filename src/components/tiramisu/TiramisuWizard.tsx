@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { TIRAMISU_CATALOG, formatDA, findOption } from "@/lib/tiramisu-catalog";
@@ -18,6 +18,10 @@ import ItemCustomizer, { personalizationText, type Personalization } from "./Ite
 import { LettersLand } from "./LettersLand";
 import { TIcon, Spinner } from "./TiramisuIcon";
 import { TiramisuUiProvider, useTiramisuUi, fmt, plural, type TiramisuUi } from "./ui-context";
+import { UniverseStrip } from "@/components/universe/UniverseBar";
+import { UniverseSwitcher } from "@/components/universe/UniverseSwitcher";
+import { useWizardMemory } from "@/components/universe/useWizardMemory";
+import type { Universe } from "@/components/universe/model";
 import s from "./tiramisu.module.css";
 
 type Step = "mode" | "boxes" | "bucket" | "review" | "confirm";
@@ -46,11 +50,30 @@ type Session =
   | { lineUid: string; kind: "edit"; index: number }
   | { lineUid: string; kind: "add"; total: number; doneInSession: number };
 
+/** Universe chrome from the page (07 §4.1, §4.4): the switcher on the first
+ *  step, the cross-sell block after a sent order. */
+export interface WizardUniverse {
+  labels: Record<Universe, string>;
+  label: string;
+  crossSell?: ReactNode;
+}
+const UniverseCtx = createContext<WizardUniverse | null>(null);
+
 /** Strings come from the server page (messages/<locale>/tiramisuUi.json). */
-export default function TiramisuWizard({ locale, ui }: { locale: Locale; ui: TiramisuUi }) {
+export default function TiramisuWizard({
+  locale,
+  ui,
+  universe,
+}: {
+  locale: Locale;
+  ui: TiramisuUi;
+  universe?: WizardUniverse;
+}) {
   return (
     <TiramisuUiProvider locale={locale} ui={ui}>
-      <Wizard />
+      <UniverseCtx.Provider value={universe ?? null}>
+        <Wizard />
+      </UniverseCtx.Provider>
     </TiramisuUiProvider>
   );
 }
@@ -81,6 +104,20 @@ function Wizard() {
 
   const uidRef = useRef(0);
   const newUid = () => `b${++uidRef.current}`;
+
+  // Basket + step survive a trip to another universe (sessionStorage,
+  // validated against the catalogue on restore). Wraps the state above.
+  useWizardMemory(
+    { step, mode, bucket, activeCat },
+    (snap) => {
+      uidRef.current = Math.max(uidRef.current, ...snap.bucket.map((l) => Number(l.uid.slice(1)) || 0));
+      setMode(snap.mode);
+      setActiveCat(snap.activeCat);
+      setBucket(snap.bucket);
+      setStep(snap.step);
+    },
+    doneId !== null
+  );
 
   const count = useMemo(() => bucket.reduce((n, b) => n + b.qty, 0), [bucket]);
   const total = useMemo(
@@ -262,7 +299,8 @@ function Wizard() {
   if (doneId) {
     return (
       <Shell>
-        <div className={cn(s.stepIn, "mx-auto flex h-full w-full max-w-[480px] flex-col items-center justify-center px-6 text-center")}>
+        <SuccessScroll>
+        <div className={cn(s.stepIn, "mx-auto flex min-h-full w-full max-w-[480px] flex-col items-center justify-center px-6 py-10 text-center")}>
           <CrownMark className={cn(s.pop, "size-20")} />
           <h1 className="type-h2 mt-6">{ui.success.title}</h1>
           <p className="type-lead mt-3 text-center">{ui.success.body}</p>
@@ -279,6 +317,7 @@ function Wizard() {
             </Button>
           </div>
         </div>
+        </SuccessScroll>
       </Shell>
     );
   }
@@ -404,6 +443,20 @@ function Wizard() {
   );
 }
 
+/** Success screen: scrolls inside the full-screen shell, and offers the
+ *  other two universes below the confirmation (07 §4.4). */
+function SuccessScroll({ children }: { children: ReactNode }) {
+  const universe = useContext(UniverseCtx);
+  return (
+    <div className="h-full overflow-y-auto">
+      {children}
+      {universe?.crossSell && (
+        <div className="mx-auto w-full max-w-[720px] px-4 pb-10 desk:px-6">{universe.crossSell}</div>
+      )}
+    </div>
+  );
+}
+
 // ============ Shell / chrome ============
 function Shell({ children }: { children: React.ReactNode }) {
   // Full-screen, no page scroll: each step scrolls inside itself if needed.
@@ -471,10 +524,14 @@ function WhatsAppShortcut() {
 
 function TopBar({ step, stepIndex, onBack }: { step: Step; stepIndex: number; onBack: () => void }) {
   const { ui } = useTiramisuUi();
+  const universe = useContext(UniverseCtx);
   if (step === "mode") {
-    // Same maison as the site: wordmark home link, languages, WhatsApp.
+    // Same maison as the site: wordmark home link, languages, WhatsApp, and
+    // the universe switcher (header on desktop, a strip below it on phones).
+    // Deeper steps swap it for the wizard's own back button (07 §4.6).
     return (
-      <header className="relative z-20 flex h-16 shrink-0 items-center justify-between gap-2 px-4 desk:px-8">
+      <>
+      <header className="relative z-20 flex h-(--header-h) shrink-0 items-center justify-between gap-2 px-4 [view-transition-name:gp-site-header] desk:px-8">
         <span className="sr-only">{fmt(ui.chrome.progress, { n: stepIndex + 1, total: STEP_ORDER.length })}</span>
         <LocaleLink
           href="/"
@@ -485,11 +542,20 @@ function TopBar({ step, stepIndex, onBack }: { step: Step; stepIndex: number; on
           <Wordmark layout="stacked" className="desk:hidden" />
           <Wordmark layout="inline" className="hidden desk:inline-flex" />
         </LocaleLink>
+        {universe && (
+          <div className="hidden desk:ms-8 desk:me-auto desk:block">
+            <UniverseSwitcher current="tiramisu" labels={universe.labels} label={universe.label} size="header" />
+          </div>
+        )}
         <div className="flex items-center gap-1">
           <LanguageCircles />
           <WhatsAppShortcut />
         </div>
       </header>
+      {universe && (
+        <UniverseStrip current="tiramisu" labels={universe.labels} label={universe.label} className="relative z-20 shrink-0 px-4" />
+      )}
+      </>
     );
   }
   return (
@@ -571,7 +637,11 @@ function ModeStep({ onPick }: { onPick: (m: Mode) => void }) {
     <div className="flex h-full min-h-0 flex-col gap-5 overflow-y-auto px-4 pb-4 desk:grid desk:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] desk:content-center desk:items-center desk:gap-x-14 desk:px-6 desk:pb-8">
       {/* The stage (écrin) + the page's one signature moment: a slim band on
           phones (the choice must sit in the first viewport), a tile on desktop. */}
-      <EcrinSurface className="flex h-[clamp(160px,34dvh,300px)] shrink-0 items-center justify-center rounded-[28px] p-3.5 desk:row-span-3 desk:aspect-square desk:h-auto desk:max-h-[520px] desk:rounded-[32px] desk:p-8">
+      {/* data-gp-hero: the home card's picture morphs into this stage (universe/hero-morph.ts). */}
+      <EcrinSurface
+        data-gp-hero="tiramisu"
+        className="flex h-[clamp(150px,30dvh,300px)] shrink-0 items-center justify-center rounded-[28px] p-3.5 desk:row-span-3 desk:aspect-square desk:h-auto desk:max-h-[520px] desk:rounded-[32px] desk:p-8"
+      >
         <LettersLand
           word={ui.mode.sample}
           label={fmt(ui.mode.stage_label, { word: ui.mode.sample })}
