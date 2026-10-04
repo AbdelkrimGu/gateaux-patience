@@ -1,0 +1,24 @@
+{
+  "switcher_label": "Nos univers",
+  "short": {
+    "cakes": "Gâteaux",
+    "sweets": "Douceurs",
+    "tiramisu": "Tiramisu"
+  },
+  "title": {
+    "cakes": "Gâteaux sur mesure",
+    "sweets": "Douceurs",
+    "tiramisu": "Tiramisu au prénom"
+  },
+  "inside": {
+    "cakes": "Anniversaires, fiançailles, mariages",
+    "sweets": "Cupcakes, cake pops, popsicles",
+    "tiramisu": "Un prénom en chocolat blanc"
+  },
+  "cross_title": "Vous aimerez aussi",
+  "cross_lead": "Tout se commande dans le même message.",
+  "resume": {
+    "universe": "Reprendre : {universe}",
+    "tiramisu": "Reprendre votre tiramisu : {count, plural, one {# boîte} other {# boîtes}}"
+  }
+}

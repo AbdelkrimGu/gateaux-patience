@@ -13,6 +13,7 @@ import fr_gallery from "../../messages/fr/gallery.json";
 import fr_home from "../../messages/fr/home.json";
 import fr_meta from "../../messages/fr/meta.json";
 import fr_tiramisuUi from "../../messages/fr/tiramisuUi.json";
+import fr_universe from "../../messages/fr/universe.json";
 import fr_whatsapp from "../../messages/fr/whatsapp.json";
 
 import ar_cake from "../../messages/ar/cake.json";
@@ -21,6 +22,7 @@ import ar_gallery from "../../messages/ar/gallery.json";
 import ar_home from "../../messages/ar/home.json";
 import ar_meta from "../../messages/ar/meta.json";
 import ar_tiramisuUi from "../../messages/ar/tiramisuUi.json";
+import ar_universe from "../../messages/ar/universe.json";
 import ar_whatsapp from "../../messages/ar/whatsapp.json";
 
 import en_cake from "../../messages/en/cake.json";
@@ -29,6 +31,7 @@ import en_gallery from "../../messages/en/gallery.json";
 import en_home from "../../messages/en/home.json";
 import en_meta from "../../messages/en/meta.json";
 import en_tiramisuUi from "../../messages/en/tiramisuUi.json";
+import en_universe from "../../messages/en/universe.json";
 import en_whatsapp from "../../messages/en/whatsapp.json";
 
 const fr = {
@@ -38,6 +41,7 @@ const fr = {
   home: fr_home,
   meta: fr_meta,
   tiramisuUi: fr_tiramisuUi,
+  universe: fr_universe,
   whatsapp: fr_whatsapp,
 };
 
@@ -48,6 +52,7 @@ const ar = {
   home: ar_home,
   meta: ar_meta,
   tiramisuUi: ar_tiramisuUi,
+  universe: ar_universe,
   whatsapp: ar_whatsapp,
 };
 
@@ -58,6 +63,7 @@ const en = {
   home: en_home,
   meta: en_meta,
   tiramisuUi: en_tiramisuUi,
+  universe: en_universe,
   whatsapp: en_whatsapp,
 };
 

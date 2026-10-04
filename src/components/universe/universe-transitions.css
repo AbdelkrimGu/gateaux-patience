@@ -1,0 +1,127 @@
+/*
+  Page transitions between the gate and the three universes (07 §4.2).
+  Global on purpose: view-transition pseudo-elements and transition types
+  can't live in a CSS module. Classes come from <UniversePage> (React
+  <ViewTransition enter/exit> keyed by the Link transitionTypes set in
+  model.ts), names from hero-morph.ts, the switcher and the header.
+
+  Only transform + opacity. Reduced motion: nothing moves (also covered by
+  the global guard). No View Transitions support: plain, instant navigation.
+*/
+
+::view-transition {
+  pointer-events: none;
+}
+
+/* ---- Anchors: the header and the phone switcher strip never slide. */
+::view-transition-group(gp-site-header),
+::view-transition-group(gp-switch-bar) {
+  animation: none;
+  z-index: 40;
+}
+::view-transition-old(gp-site-header),
+::view-transition-old(gp-switch-bar) {
+  display: none;
+}
+::view-transition-new(gp-site-header),
+::view-transition-new(gp-switch-bar) {
+  animation: none;
+}
+
+/* ---- The switcher's indicator glides to the new universe (and recolours). */
+::view-transition-group(gp-switch-ind) {
+  z-index: 41;
+  animation-duration: 380ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ---- Universe -> universe: a short directional slide in switcher order.
+   Forward = towards the inline end, so in LTR the old page leaves to the
+   left and the new one comes from the right; RTL mirrors it. */
+::view-transition-old(.gp-forward) {
+  animation: gp-vt-out-start 200ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+::view-transition-new(.gp-forward) {
+  animation: gp-vt-in-end 340ms cubic-bezier(0.2, 0.8, 0.2, 1) 60ms both;
+}
+::view-transition-old(.gp-back) {
+  animation: gp-vt-out-end 200ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+::view-transition-new(.gp-back) {
+  animation: gp-vt-in-start 340ms cubic-bezier(0.2, 0.8, 0.2, 1) 60ms both;
+}
+html[dir="rtl"]::view-transition-old(.gp-forward) {
+  animation-name: gp-vt-out-end;
+}
+html[dir="rtl"]::view-transition-new(.gp-forward) {
+  animation-name: gp-vt-in-start;
+}
+html[dir="rtl"]::view-transition-old(.gp-back) {
+  animation-name: gp-vt-out-start;
+}
+html[dir="rtl"]::view-transition-new(.gp-back) {
+  animation-name: gp-vt-in-end;
+}
+
+/* ---- Gate -> universe: the gate steps back, the universe settles in,
+   while the tapped card's photo morphs into the universe's hero. */
+::view-transition-old(.gp-gate) {
+  animation: gp-vt-fade-out 180ms linear both;
+}
+::view-transition-new(.gp-gate) {
+  animation: gp-vt-rise 380ms cubic-bezier(0.2, 0.8, 0.2, 1) 90ms both;
+}
+::view-transition-group(.gp-hero) {
+  z-index: 42;
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+::view-transition-old(.gp-hero),
+::view-transition-new(.gp-hero) {
+  height: 100%;
+  object-fit: cover;
+}
+
+@keyframes gp-vt-out-start {
+  to {
+    opacity: 0;
+    transform: translateX(-36px);
+  }
+}
+@keyframes gp-vt-out-end {
+  to {
+    opacity: 0;
+    transform: translateX(36px);
+  }
+}
+@keyframes gp-vt-in-end {
+  from {
+    opacity: 0;
+    transform: translateX(48px);
+  }
+}
+@keyframes gp-vt-in-start {
+  from {
+    opacity: 0;
+    transform: translateX(-48px);
+  }
+}
+@keyframes gp-vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes gp-vt-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
