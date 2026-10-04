@@ -53,7 +53,7 @@ export async function IntentGate({
 
       <IntentScope from="home" className="contents">
         <ul aria-label={t("choices_label")} className={s.list}>
-          {UNIVERSES.map((u, i) => (
+          {UNIVERSES.map((u) => (
             <li key={u}>
               <Link
                 href={UNIVERSE_HREF[u]}
@@ -74,8 +74,10 @@ export async function IntentGate({
                     cakes={cakesPhoto}
                     word={tt("sample")}
                     sizes="(min-width: 1240px) 380px, (min-width: 900px) 30vw, 42vw"
-                    // The first card's photo is the likeliest LCP on phones.
-                    priority={i === 0}
+                    // In the first viewport, but not the phone LCP (the H1
+                    // is): no high-priority preload competing with the CSS
+                    // and fonts on 4G, just no lazy-loading delay either.
+                    loading="eager"
                   />
                 </span>
               </Link>

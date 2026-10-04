@@ -28,9 +28,11 @@ export interface UniverseImageProps {
   /** tiramisu only: the word in letters (tiramisuUi.mode.sample). */
   word?: string;
   priority?: boolean;
+  /** "eager" for pictures in the first viewport that are not the LCP. */
+  loading?: "eager" | "lazy";
 }
 
-export function UniverseImage({ universe, sizes, cakes, word = "BRAVO", priority }: UniverseImageProps) {
+export function UniverseImage({ universe, sizes, cakes, word = "BRAVO", priority, loading }: UniverseImageProps) {
   if (universe === "tiramisu") {
     const chars = [...word.toUpperCase()].filter((c) => GLYPHS[c]).slice(0, 8);
     const sumAspect = chars.reduce((n, c) => n + GLYPHS[c].aspect, 0) || 1;
@@ -42,6 +44,7 @@ export function UniverseImage({ universe, sizes, cakes, word = "BRAVO", priority
           fill
           sizes={sizes}
           priority={priority}
+          loading={priority ? undefined : loading}
           className="scale-[1.3] object-cover"
         />
         {/* The parent is a size container (gate + cross-sell CSS): letters
@@ -59,6 +62,7 @@ export function UniverseImage({ universe, sizes, cakes, word = "BRAVO", priority
               width={Math.round(SPRITE_H * GLYPHS[c].aspect)}
               height={SPRITE_H}
               sizes="40px"
+              loading={loading}
               className="h-full w-auto drop-shadow-[0_2px_1.5px_rgb(34_19_9/0.55)]"
             />
           ))}
@@ -74,6 +78,7 @@ export function UniverseImage({ universe, sizes, cakes, word = "BRAVO", priority
       fill
       sizes={sizes}
       priority={priority}
+      loading={priority ? undefined : loading}
       className="photo-grade object-cover"
       style={{ objectPosition: img.position ?? "50% 45%" }}
     />
