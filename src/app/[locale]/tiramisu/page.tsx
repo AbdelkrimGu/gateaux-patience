@@ -1,34 +1,19 @@
 import type { Metadata } from "next";
-import { setRequestLocale } from "next-intl/server";
+import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { asLocale } from "@/i18n/locale";
-import { IntlIsland } from "@/components/layout/IntlIsland";
 import TiramisuWizard from "@/components/tiramisu/TiramisuWizard";
-
-const META: Record<string, { title: string; desc: string }> = {
-  fr: {
-    title: "Tiramisu Personnalisé | Gateaux Patience",
-    desc: "Commandez votre tiramisu : boîtes gourmandes ou personnalisées, écrivez votre message et visualisez le résultat en direct. Sidi Bel Abbès.",
-  },
-  ar: {
-    title: "تيراميسو مخصّص | Gateaux Patience",
-    desc: "اطلب تيراميسو الخاص بك: علب لذيذة أو مخصّصة، اكتب رسالتك وشاهد النتيجة مباشرة.",
-  },
-  en: {
-    title: "Custom Tiramisu | Gateaux Patience",
-    desc: "Order your tiramisu: gourmet or personalized boxes, write your message and preview it live. Sidi Bel Abbès.",
-  },
-};
+import type { TiramisuUi } from "@/components/tiramisu/ui-context";
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
-  const { locale } = await params;
-  const m = META[locale] ?? META.fr;
+  const locale = asLocale((await params).locale);
+  const t = await getTranslations({ locale, namespace: "tiramisuUi" });
   return {
-    title: m.title,
-    description: m.desc,
+    title: { absolute: t("meta_title") },
+    description: t("meta_desc"),
     alternates: {
       canonical: locale === "fr" ? "/tiramisu" : `/${locale}/tiramisu`,
       languages: { fr: "/tiramisu", ar: "/ar/tiramisu", en: "/en/tiramisu" },
@@ -41,12 +26,10 @@ export default async function TiramisuPage({
 }: {
   params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
-  setRequestLocale(asLocale(locale));
-  // The wizard calls useLocale(): it needs a client intl provider.
-  return (
-    <IntlIsland namespaces={[]}>
-      <TiramisuWizard />
-    </IntlIsland>
-  );
+  const locale = asLocale((await params).locale);
+  setRequestLocale(locale);
+  // Strings are passed as a plain object: the wizard needs no client intl
+  // provider (no use-intl runtime on this route).
+  const ui = (await getMessages({ locale })).tiramisuUi as TiramisuUi;
+  return <TiramisuWizard locale={locale} ui={ui} />;
 }

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { TiramisuStyle } from "@/lib/tiramisu-config";
 import type { TiramisuTemplate } from "@/lib/tiramisu-templates";
 import { SETS, loadImage, loadSprites, paintPreview } from "@/lib/tiramisu-layout";
+import s from "./tiramisu.module.css";
 
 interface Props {
   style: TiramisuStyle;
@@ -41,8 +42,8 @@ export default function TiramisuCanvas({ style, template, text }: Props) {
   }, [ready, style, template, text]);
 
   return (
-    <div className="relative aspect-square w-full overflow-hidden rounded-4xl shadow-[0_24px_70px_rgba(40,20,8,0.4)] ring-1 ring-black/5">
-      {!ready && <div className="absolute inset-0 shimmer" />}
+    <div className="relative aspect-square w-full overflow-hidden">
+      {!ready && <div className={`absolute inset-0 ${s.loading}`} />}
       <canvas
         ref={canvasRef}
         width={size}

@@ -1,1 +1,126 @@
-{}
+{
+  "meta_title": "Custom Tiramisu | Gateaux Patience",
+  "meta_desc": "Order your tiramisu: gourmet or personalized boxes, write your message and preview it live. Sidi Bel Abbès.",
+  "chrome": {
+    "home": "Gateaux Patience, back to the site",
+    "back": "Back",
+    "progress": "Step {n} of {total}"
+  },
+  "mode": {
+    "title": "Your tiramisu, your message",
+    "lead": "Choose where to begin.",
+    "custom_title": "Custom tiramisu",
+    "custom_desc": "Write your message and see it live.",
+    "simple_title": "Simple tiramisu",
+    "simple_desc": "Our gourmet boxes, ready to enjoy.",
+    "stage_label": "Example: the word “{word}” in white-chocolate letters on cocoa",
+    "sample": "BRAVO"
+  },
+  "boxes": {
+    "title": "Choose your boxes",
+    "lead_custom": "Add each box; you'll personalize them next.",
+    "lead_simple": "Add as many as you like.",
+    "sizes": "Box size",
+    "add": "Add",
+    "add_aria": "Add: {box}",
+    "in_bucket": "{n} in your basket",
+    "cta_empty": "Add a box",
+    "cta": "View basket",
+    "cta_count": "{n} · {total}"
+  },
+  "bucket": {
+    "title": "Your basket",
+    "lead_custom": "Personalize your boxes, or leave them plain.",
+    "lead_simple": "Adjust quantities.",
+    "add_more": "Add a box",
+    "empty": "Your basket is empty.",
+    "remove": "Remove: {box}",
+    "less": "One box fewer",
+    "more": "One more box",
+    "qty": "Quantity: {n}",
+    "personalize_one": "Personalize this tiramisu",
+    "personalize_n": "Personalize ({n})",
+    "custom_one": "{n} personalized",
+    "custom_other": "{n} personalized",
+    "plain_one": "{n} plain",
+    "plain_other": "{n} plain",
+    "plain_count": "{n} without a message",
+    "edit": "Edit",
+    "remove_message": "Delete the message “{msg}”",
+    "personalize": "Personalize",
+    "total": "Total",
+    "continue": "Continue"
+  },
+  "howmany": {
+    "title": "How many to personalize?",
+    "body": "You can write on up to {max}. We'll guide you one by one.",
+    "cancel": "Cancel"
+  },
+  "gate": {
+    "title": "Add a personal touch?",
+    "body_simple": "Write a name, an age or a little note on your tiramisus, for free.",
+    "body_custom": "Tap a box to write a message on it.",
+    "write": "Write",
+    "plain_n": "{n} plain",
+    "yes": "Yes, personalize",
+    "skip": "No thanks, continue",
+    "close": "Close"
+  },
+  "review": {
+    "title": "Your order",
+    "lead": "Check it before confirming.",
+    "plain_more": "+ {n} without a message",
+    "total": "Total",
+    "confirm": "Confirm order"
+  },
+  "confirm": {
+    "title": "Your details",
+    "lead": "So we can confirm your order with you.",
+    "name": "Your name",
+    "name_ph": "Full name",
+    "phone": "Your phone",
+    "items_one": "{n} item",
+    "items_other": "{n} items",
+    "no_payment": "No payment now: we'll call you back to confirm.",
+    "submit": "Place my order",
+    "sending": "Sending…",
+    "error": "Sending failed. Check your connection and try again."
+  },
+  "success": {
+    "title": "Order received!",
+    "body": "Thank you! We've received your order and will contact you very soon to confirm it.",
+    "ref": "Reference",
+    "again": "New order",
+    "home": "Back home"
+  },
+  "custom": {
+    "progress": "Box {n} of {total}",
+    "personalizing": "Personalizing",
+    "style": "Decoration",
+    "tip": "The shorter the text, the bigger and lovelier the letters.",
+    "line": "Line {n}",
+    "type_here": "Type here…",
+    "line_aria": "Message line {n}",
+    "count": "{n} of {max} characters",
+    "too_long": "This message is a little long for this box, so the letters will be smaller.",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "preview": {
+    "mode": "Preview type",
+    "label_2d": "2D preview",
+    "label_3d": "3D preview",
+    "views": "Viewing angle",
+    "top": "Top",
+    "hero": "3/4",
+    "side": "Side",
+    "reset": "Reset view",
+    "loading": "Loading the preview",
+    "scene": "3D preview of your {shape} box",
+    "scene_msg": "3D preview of your {shape} box with the message “{msg}”",
+    "shape_heart": "heart",
+    "shape_square": "square",
+    "shape_oval": "oval",
+    "shape_round": "round"
+  }
+}

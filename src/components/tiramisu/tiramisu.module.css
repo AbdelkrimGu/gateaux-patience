@@ -1,0 +1,153 @@
+/*
+  Wizard-only CSS (skin). Layered so Tailwind utilities still win.
+  Every animation lives inside `prefers-reduced-motion: no-preference`; with
+  reduce, everything is simply in its final state. Only transform/opacity.
+*/
+@layer components {
+  /* ---- step / overlay / sheet entrances (no exit animations: CSS only) */
+  @media (prefers-reduced-motion: no-preference) {
+    .stepIn {
+      animation: gp-rise var(--d-base) var(--ease-out) both;
+    }
+    .overlayIn {
+      animation: gp-rise-far var(--d-base) var(--ease-out) both;
+    }
+    .scrimIn {
+      animation: gp-fade 200ms linear both;
+    }
+    .sheetIn {
+      animation: gp-rise-far var(--d-base) var(--ease-out) both;
+    }
+    .pop {
+      animation: gp-pop var(--d-base) var(--ease-out) both;
+    }
+  }
+
+  /* ---- the signature: letters land in the cocoa (B §8) ----------------
+     White-chocolate sprites drop 8px with a 60ms stagger; as each one
+     touches down a tiny cocoa puff (opacity + scale ring) blooms under it.
+     Pure overlay on a photo of the cocoa top: the canvas engine is untouched.
+     Latin LTR in every locale (the product letters are Latin). */
+  .word {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 2%;
+    direction: ltr;
+  }
+  .letter {
+    position: relative;
+    display: block;
+    height: 100%;
+    filter: drop-shadow(0 2px 1.5px rgb(34 19 9 / 0.55));
+  }
+  .letter img {
+    position: relative;
+    z-index: 1;
+    display: block;
+    height: 100%;
+    width: auto;
+  }
+  .letter::after {
+    content: "";
+    position: absolute;
+    inset-inline: -30%;
+    bottom: -14%;
+    height: 42%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(110 62 34 / 0.75), rgb(110 62 34 / 0) 100%);
+    opacity: 0;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .letter {
+      animation: gp-land 420ms var(--ease-out) both;
+      animation-delay: calc(350ms + var(--i, 0) * 60ms);
+    }
+    .letter::after {
+      animation: gp-puff 560ms var(--ease-out) both;
+      animation-delay: calc(350ms + var(--i, 0) * 60ms + 300ms);
+    }
+  }
+
+  /* ---- scalloped receipt edge (the one shape motif, B §9) */
+  .scallop {
+    --s: 18px;
+    padding-bottom: calc(var(--s) * 0.9);
+    -webkit-mask:
+      radial-gradient(circle calc(var(--s) / 2) at 50% 100%, #0000 98%, #000) 0 0 / var(--s) 100% repeat-x;
+    mask:
+      radial-gradient(circle calc(var(--s) / 2) at 50% 100%, #0000 98%, #000) 0 0 / var(--s) 100% repeat-x;
+  }
+
+  /* ---- preview placeholder while the 2D base image / 3D chunk loads */
+  .loading {
+    background: rgb(255 255 255 / 0.35);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .loading {
+      animation: gp-breathe 1.4s ease-in-out infinite alternate;
+    }
+  }
+
+  /* hide scrollbars on the horizontal rails (still scrollable) */
+  .rail {
+    scrollbar-width: none;
+  }
+  .rail::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes gp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes gp-rise-far {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+@keyframes gp-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes gp-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+@keyframes gp-land {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  55% {
+    opacity: 1;
+  }
+}
+@keyframes gp-puff {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+@keyframes gp-breathe {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 0.8;
+  }
+}
