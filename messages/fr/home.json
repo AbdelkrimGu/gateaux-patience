@@ -1,34 +1,19 @@
 {
   "meta_title": "Gateaux Patience | Gâteaux personnalisés à Sidi Bel Abbès",
-  "meta_desc": "Gâteaux personnalisés faits main à Sidi Bel Abbès depuis {year} : anniversaires, fiançailles, mariages, naissances et tiramisu au prénom. Commande sur WhatsApp.",
-  "hero": {
-    "title": "Le gâteau qui porte son prénom.",
-    "lead": "Des gâteaux faits main à Sidi Bel Abbès depuis {year}, pour les anniversaires, les fiançailles, les mariages et les naissances.",
-    "caption": "Le message et le prénom tapé sont écrits autour du gâteau.",
-    "ref_aria": "Voir ce gâteau, réf. {ref}",
-    "note": "Le prénom part avec votre message.",
-    "see_creations": "Voir les créations"
+  "meta_desc": "Gâteaux personnalisés, douceurs de fête et tiramisu au prénom, faits main à Sidi Bel Abbès depuis {year}. Commande sur WhatsApp.",
+  "gate": {
+    "title": "Qu’est-ce qui vous ferait plaisir ?",
+    "subline": "Fait main à Sidi Bel Abbès, sur commande.",
+    "choices_label": "Choisissez ce qui vous ferait plaisir"
   },
-  "make": {
-    "title": "Ce qu’on prépare",
-    "cakes_title": "Gâteaux sur mesure",
-    "cakes_text": "Personnages, chiffres, prénoms : on part de votre idée ou d’une photo, et on la réalise en sucre.",
-    "cakes_action": "Voir la galerie",
-    "tiramisu_title": "Tiramisu personnalisé",
-    "tiramisu_text": "Le prénom en lettres de chocolat blanc, dans une boîte cœur, ovale ou carrée.",
-    "tiramisu_action": "Composer ma boîte",
-    "tiramisu_sample": "MAMAN",
-    "wedding_title": "Mariages & fiançailles",
-    "wedding_text": "Pour la demande en mariage, les fiançailles ou le mariage : un gâteau à vos couleurs, avec les mots que vous choisissez.",
-    "wedding_action": "Voir les gâteaux de mariage"
-  },
-  "creations": {
-    "title": "Déjà fêtés à Sidi Bel Abbès",
-    "all": "Voir toutes les créations"
+  "brand": {
+    "title": "Une seule maison, trois façons de fêter.",
+    "text": "Depuis {year}, chaque commande est préparée à la main à Sidi Bel Abbès, avec le prénom, la date et les couleurs que vous choisissez.",
+    "since": "Depuis {year}"
   },
   "steps": {
     "title": "Commander en trois messages",
-    "s1": "Choisissez un modèle dans la galerie, ou envoyez-nous votre idée en photo.",
+    "s1": "Choisissez un gâteau, des douceurs ou un tiramisu, ou envoyez-nous votre idée en photo.",
     "s2": "Sur WhatsApp, donnez la date, le nombre d’invités et le prénom à écrire.",
     "s3": "On valide ensemble le dessin, le prix et le retrait ou la livraison.",
     "lead_time": "Commandez au moins {days, plural, one {# jour} other {# jours}} avant la date.",
