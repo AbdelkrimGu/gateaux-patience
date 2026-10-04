@@ -1,0 +1,10 @@
+{
+  "title": "Commander ce Gâteau",
+  "whatsapp_msg": "Bonjour Gateaux Patience ! Je suis intéressé(e) par le gâteau : ",
+  "name": "Votre nom",
+  "phone": "Votre téléphone",
+  "message": "Message (occasion, date, personnalisation...)",
+  "send_whatsapp": "Envoyer via WhatsApp",
+  "send_form": "Envoyer le formulaire",
+  "cancel": "Annuler"
+}

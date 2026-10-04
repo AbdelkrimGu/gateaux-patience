@@ -1,0 +1,65 @@
+{
+  "brand": "Gateaux Patience",
+  "skip_to_content": "انتقل إلى المحتوى",
+  "nav": {
+    "primary_label": "القائمة الرئيسية",
+    "home_aria": "Gateaux Patience، الصفحة الرئيسية",
+    "creations": "إبداعاتنا",
+    "tiramisu": "تيراميسو",
+    "weddings": "الأعراس",
+    "how_to_order": "كيف تطلب",
+    "contact": "اتصل بنا",
+    "menu_open": "افتح القائمة",
+    "menu_close": "أغلق القائمة",
+    "menu_title": "القائمة"
+  },
+  "lang": {
+    "label": "اللغة",
+    "fr_short": "FR",
+    "ar_short": "ع",
+    "en_short": "EN",
+    "fr_name": "Français",
+    "ar_name": "العربية",
+    "en_name": "English"
+  },
+  "order": {
+    "cta": "اطلب عبر واتساب",
+    "cta_short": "اطلب الآن",
+    "bar_label": "اطلب",
+    "call_aria": "اتصل بالرقم {phone}",
+    "opens_whatsapp": "يفتح واتساب"
+  },
+  "name_field": {
+    "label": "الاسم على الكعكة",
+    "placeholder": "الاسم",
+    "counter": "{count} من {max} حرفًا"
+  },
+  "occasion": {
+    "birthday": "عيد ميلاد سعيد",
+    "wedding": "ألف مبروك",
+    "birth": "أهلًا بالمولود",
+    "success": "مبروك النجاح"
+  },
+  "footer": {
+    "label": "تذييل الصفحة",
+    "tagline": "كعكات مخصّصة مصنوعة يدويًا في سيدي بلعباس منذ 2018.",
+    "explore_title": "تصفّح",
+    "contact_title": "راسلنا",
+    "follow_title": "تابعنا",
+    "whatsapp": "واتساب",
+    "phone": "الهاتف",
+    "instagram": "إنستغرام",
+    "facebook": "فيسبوك",
+    "city": "سيدي بلعباس، الجزائر",
+    "rights": "© {year} Gateaux Patience. جميع الحقوق محفوظة.",
+    "logo_alt": "شعار Gateaux Patience: كعكة بتاج وطائر عنقاء نحاسي"
+  },
+  "not_found": {
+    "meta_title": "الصفحة غير موجودة",
+    "ring": "الصفحة غير موجودة",
+    "title": "هذه الصفحة ليست على قائمتنا.",
+    "text": "ربما الرابط قديم أو نُسخ بشكل خاطئ. أمّا الكعكات فما زالت هنا.",
+    "gallery": "شاهد إبداعاتنا",
+    "home": "العودة إلى الرئيسية"
+  }
+}

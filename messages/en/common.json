@@ -1,0 +1,65 @@
+{
+  "brand": "Gateaux Patience",
+  "skip_to_content": "Skip to content",
+  "nav": {
+    "primary_label": "Main navigation",
+    "home_aria": "Gateaux Patience, home",
+    "creations": "Creations",
+    "tiramisu": "Tiramisu",
+    "weddings": "Weddings",
+    "how_to_order": "How to order",
+    "contact": "Contact",
+    "menu_open": "Open menu",
+    "menu_close": "Close menu",
+    "menu_title": "Menu"
+  },
+  "lang": {
+    "label": "Language",
+    "fr_short": "FR",
+    "ar_short": "ع",
+    "en_short": "EN",
+    "fr_name": "Français",
+    "ar_name": "العربية",
+    "en_name": "English"
+  },
+  "order": {
+    "cta": "Order on WhatsApp",
+    "cta_short": "Order",
+    "bar_label": "Order",
+    "call_aria": "Call {phone}",
+    "opens_whatsapp": "opens WhatsApp"
+  },
+  "name_field": {
+    "label": "Their name",
+    "placeholder": "Name",
+    "counter": "{count} of {max} characters"
+  },
+  "occasion": {
+    "birthday": "Happy birthday",
+    "wedding": "Congratulations",
+    "birth": "Welcome",
+    "success": "Congratulations"
+  },
+  "footer": {
+    "label": "Footer",
+    "tagline": "Custom cakes, handmade in Sidi Bel Abbès since 2018.",
+    "explore_title": "Explore",
+    "contact_title": "Write to us",
+    "follow_title": "Follow",
+    "whatsapp": "WhatsApp",
+    "phone": "Phone",
+    "instagram": "Instagram",
+    "facebook": "Facebook",
+    "city": "Sidi Bel Abbès, Algeria",
+    "rights": "© {year} Gateaux Patience. All rights reserved.",
+    "logo_alt": "Gateaux Patience logo: a crowned cake and a copper phoenix"
+  },
+  "not_found": {
+    "meta_title": "Page not found",
+    "ring": "Page not found",
+    "title": "This page isn’t on the menu.",
+    "text": "The link may be old or mistyped. The cakes are all still here.",
+    "gallery": "See the creations",
+    "home": "Back to home"
+  }
+}

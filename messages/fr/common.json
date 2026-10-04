@@ -1,0 +1,65 @@
+{
+  "brand": "Gateaux Patience",
+  "skip_to_content": "Aller au contenu",
+  "nav": {
+    "primary_label": "Navigation principale",
+    "home_aria": "Gateaux Patience, accueil",
+    "creations": "Créations",
+    "tiramisu": "Tiramisu",
+    "weddings": "Mariages",
+    "how_to_order": "Comment commander",
+    "contact": "Contact",
+    "menu_open": "Ouvrir le menu",
+    "menu_close": "Fermer le menu",
+    "menu_title": "Menu"
+  },
+  "lang": {
+    "label": "Langue",
+    "fr_short": "FR",
+    "ar_short": "ع",
+    "en_short": "EN",
+    "fr_name": "Français",
+    "ar_name": "العربية",
+    "en_name": "English"
+  },
+  "order": {
+    "cta": "Commander sur WhatsApp",
+    "cta_short": "Commander",
+    "bar_label": "Commander",
+    "call_aria": "Appeler le {phone}",
+    "opens_whatsapp": "ouvre WhatsApp"
+  },
+  "name_field": {
+    "label": "Son prénom",
+    "placeholder": "Prénom",
+    "counter": "{count} sur {max} caractères"
+  },
+  "occasion": {
+    "birthday": "Joyeux anniversaire",
+    "wedding": "Félicitations",
+    "birth": "Bienvenue",
+    "success": "Félicitations"
+  },
+  "footer": {
+    "label": "Pied de page",
+    "tagline": "Gâteaux personnalisés faits main à Sidi Bel Abbès, depuis 2018.",
+    "explore_title": "Explorer",
+    "contact_title": "Nous écrire",
+    "follow_title": "Suivre",
+    "whatsapp": "WhatsApp",
+    "phone": "Téléphone",
+    "instagram": "Instagram",
+    "facebook": "Facebook",
+    "city": "Sidi Bel Abbès, Algérie",
+    "rights": "© {year} Gateaux Patience. Tous droits réservés.",
+    "logo_alt": "Logo Gateaux Patience : un gâteau couronné et un phénix cuivré"
+  },
+  "not_found": {
+    "meta_title": "Page introuvable",
+    "ring": "Page introuvable",
+    "title": "Cette page n’est pas au menu.",
+    "text": "Le lien est peut-être ancien ou mal recopié. Les gâteaux, eux, sont toujours là.",
+    "gallery": "Voir les créations",
+    "home": "Retour à l’accueil"
+  }
+}

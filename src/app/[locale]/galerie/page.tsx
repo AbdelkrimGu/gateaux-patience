@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { asLocale } from "@/i18n/locale";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import GalleryClient from "@/components/gallery/GalleryClient";
@@ -15,7 +16,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "meta" });
+  const t = await getTranslations({ locale: asLocale(locale), namespace: "meta" });
   return {
     title: t("gallery_title"),
     description: t("gallery_desc"),

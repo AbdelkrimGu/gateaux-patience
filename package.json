@@ -8,7 +8,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "shoot": "node scripts/shoot.mjs"
+    "shoot": "node scripts/shoot.mjs",
+    "check:i18n": "node scripts/check-messages.mjs",
+    "test": "node --import tsx --test \"src/**/*.test.ts\"",
+    "measure:js": "node scripts/measure-js.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1048.0",
@@ -42,9 +45,11 @@
     "@types/three": "^0.169.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.8",
+    "opentype.js": "^2.0.0",
     "playwright": "^1.63.0",
     "postcss": "^8",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

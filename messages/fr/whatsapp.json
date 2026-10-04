@@ -1,0 +1,12 @@
+{
+  "greeting": "Bonjour Gateaux Patience !",
+  "general": "Je voudrais commander un gâteau personnalisé.",
+  "cake": "Je voudrais un gâteau comme « {title} » (réf. {ref}).",
+  "tiramisu": "Je voudrais commander un tiramisu personnalisé.",
+  "sweets": "Je voudrais des douceurs de fête (cakesicles, cupcakes, cake pops).",
+  "name": "Prénom à écrire : {name}",
+  "date": "Date de l’événement : {date}",
+  "guests": "Nombre d’invités : {guests}",
+  "blank": "…",
+  "link": "Vu ici : {url}"
+}
