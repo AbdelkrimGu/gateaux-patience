@@ -10,6 +10,10 @@ export const SITE_URL = contact.siteUrl;
 /** E.164 phone for tel: links and structured data, e.g. "+213669592850". */
 export const PHONE_E164 = `+${contact.whatsapp.replace(/\D/g, "")}`;
 
+/** National format for display, e.g. "0669 59 28 50" (wrap in <bdi className="ltr">). */
+export const PHONE_LOCAL = contact.phone.replace(/^\+213\s*/, "0");
+
+/** @deprecated use buildWhatsAppUrl() from src/lib/whatsapp.ts (prefilled message). */
 export const WHATSAPP_URL = `https://wa.me/${contact.whatsapp.replace(/\D/g, "")}`;
 
 export const CATEGORIES = [
