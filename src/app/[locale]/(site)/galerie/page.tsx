@@ -76,15 +76,7 @@ export default async function GalleriePage({ params }: { params: Promise<{ local
 
   const generalHref = buildWhatsAppUrl({ locale, kind: "general", page: "/galerie" });
   // Wedding brief for ?c=wedding ("un gâteau de mariage / fiançailles").
-  // `occasion` is the whatsapp.ts extension from the engineering pass; passed
-  // through a typed variable so this compiles before and after it lands.
-  const weddingOpts: Parameters<typeof buildWhatsAppUrl>[0] & { occasion?: "wedding" } = {
-    locale,
-    kind: "general",
-    occasion: "wedding",
-    page: "/galerie?c=wedding",
-  };
-  const weddingHref = buildWhatsAppUrl(weddingOpts);
+  const weddingHref = buildWhatsAppUrl({ locale, kind: "general", category: "wedding", page: "/galerie?c=wedding" });
 
   // The first card is the phone LCP: preload it at high priority with the
   // exact srcset CakeCard's next/image will request (CakeCard itself only

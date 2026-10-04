@@ -155,6 +155,7 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
     </>
   );
 
+  const briefParts = t("brief_text", { ref: "\u0001" }).split("\u0001");
   const studio = (
     <CakeStudio
       locale={locale}
@@ -172,8 +173,15 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
         namePlaceholder: t("name_placeholder"),
         nameHint: t("name_hint"),
         briefTitle: t("brief_title"),
-        // Isolated + non-breaking hyphen: the ref never splits or reorders in Arabic.
-        briefText: t("brief_text", { ref: `⁨${ref.replace("-", "‑")}⁩` }),
+        // The ref in a nowrap <bdi> with a plain hyphen: it never splits or
+        // reorders in Arabic, and no U+2011 pulls the Arabic font on FR/EN.
+        briefText: (
+          <>
+            {briefParts[0]}
+            <bdi className="ltr whitespace-nowrap">{ref}</bdi>
+            {briefParts[1]}
+          </>
+        ),
         dateLabel: t("date_label"),
         guestsLabel: t("guests_label"),
         guestsPlaceholder: t("guests_placeholder"),

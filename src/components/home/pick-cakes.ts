@@ -15,8 +15,9 @@ import { byPhotoQuality } from "@/components/gallery/catalog";
 
 /** Princesse Ghita: crisp 1085px photo, "PRINCESSE GHITA" around the board. */
 const HERO_PICKS = ["gateau-princesse-couronnee", "gateau-cocomelon"];
-/** Blue fondant (rocket): sits on the bleu band. */
-const CAKES_BAND_PICKS: Record<string, string> = { "tarte-de-lespace-avec-fusee": "50% 42%" };
+/** Bright, studio-lit and blue-accented (CoComelon) for the bleu band; the
+ *  rocket cake carries a large centred watermark at band size (08-review M3). */
+const CAKES_BAND_PICKS: Record<string, string> = { "gateau-cocomelon": "50% 45%", "tarte-de-lespace-avec-fusee": "50% 42%" };
 /** Engagement cake (hearts, ring, red bow). */
 const WEDDING_BAND_PICKS: Record<string, string> = { "gateau-remise-diplome": "50% 52%" };
 
@@ -53,7 +54,8 @@ export function pickHomeCakes(cakes: Cake[]) {
     withPhoto[0] ??
     null;
 
-  const cakesPhoto = bandPhoto(withPhoto, CAKES_BAND_PICKS, (c) => !isWedding(c.category) && c.id !== hero?.id);
+  const notHero = withPhoto.filter((c) => c.id !== hero?.id);
+  const cakesPhoto = bandPhoto(notHero, CAKES_BAND_PICKS, (c) => !isWedding(c.category));
   const weddingPhoto = bandPhoto(withPhoto, WEDDING_BAND_PICKS, (c) => isWedding(c.category));
 
   // Clean, crisp photos first (byPhotoQuality, 08-review M3), the rest in

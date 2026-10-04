@@ -29,7 +29,8 @@ export interface CakeStudioLabels {
   namePlaceholder: string;
   nameHint: string;
   briefTitle: string;
-  briefText: string;
+  /** Rich: the ref sits in a nowrap <bdi>. */
+  briefText: ReactNode;
   dateLabel: string;
   guestsLabel: string;
   guestsPlaceholder: string;
