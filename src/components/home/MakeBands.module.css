@@ -1,0 +1,170 @@
+/* "What we make" (B §5, §6): full-bleed candy-stripe bands on phones (no
+   radius, no gaps), one 3-column block with a 36px radius on desktop.
+   Round photos bleed off the band's inline-end edge (mirrors in RTL). */
+
+@layer components {
+  .bands {
+    display: grid;
+    margin-inline: calc(-1 * var(--gutter));
+    padding: 0;
+    list-style: none;
+  }
+
+  .band {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    height: 100%;
+    min-height: 184px;
+    padding: 24px var(--gutter);
+    overflow: hidden;
+    text-decoration: none;
+  }
+  .band:focus-visible {
+    outline-offset: -6px;
+  }
+
+  .copy {
+    display: grid;
+    gap: 6px;
+    align-content: start;
+  }
+  .text {
+    font-size: 14px;
+    line-height: 1.45;
+    max-width: 30ch;
+  }
+  .text:lang(ar) {
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .action {
+    margin-block-start: 6px;
+    justify-self: start;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 5px;
+  }
+
+  .photo {
+    position: relative;
+    width: 150px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-inline-end: -52px;
+    background: #fff;
+    box-shadow: 0 0 0 6px rgb(255 255 255 / 0.55);
+  }
+  .photo img {
+    object-fit: cover;
+  }
+
+  /* Tiramisu: the heart box, with the name in white-chocolate letters. */
+  .tira {
+    position: relative;
+    width: 150px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-inline-end: -12px;
+    container-type: inline-size;
+    --letter-h: 26px;
+    box-shadow: 0 0 0 6px rgb(255 255 255 / 0.12);
+  }
+  .tira > img {
+    object-fit: cover;
+    transform: scale(1.64);
+  }
+
+  /* Colour fields: the cake's own palette, cacao, and the écrin. */
+  .cakes {
+    background: var(--color-t-bleu);
+    color: var(--color-ink-soft);
+  }
+  .cakes h3 {
+    color: var(--color-p-bleu);
+  }
+  .cakes .action {
+    color: var(--color-ink);
+    text-decoration-color: var(--color-p-bleu);
+  }
+
+  .tiramisu {
+    background: var(--color-cacao);
+    color: rgb(247 242 244 / 0.88);
+  }
+  .tiramisu h3,
+  .tiramisu .action {
+    color: var(--color-mascarpone);
+  }
+  .tiramisu .action {
+    text-decoration-color: rgb(243 217 184 / 0.6);
+  }
+  .tiramisu:focus-visible,
+  .wedding:focus-visible {
+    outline-color: var(--color-dragee);
+  }
+
+  .wedding {
+    color: rgb(247 242 244 / 0.82);
+  }
+  .wedding h3 {
+    color: var(--color-sucre);
+  }
+  .wedding .action {
+    color: var(--color-cuivre);
+    text-decoration-color: rgb(196 134 74 / 0.6);
+  }
+  .wedding .photo {
+    background: var(--color-paillette);
+    box-shadow:
+      0 0 0 1px rgb(196 134 74 / 0.45),
+      0 0 0 7px rgb(247 242 244 / 0.06);
+  }
+
+  @media (min-width: 900px) {
+    .bands {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-inline: 0;
+      border-radius: var(--radius-band);
+      overflow: hidden;
+    }
+    .band {
+      grid-template-columns: minmax(0, 1fr);
+      /* fixed photo row, so the three titles share one line */
+      grid-template-rows: 196px auto;
+      align-content: start;
+      align-items: start;
+      row-gap: 32px;
+      min-height: 420px;
+      padding: 32px;
+    }
+    .photo,
+    .tira {
+      width: 220px;
+      justify-self: end;
+      order: -1;
+      margin-block-start: -64px;
+      margin-inline-end: -64px;
+    }
+    .tira {
+      margin-inline-end: -24px;
+      margin-block-start: -24px;
+      --letter-h: 36px;
+    }
+    .text {
+      font-size: 16px;
+    }
+    .text:lang(ar) {
+      font-size: 17px;
+    }
+    .action {
+      font-size: 15px;
+    }
+  }
+}
