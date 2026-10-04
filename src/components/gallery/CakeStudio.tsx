@@ -37,6 +37,7 @@ export interface CakeStudioLabels {
   cta: string;
   opensWhatsApp: string;
   barLabel: string;
+  barShortLabel: string;
   barNavLabel: string;
   barCallLabel: string;
 }
@@ -220,6 +221,7 @@ export function CakeStudio({
       <StickyOrderBarView
         waHref={waHref}
         label={labels.barLabel}
+        shortLabel={labels.barShortLabel}
         navLabel={labels.barNavLabel}
         callLabel={labels.barCallLabel}
       />

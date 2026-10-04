@@ -188,6 +188,7 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
         cta: t("cta"),
         opensWhatsApp: tc("order.opens_whatsapp"),
         barLabel: tc("order.cta"),
+        barShortLabel: tc("order.cta_short"),
         barNavLabel: tc("order.bar_label"),
         barCallLabel: tc("order.call_aria", { phone: PHONE_LOCAL }),
       }}

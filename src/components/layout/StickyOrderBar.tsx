@@ -29,13 +29,15 @@ export interface StickyOrderBarViewProps {
   reveal?: "always" | "scroll";
   /** common.order.cta */
   label: string;
+  /** common.order.cta_short: shown instead of `label` on phones narrower than 380px. */
+  shortLabel?: string;
   /** common.order.bar_label */
   navLabel: string;
   /** common.order.call_aria with {phone} = PHONE_LOCAL */
   callLabel: string;
 }
 
-export function StickyOrderBarView({ waHref, reveal = "always", label, navLabel, callLabel }: StickyOrderBarViewProps) {
+export function StickyOrderBarView({ waHref, reveal = "always", label, shortLabel, navLabel, callLabel }: StickyOrderBarViewProps) {
   return (
     <nav aria-label={navLabel} className={cn(styles.bar, reveal === "scroll" && styles.reveal)}>
       <a
@@ -45,7 +47,14 @@ export function StickyOrderBarView({ waHref, reveal = "always", label, navLabel,
         className={buttonClasses({ size: "md", className: "min-w-0 flex-1" })}
       >
         <Icon name="whatsapp" size={22} />
-        <span className="truncate">{label}</span>
+        {shortLabel ? (
+          <>
+            <span className="hidden truncate min-[380px]:inline">{label}</span>
+            <span className="truncate min-[380px]:hidden">{shortLabel}</span>
+          </>
+        ) : (
+          <span className="truncate">{label}</span>
+        )}
       </a>
       <a
         href={`tel:${PHONE_E164}`}
@@ -74,6 +83,7 @@ export function StickyOrderBar({
       waHref={waHref}
       reveal={reveal}
       label={label ?? t("cta")}
+      shortLabel={label ? undefined : t("cta_short")}
       navLabel={t("bar_label")}
       callLabel={t("call_aria", { phone: PHONE_LOCAL })}
     />

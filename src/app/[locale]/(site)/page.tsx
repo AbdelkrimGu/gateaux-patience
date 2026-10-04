@@ -47,6 +47,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <HomeStickyBar
         locale={locale}
         label={common("order.cta")}
+        shortLabel={common("order.cta_short")}
         navLabel={common("order.bar_label")}
         callLabel={common("order.call_aria", { phone: PHONE_LOCAL })}
       />
