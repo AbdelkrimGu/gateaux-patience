@@ -19,7 +19,7 @@ import { PHONE_LOCAL, SITE_URL } from "@/lib/constants";
 import { isWedding, occasionFor, pipingFor, pipingStyle } from "@/lib/piping";
 import { cn } from "@/lib/utils";
 import styles from "@/components/gallery/gallery.module.css";
-import "@/components/gallery/view-transitions.css";
+import { ViewTransitionStyles } from "@/components/gallery/ViewTransitionStyles";
 
 // ISR: every published cake is prerendered at build (× 3 locales from the
 // [locale] layout); new slugs render on first visit, then stay cached.
@@ -146,7 +146,7 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
                 )}
               >
                 <dt className={cn("type-meta", ecrin ? "text-sucre/75" : "text-ink-muted")}>{f.label}</dt>
-                <dd className={cn("mt-1 font-display text-xl leading-tight", ecrin ? "text-cuivre" : "text-piping")}>
+                <dd className={cn("mt-1 font-display text-2xl leading-tight", ecrin ? "text-cuivre" : "text-piping")}>
                   <bdi>{f.value}</bdi>
                 </dd>
               </div>
@@ -266,6 +266,7 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
 
   return (
     <ViewTransition default="none">
+      <ViewTransitionStyles />
       {ecrin ? (
         <EcrinSurface as="section" aria-label={title} className="pt-2 pb-14 desk:pt-8 desk:pb-24">
           <div className="wrap">
@@ -285,7 +286,7 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
       )}
 
       {related.length > 0 && (
-        <section aria-labelledby="cake-related" className="wrap pt-6 pb-16 desk:pt-16 desk:pb-24">
+        <section aria-labelledby="cake-related" className="wrap [contain-intrinsic-size:auto_900px] [content-visibility:auto] pt-6 pb-16 desk:pt-16 desk:pb-24">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <h2 id="cake-related" className="type-h2">
               {t("related_title")}

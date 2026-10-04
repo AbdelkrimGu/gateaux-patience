@@ -126,6 +126,8 @@ export function CakeStudio({
             message={message}
             name={name}
             pipeKey={`${message}|${pipeName}`}
+            // Set on arrival (the morph is the entrance); piped only once a name is typed.
+            animate={pipeName ? "pipe" : "none"}
             tone={ecrin ? "ecrin" : "sucre"}
             image={
               image && {

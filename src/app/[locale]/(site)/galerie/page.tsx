@@ -15,7 +15,7 @@ import { getAllPublishedCakes } from "@/lib/cakes-data";
 import { getCategories } from "@/lib/categories-data";
 import { assertUniqueRefs } from "@/lib/cake-ref";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
-import "@/components/gallery/view-transitions.css";
+import { ViewTransitionStyles } from "@/components/gallery/ViewTransitionStyles";
 
 // ISR (see src/lib/revalidate.ts). Keep this page static: the ?c= filter is
 // read on the client (GalleryFilter), never from `searchParams` here.
@@ -98,6 +98,7 @@ export default async function GalleriePage({ params }: { params: Promise<{ local
 
   return (
     <ViewTransition default="none">
+      <ViewTransitionStyles />
       <div className="pb-16 desk:pb-24">
         <header className="wrap pt-6 pb-2 desk:pt-14 desk:pb-4">
           <h1 className="type-h1">{t("title")}</h1>
@@ -108,7 +109,12 @@ export default async function GalleriePage({ params }: { params: Promise<{ local
           <CardTransitionScope>
             <ul className="grid grid-cols-2 gap-x-3 gap-y-6 desk:grid-cols-4 desk:gap-x-6 desk:gap-y-10">
               {cakes.map((cake, i) => (
-                <li key={cake.id} data-cat={listed.has(cake.category) ? cake.category : "_"}>
+                <li
+                  key={cake.id}
+                  data-cat={listed.has(cake.category) ? cake.category : "_"}
+                  // Below the fold: skip layout/paint until near the viewport.
+                  className={i < EAGER ? undefined : "[contain-intrinsic-size:auto_420px] [content-visibility:auto]"}
+                >
                   <CakeCard cake={cake} locale={locale} as="h2" eager={i < EAGER} sizes={CARD_SIZES} />
                 </li>
               ))}
