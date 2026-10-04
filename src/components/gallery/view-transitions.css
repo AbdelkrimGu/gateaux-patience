@@ -1,0 +1,39 @@
+/*
+  Card → plate (DESIGN.md amendment 9, B §8 gallery signature).
+
+  How it works: CakeCard puts `view-transition-name: cake-<slug>` on its
+  U-mat, the detail page puts the same name on its LetteredBoard. Both pages
+  wrap their content in React's <ViewTransition default="none">, so every
+  App Router navigation into or out of them runs inside
+  document.startViewTransition (no next.config flag needed on Next 16.3);
+  the browser pairs the two named boxes and morphs mat → plate (and back on
+  browser back). Without View Transitions support it is a plain navigation.
+
+  Only loaded by the gallery/detail routes. The rest of the page does a short
+  crossfade so the morph is the one thing that moves.
+*/
+
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(*) {
+  animation-duration: 440ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+::view-transition-old(root),
+::view-transition-new(root),
+::view-transition-group(root) {
+  animation-duration: 180ms;
+  animation-timing-function: ease-out;
+}
+
+/* Reduced motion: no morph, no crossfade, the new page just appears. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

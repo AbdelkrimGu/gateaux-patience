@@ -1,1 +1,14 @@
-{}
+{
+  "meta_title": "Our creations: custom cakes in Sidi Bel Abbès | Gateaux Patience",
+  "meta_desc": "Handmade cakes by Gateaux Patience: kids’ and adult birthdays, engagements, weddings, births and graduations. Pick an idea and we adapt it to your celebration.",
+  "title": "Our creations",
+  "intro": "Every cake here was made for someone: a name, a date, a celebration. Pick an idea and we’ll make it yours.",
+  "filter_label": "Filter by occasion",
+  "all": "All",
+  "count": "{count, plural, =0 {No creations} one {# creation} other {# creations}}",
+  "closing_title": "Your idea isn’t here yet?",
+  "closing_text": "Tell us about the celebration: the theme, the name, the date. We’ll reply on WhatsApp with a proposal.",
+  "closing_cta": "Describe my cake",
+  "closing_tiramisu": "A tiramisu with their name",
+  "closing_tiramisu_text": "Or build a custom tiramisu, letter by letter."
+}
