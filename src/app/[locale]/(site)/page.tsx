@@ -55,7 +55,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <Steps locale={locale} />
         <InstagramStrip locale={locale} />
         {/* The gate fills the first screen: the bar arrives once the visitor scrolls. */}
-        <StickyOrderBar waHref={buildWhatsAppUrl({ locale, kind: "general" })} reveal="gate" />
+        <StickyOrderBar waHref={buildWhatsAppUrl({ locale, kind: "gate" })} reveal="gate" />
       </div>
     </UniversePage>
   );

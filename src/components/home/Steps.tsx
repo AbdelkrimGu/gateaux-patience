@@ -37,7 +37,7 @@ export async function Steps({ locale }: { locale: Locale }) {
         {LEAD_TIME_DAYS !== null && (
           <p className="mt-8 font-medium text-dragee">{t("lead_time", { days: LEAD_TIME_DAYS })}</p>
         )}
-        <Button href={buildWhatsAppUrl({ locale, kind: "general" })} icon="whatsapp" className="mt-10 w-full desk:w-auto">
+        <Button href={buildWhatsAppUrl({ locale, kind: "gate" })} icon="whatsapp" className="mt-10 w-full desk:w-auto">
           {t("cta")}
         </Button>
       </div>

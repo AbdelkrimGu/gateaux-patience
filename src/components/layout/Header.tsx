@@ -2,7 +2,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { LocaleLink as Link } from "@/i18n/LocaleLink";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { HeaderSwitcher } from "@/components/universe/UniverseBar";
-import { UNIVERSES, type Universe } from "@/components/universe/model";
+import { UNIVERSES, UNIVERSE_HREF, type Universe } from "@/components/universe/model";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { PHONE_E164, PHONE_LOCAL } from "@/lib/constants";
 import { HeaderNav } from "./HeaderNav";
@@ -19,7 +19,7 @@ import { HeaderNav } from "./HeaderNav";
   slide under it (universe/transitions-css.ts).
 */
 
-export function Header({ orderHref }: { orderHref?: string }) {
+export function Header() {
   const t = useTranslations("common");
   const tu = useTranslations("universe");
   const locale = useLocale();
@@ -40,15 +40,23 @@ export function Header({ orderHref }: { orderHref?: string }) {
     { href: "/#commander", label: t("nav.how_to_order") },
   ];
 
+  // "Commander" (desktop pill + mobile menu): the message follows the
+  // universe the visitor is in (HeaderNav picks by pathname); outside the
+  // universes, the neutral sentence.
+  const orderHrefs: Record<Universe | "gate", string> = {
+    gate: buildWhatsAppUrl({ locale, kind: "gate" }),
+    cakes: buildWhatsAppUrl({ locale, kind: "general", page: UNIVERSE_HREF.cakes }),
+    sweets: buildWhatsAppUrl({ locale, kind: "sweets", page: UNIVERSE_HREF.sweets }),
+    tiramisu: buildWhatsAppUrl({ locale, kind: "tiramisu", page: UNIVERSE_HREF.tiramisu }),
+  };
+
   return (
     <header className="wrap flex h-(--header-h) items-center gap-3 [view-transition-name:gp-site-header]">
       <Link href="/" aria-label={t("nav.home_aria")} className="me-auto rounded-lg no-underline desk:me-0">
         <Wordmark layout="stacked" className="desk:hidden" />
         <Wordmark layout="inline" className="hidden desk:inline-flex" />
       </Link>
-      <div className="hidden desk:ms-8 desk:block">
-        <HeaderSwitcher labels={universeLabels} label={tu("switcher_label")} />
-      </div>
+      <HeaderSwitcher labels={universeLabels} label={tu("switcher_label")} className="hidden desk:ms-8 desk:block" />
       <HeaderNav
         items={items}
         deskItems={deskItems}
@@ -63,7 +71,7 @@ export function Header({ orderHref }: { orderHref?: string }) {
         menuClose={t("nav.menu_close")}
         menuTitle={t("nav.menu_title")}
         orderLabel={t("order.cta_short")}
-        orderHref={orderHref ?? buildWhatsAppUrl({ locale, kind: "general" })}
+        orderHrefs={orderHrefs}
         callLabel={t("order.call_aria", { phone: PHONE_LOCAL })}
         phoneHref={`tel:${PHONE_E164}`}
         phoneDisplay={PHONE_LOCAL}

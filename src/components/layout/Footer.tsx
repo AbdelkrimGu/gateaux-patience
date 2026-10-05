@@ -87,7 +87,7 @@ export function Footer() {
         <div className="order-4 col-span-2 desk:order-none desk:col-span-1">
           <h2 className="type-meta mb-2 font-semibold text-cuivre">{t("footer.contact_title")}</h2>
           <ul className="grid">
-            <ExternalItem href={buildWhatsAppUrl({ locale, kind: "general" })} icon="whatsapp">
+            <ExternalItem href={buildWhatsAppUrl({ locale, kind: "gate" })} icon="whatsapp">
               {t("footer.whatsapp")}
             </ExternalItem>
             <ExternalItem href={`tel:${PHONE_E164}`} icon="phone">

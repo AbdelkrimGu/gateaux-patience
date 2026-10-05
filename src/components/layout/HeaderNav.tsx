@@ -7,6 +7,7 @@ import { stripLocale, switchLocaleHref } from "@/i18n/paths";
 import { routing } from "@/i18n/routing";
 import { Icon } from "@/components/ui/Icon";
 import { buttonClasses } from "@/components/ui/Button";
+import { universeOfPath, type Universe } from "@/components/universe/model";
 import { cn } from "@/lib/utils";
 import styles from "./HeaderNav.module.css";
 
@@ -35,7 +36,8 @@ export interface HeaderNavProps {
   navLabel: string;
   menuTitle: string;
   orderLabel: string;
-  orderHref: string;
+  /** WhatsApp link per universe (picked from the pathname), "gate" elsewhere. */
+  orderHrefs: Record<Universe | "gate", string>;
   callLabel: string;
   phoneHref: string;
   phoneDisplay: string;
@@ -99,7 +101,10 @@ function LanguageCircles({
             >
               {langs[l].short}
             </span>
-            <span className="sr-only">{`${langs[l].short} ${langs[l].name}`}</span>
+            {/* System font for the Arabic name too: sr-only text still renders,
+                and in Readex it fetched the 23 KB Arabic slice on FR/EN pages,
+                competing with the H1's font (10-review B1). */}
+            <span className={cn("sr-only", l === "ar" && "font-[system-ui,sans-serif]")}>{`${langs[l].short} ${langs[l].name}`}</span>
           </a>
         );
       })}
@@ -111,6 +116,7 @@ export function HeaderNav(props: HeaderNavProps) {
   const pathname = stripLocale(useBrowserPathname());
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
+  const orderHref = props.orderHrefs[universeOfPath(pathname) ?? "gate"];
 
   const close = () => dialogRef.current?.close();
 
@@ -140,7 +146,7 @@ export function HeaderNav(props: HeaderNavProps) {
       <LanguageCircles label={props.langLabel} langs={props.langs} pathname={pathname} />
 
       <a
-        href={props.orderHref}
+        href={orderHref}
         target="_blank"
         rel="noopener noreferrer"
         className={buttonClasses({ size: "sm", className: "hidden desk:inline-flex" })}
@@ -204,7 +210,7 @@ export function HeaderNav(props: HeaderNavProps) {
 
           <div className="mt-auto grid gap-3 pt-8">
             <a
-              href={props.orderHref}
+              href={orderHref}
               target="_blank"
               rel="noopener noreferrer"
               className={buttonClasses({ block: true })}

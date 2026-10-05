@@ -47,8 +47,22 @@ export function UniverseStrip({
   );
 }
 
-/** Desktop header copy: same control, current from the URL (none on the home page). */
-export function HeaderSwitcher({ labels, label }: { labels: Record<Universe, string>; label: string }) {
+/** Desktop header copy: same control, current from the URL. Not on the home
+ *  page (the gate cards do that job) nor outside the universes, like the strip. */
+export function HeaderSwitcher({
+  labels,
+  label,
+  className,
+}: {
+  labels: Record<Universe, string>;
+  label: string;
+  className?: string;
+}) {
   const current = universeOfPath(stripLocale(usePathname()));
-  return <UniverseSwitcher current={current} labels={labels} label={label} size="header" />;
+  if (!current) return null;
+  return (
+    <div className={className}>
+      <UniverseSwitcher current={current} labels={labels} label={label} size="header" />
+    </div>
+  );
 }

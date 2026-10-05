@@ -99,6 +99,16 @@ test("tiramisu and sweets kinds, extra lines", () => {
   assert.match(sweets, /\nBox: heart$/);
 });
 
+test("gate kind: one neutral sentence for all three universes", () => {
+  const line = (locale: string) => buildWhatsAppMessage({ locale, kind: "gate" }).split("\n")[1];
+  assert.equal(line("fr"), "Je voudrais passer une commande.");
+  assert.equal(line("en"), "I would like to place an order.");
+  assert.equal(line("ar"), "أودّ تقديم طلبية.");
+  // Never the cake sentence, and the brief lines still follow.
+  assert.doesNotMatch(buildWhatsAppMessage({ locale: "fr", kind: "gate" }), /gâteau/);
+  assert.match(buildWhatsAppMessage({ locale: "fr", kind: "gate" }), /Date de l’événement/);
+});
+
 test("unknown locale falls back to FR; URL is wa.me with encoded text", () => {
   const url = buildWhatsAppUrl({ locale: "de", kind: "general" });
   assert.ok(url.startsWith("https://wa.me/213669592850?text="));

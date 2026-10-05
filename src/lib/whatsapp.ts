@@ -22,7 +22,9 @@ import ar from "../../messages/ar/whatsapp.json";
 import en from "../../messages/en/whatsapp.json";
 
 export type WhatsAppLocale = "fr" | "ar" | "en";
-export type WhatsAppKind = "general" | "cake" | "tiramisu" | "sweets";
+/** "gate": the neutral sentence for places that sell all three universes
+ *  (home, footer, header outside a universe). */
+export type WhatsAppKind = "gate" | "general" | "cake" | "tiramisu" | "sweets";
 /** kind "sweets": one sweet type (a /douceurs menu tile). */
 export type SweetType = "cupcakes" | "cake_pops" | "cakesicles" | "desserts";
 export const SWEET_TYPES: readonly SweetType[] = ["cupcakes", "cake_pops", "cakesicles", "desserts"];
