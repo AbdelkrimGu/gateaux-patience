@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Lalezar, Readex_Pro } from "next/font/google";
-import localFont from "next/font/local";
+import { preload } from "react-dom";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -8,6 +8,7 @@ import { routing } from "@/i18n/routing";
 import { asLocale } from "@/i18n/locale";
 import { CONTACT, PHONE_E164, SITE_URL } from "@/lib/constants";
 import { WordmarkDefs } from "@/components/ui/Wordmark";
+import { GALLERY_FILTER_BOOT_JS } from "@/components/gallery/filter-boot";
 import { DEFAULT_OG_IMAGE, SITE_NAME } from "@/lib/seo";
 import "../globals.css";
 
@@ -27,15 +28,13 @@ import "../globals.css";
 */
 // Dela is self-hosted as a 14 KB Latin subset (scripts/build-display-font.mjs):
 // via next/font/google it drags ~120 Japanese unicode-range @font-face rules
-// (~34 KB gz of CSS) into every page.
-const dela = localFont({
-  src: "../../fonts/DelaGothicOne-Latin.woff2",
-  weight: "400",
-  variable: "--font-dela",
-  display: "swap",
-  preload: false,
-  fallback: ["Arial Black", "system-ui", "sans-serif"],
-});
+// (~34 KB gz of CSS) into every page. Declared by hand in globals.css
+// (@font-face + --font-dela on FR/EN only) instead of next/font/local, so its
+// preload can depend on the locale: it is the H1's face, i.e. the home LCP
+// (10-review B1: discovered late, the H1 repainted at ~3.5 s). next/font
+// would preload it on AR pages too, which never use it. Long-cached via
+// next.config headers (the file name carries a version).
+const DELA_FONT_URL = "/fonts/dela-gothic-one-latin-v1.woff2";
 const lalezar = Lalezar({
   weight: "400",
   subsets: ["arabic"],
@@ -50,8 +49,8 @@ const readex = Readex_Pro({
 });
 
 const FONT_CLASSES = {
-  fr: `${dela.variable} ${lalezar.variable} ${readex.variable}`,
-  en: `${dela.variable} ${lalezar.variable} ${readex.variable}`,
+  fr: `${lalezar.variable} ${readex.variable}`,
+  en: `${lalezar.variable} ${readex.variable}`,
   ar: `${lalezar.variable} ${readex.variable}`,
 } as const;
 
@@ -139,6 +138,7 @@ export default async function LocaleLayout({
 
   // Enables static rendering for pages under [locale] (next-intl v4).
   setRequestLocale(locale);
+  if (locale !== "ar") preload(DELA_FONT_URL, { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
 
   return (
     // data-scroll-behavior: Next turns the global smooth scrolling off while it
@@ -152,6 +152,8 @@ export default async function LocaleLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: BUSINESS_JSON_LD }}
         />
+        {/* /galerie?c= deep links: filter before first paint (no-op elsewhere). */}
+        <script dangerouslySetInnerHTML={{ __html: GALLERY_FILTER_BOOT_JS }} />
       </head>
       <body>
         {/* No NextIntlClientProvider here: use-intl on the client is ~12 KB gz.

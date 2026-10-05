@@ -12,6 +12,29 @@
 @source not "../components/admin";
 @source not "../**/*.{md,test.ts}";
 
+/* Dela Gothic One, FR/EN display face (14 KB Latin subset). Declared here,
+   not via next/font, so the layout can preload it on FR/EN only (it is the
+   home H1 = LCP). The fallback face is next/font's computed Arial metrics,
+   so the swap does not shift the layout. */
+@font-face {
+  font-family: "Dela Gothic One";
+  src: url("/fonts/dela-gothic-one-latin-v1.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dela Gothic One Fallback";
+  src: local("Arial");
+  ascent-override: 88.05%;
+  descent-override: 21.86%;
+  line-gap-override: 0%;
+  size-adjust: 131.74%;
+}
+:root:lang(fr),
+:root:lang(en) {
+  --font-dela: "Dela Gothic One", "Dela Gothic One Fallback", "Arial Black", system-ui, sans-serif;
+}
+
 /* ------------------------------------------------------------------ tokens */
 @theme static {
   /* Core palette (B §3 + DESIGN.md amendment 1) */
@@ -95,9 +118,9 @@
     --sequin-b: rgb(196 134 74 / 0.1);
     --header-h: 60px;
 
-    /* next/font sets --font-dela (FR/EN), --font-lalezar and --font-readex
-       (every locale) on <html>. Never define those here (that was the
-       audit's font bug). --font-display-ar = the Arabic display face, for
+    /* next/font sets --font-lalezar and --font-readex (every locale) on
+       <html>; --font-dela (FR/EN) is set above. Never define those in this
+       block (that was the audit's font bug). --font-display-ar = the Arabic display face, for
        stacks that must render a typed Arabic name on any locale:
        font-family: var(--font-dela), var(--font-display-ar), ...  */
     --font-display-ar: var(--font-lalezar);

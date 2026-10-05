@@ -15,7 +15,7 @@ import { SWEETS_CARD_IMAGE, TIRAMISU_CARD_IMAGE, type Universe } from "./model";
 */
 
 const GLYPHS = (glyphs as { glyphs: Record<string, { file: string; aspect: number }> }).glyphs;
-const SPRITE_H = 171;
+const LETTER_H = 48;
 
 /** The princess cake (Cake7): used when no catalogue photo is passed. */
 export const DEFAULT_CAKES_IMAGE = { src: "/images/Cake7/FB_IMG_1778413136978.jpg", position: "50% 48%" };
@@ -59,9 +59,11 @@ export function UniverseImage({ universe, sizes, cakes, word = "BRAVO", priority
               key={`${i}-${c}`}
               src={`/images/tiramisu/letters/${GLYPHS[c].file}`}
               alt=""
-              width={Math.round(SPRITE_H * GLYPHS[c].aspect)}
-              height={SPRITE_H}
-              sizes="40px"
+              // Drawn ~40px tall (CSS sets the size). Intrinsic 48px and no
+              // `sizes`: a 1x/2x srcset of two URLs instead of sixteen, in the
+              // <img> and in React's auto-preload <link> (home HTML weight).
+              width={Math.round(LETTER_H * GLYPHS[c].aspect)}
+              height={LETTER_H}
               loading={loading}
               className="h-full w-auto drop-shadow-[0_2px_1.5px_rgb(34_19_9/0.55)]"
             />

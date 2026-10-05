@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { EcrinSurface } from "@/components/ui/EcrinSurface";
 import { PIPING, isWedding, type PipingName } from "@/lib/piping";
 import { cn } from "@/lib/utils";
+import { GRID_ID, SCOPE_ID } from "./filter-boot";
 import styles from "./gallery.module.css";
 
 /*
@@ -22,7 +23,8 @@ import styles from "./gallery.module.css";
   click pushes the URL with history.pushState, which the App Router syncs
   into useSearchParams, so back/forward also drive the filter. The page stays
   static: `?c=` is read on the client only (inside <Suspense>), and an inline
-  script applies it before first paint for deep links (no flash of all cakes).
+  script in the root layout's <head> (filter-boot.ts) applies it before first
+  paint for deep links (no flash of all cakes).
 
   Wedding view (?c=wedding, DESIGN.md amendment 1): the chip row turns into
   the écrin surface and an écrin intro with a wedding WhatsApp brief appears.
@@ -49,9 +51,6 @@ export interface WeddingView {
   /** buildWhatsAppUrl(…) with the wedding context. */
   href: string;
 }
-
-export const GRID_ID = "gp-gallery-grid";
-const SCOPE_ID = "gp-gallery-scope";
 
 // Wedding styling uses the literal variant `group-data-[c=wedding]/scope:`
 // (Tailwind only sees literal class names; the wedding slug is "wedding").
@@ -210,19 +209,12 @@ export function GalleryFilter({
 }
 
 /**
- * Server-side companion: CSS that hides non-matching items for each slug,
- * plus a tiny pre-paint script that reads ?c= for deep links. Render it
- * right AFTER <GalleryFilter>.
+ * Server-side companion: CSS that hides non-matching items for each slug.
+ * Render it right AFTER <GalleryFilter>. The deep-link pre-paint script
+ * lives in the root layout (filter-boot.ts).
  */
 export function GalleryFilterStyles({ slugs }: { slugs: string[] }) {
   const safe = slugs.filter((s) => /^[a-z0-9-]+$/.test(s));
   const css = safe.map((s) => `#${GRID_ID}[data-c="${s}"] [data-cat]:not([data-cat="${s}"]){display:none}`).join("");
-  const list = JSON.stringify(safe);
-  const js = `(function(){try{var c=new URLSearchParams(location.search).get("c");if(c&&${list}.indexOf(c)>-1){document.getElementById("${GRID_ID}").setAttribute("data-c",c);var s=document.getElementById("${SCOPE_ID}");if(s)s.setAttribute("data-c",c)}}catch(e){}})()`;
-  return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: css }} />
-      <script dangerouslySetInnerHTML={{ __html: js }} />
-    </>
-  );
+  return <style dangerouslySetInnerHTML={{ __html: css }} />;
 }

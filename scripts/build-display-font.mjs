@@ -14,7 +14,7 @@ import { readFileSync, writeFileSync } from "fs";
 import subsetFont from "subset-font";
 
 const SRC = "assets-src/fonts/DelaGothicOne-Regular.ttf";
-const OUT = "src/fonts/DelaGothicOne-Latin.woff2";
+const OUT = "public/fonts/dela-gothic-one-latin-v1.woff2";
 
 const ranges = [
   [0x20, 0x7e], // Basic Latin
