@@ -5,6 +5,10 @@ const withNextIntl = createNextIntlPlugin();
 const s3Bucket = process.env.S3_BUCKET || "gateaux-patience-media";
 const s3Region = process.env.S3_REGION || "eu-west-3";
 
+// Netlify sets CONTEXT at build time: production | branch-deploy | deploy-preview | dev.
+// Previews must never be indexed (they share the production content).
+const isPreviewBuild = Boolean(process.env.CONTEXT) && process.env.CONTEXT !== "production";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // experimental.inlineCss was measured and rejected (2026-10, LH mobile
@@ -18,6 +22,9 @@ const nextConfig = {
         source: "/fonts/:file*",
         headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
       },
+      ...(isPreviewBuild
+        ? [{ source: "/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] }]
+        : []),
     ];
   },
   images: {
