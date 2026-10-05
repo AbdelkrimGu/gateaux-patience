@@ -10,6 +10,8 @@ import { SWEETS_HERO_IMAGE } from "@/lib/universes-core";
   on the lettered board. All server HTML; the photo is the phone LCP.
   Signature moment of the page: the board's ring is piped (LetteredBoard's
   CSS animation, reduced-motion aware). Same grid as the home hero.
+  Desktop: the text column sits between two 1fr rows, so the tall board
+  centres it instead of stretching the gaps between H1, lead and CTA.
 */
 
 export async function SweetsHero({ locale, waHref }: { locale: Locale; waHref: string }) {
@@ -18,17 +20,17 @@ export async function SweetsHero({ locale, waHref }: { locale: Locale; waHref: s
   return (
     <section
       aria-labelledby="sweets-title"
-      className="wrap grid grid-cols-1 gap-3 pt-2 pb-12 desk:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] desk:content-center desk:gap-x-14 desk:gap-y-6 desk:pt-6 desk:pb-20"
+      className="wrap grid grid-cols-1 gap-3 pt-2 pb-12 desk:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] desk:grid-rows-[1fr_auto_auto_auto_1fr] desk:content-center desk:gap-x-14 desk:gap-y-6 desk:pt-6 desk:pb-20"
     >
       <h1
         id="sweets-title"
-        className="type-h1 max-w-[12ch] [@media(max-width:899px)_and_(max-height:760px)]:text-[34px] desk:max-w-none desk:self-end desk:text-[clamp(56px,5.8vw,86px)]"
+        className="type-h1 max-w-[12ch] [@media(max-width:899px)_and_(max-height:760px)]:text-[34px] desk:row-start-2 desk:max-w-none desk:text-[clamp(56px,5.8vw,86px)]"
       >
         {t("title")}
       </h1>
-      <p className="type-lead max-w-[38ch]">{t("lead")}</p>
+      <p className="type-lead max-w-[38ch] desk:row-start-3">{t("lead")}</p>
 
-      <figure data-gp-hero="sweets" className="m-0 mt-2 grid justify-items-center gap-3 desk:col-start-2 desk:row-span-3 desk:row-start-1 desk:mt-0 desk:self-center">
+      <figure data-gp-hero="sweets" className="m-0 mt-2 grid justify-items-center gap-3 desk:col-start-2 desk:row-span-5 desk:row-start-1 desk:mt-0 desk:self-center">
         <LetteredBoard
           lang={locale}
           message={t("ring")}
@@ -44,7 +46,7 @@ export async function SweetsHero({ locale, waHref }: { locale: Locale; waHref: s
         <figcaption className="type-meta -mt-3 max-w-[34ch] text-center text-ink-muted desk:-mt-1">{t("caption")}</figcaption>
       </figure>
 
-      <div className="grid gap-2 desk:flex desk:items-center desk:gap-6">
+      <div className="grid gap-2 desk:row-start-4 desk:mt-2 desk:flex desk:items-center desk:gap-6">
         <Button href={waHref} icon="whatsapp" block className="desk:w-auto desk:shrink-0">
           {t("cta")}
         </Button>

@@ -51,6 +51,7 @@
     font-size: 14px;
     line-height: 1.4;
     color: var(--color-ink-soft);
+    text-wrap: balance; /* no one-word orphan (AR at 360px) */
   }
   .subline:lang(ar) {
     font-size: 15px;
@@ -259,6 +260,13 @@
     }
     .name:lang(ar) {
       font-size: 32px;
+    }
+    /* Titles take two lines' room and sit on the second, so the
+       descriptions start on one line across the row (1- vs 2-line titles). */
+    .name {
+      display: flex;
+      align-items: flex-end;
+      min-height: 2lh;
     }
     .inside {
       font-size: 16px;

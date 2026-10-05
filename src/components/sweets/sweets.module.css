@@ -55,7 +55,9 @@
   }
 
   .name {
-    color: var(--piping, var(--color-framboise));
+    /* A touch of ink: the raw piping tones were just under AA on their
+       tints (cake pops 4.48, desserts 4.36: 10-review m2). */
+    color: color-mix(in oklab, var(--piping, var(--color-framboise)) 82%, var(--color-ink));
   }
 
   .text {

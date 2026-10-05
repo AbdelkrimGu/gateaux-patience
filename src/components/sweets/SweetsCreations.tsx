@@ -1,12 +1,14 @@
 import { getTranslations } from "next-intl/server";
 import { CakeCard } from "@/components/ui/CakeCard";
 import type { Cake, Locale } from "@/lib/db-types";
+import { SWEETS_HERO_IMAGE } from "@/lib/universes-core";
 import { cn } from "@/lib/utils";
 
 /*
   Real sweets already made: published items of the sweets-universe
-  categories, as gallery cards (07 §5). Renders nothing when there are none:
-  no "coming soon" emptiness. With one or two items the cards sit beside
+  categories, as gallery cards (07 §5). Renders nothing with fewer than two
+  (once the hero's photo is left out): no "coming soon" emptiness, no lone
+  card. With two items the cards sit beside
   the heading instead of leaving a mostly empty 4-column row.
 
   OWNER: add photos through Admin > Catégories, in a category whose
@@ -15,8 +17,13 @@ import { cn } from "@/lib/utils";
 
 const SIZES = "(min-width: 1240px) 290px, (min-width: 900px) 23vw, 46vw";
 
-export async function SweetsCreations({ locale, cakes }: { locale: Locale; cakes: Cake[] }) {
-  if (cakes.length === 0) return null;
+const fileOf = (src: string | undefined) => src?.split(/[?#]/)[0].split("/").pop() ?? "";
+
+export async function SweetsCreations({ locale, cakes: all }: { locale: Locale; cakes: Cake[] }) {
+  // Never repeat the hero's photo, and no lone card: below two, skip the section.
+  const heroFile = fileOf(SWEETS_HERO_IMAGE.src);
+  const cakes = all.filter((c) => fileOf(c.images[0]) !== heroFile);
+  if (cakes.length < 2) return null;
   const t = await getTranslations({ locale, namespace: "sweets.creations" });
   const few = cakes.length < 3;
 
