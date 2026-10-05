@@ -46,7 +46,7 @@ export function Header({ orderHref }: { orderHref?: string }) {
         <Wordmark layout="stacked" className="desk:hidden" />
         <Wordmark layout="inline" className="hidden desk:inline-flex" />
       </Link>
-      <div className="hidden desk:ms-8 desk:me-auto desk:block">
+      <div className="hidden desk:ms-8 desk:block">
         <HeaderSwitcher labels={universeLabels} label={tu("switcher_label")} />
       </div>
       <HeaderNav

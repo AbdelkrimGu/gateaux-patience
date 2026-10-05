@@ -121,7 +121,7 @@ export function HeaderNav(props: HeaderNavProps) {
 
   return (
     <>
-      <nav aria-label={props.navLabel} className="hidden desk:me-4 desk:flex desk:gap-7">
+      <nav aria-label={props.navLabel} className="hidden desk:ms-8 desk:me-auto desk:flex desk:gap-7">
         {props.deskItems.map((item) => (
           <Link
             key={item.href}
