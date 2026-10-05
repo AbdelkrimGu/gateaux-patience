@@ -19,3 +19,9 @@
   # GEMINI_API_KEY, ADMIN_PASSWORD — are intentionally NOT in this list.
   # The scanner will keep flagging them if they ever leak into the repo.
   SECRETS_SCAN_OMIT_KEYS = "MONGODB_DB,S3_REGION,S3_BUCKET,S3_MAX_UPLOAD_BYTES,NEXT_PUBLIC_SITE_URL"
+
+  # Next 16's Turbopack persistent build cache records the env values it was
+  # built with (for invalidation). It lives under .next/cache, is never
+  # deployed or served, and only travels in Netlify's private build cache.
+  # Scanning stays ON for everything else (served output and repo files).
+  SECRETS_SCAN_OMIT_PATHS = ".next/cache/**,.netlify/.next/cache/**"
