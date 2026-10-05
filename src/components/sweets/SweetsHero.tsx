@@ -28,7 +28,7 @@ export async function SweetsHero({ locale, waHref }: { locale: Locale; waHref: s
       </h1>
       <p className="type-lead max-w-[38ch]">{t("lead")}</p>
 
-      <figure className="m-0 mt-2 grid justify-items-center gap-3 desk:col-start-2 desk:row-span-3 desk:row-start-1 desk:mt-0 desk:self-center">
+      <figure data-gp-hero="sweets" className="m-0 mt-2 grid justify-items-center gap-3 desk:col-start-2 desk:row-span-3 desk:row-start-1 desk:mt-0 desk:self-center">
         <LetteredBoard
           lang={locale}
           message={t("ring")}

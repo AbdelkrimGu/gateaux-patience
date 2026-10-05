@@ -4,6 +4,8 @@
   direction of the universe → universe slide follows it (mirrored in RTL).
 */
 
+import { SWEETS_HERO_IMAGE } from "@/lib/universes-core";
+
 export const UNIVERSES = ["cakes", "sweets", "tiramisu"] as const;
 export type Universe = (typeof UNIVERSES)[number];
 
@@ -54,10 +56,7 @@ export const heroName = (u: Universe) => `gp-hero-${u}`;
  * the home card morphs into the identical /douceurs hero.
  * INTEGRATOR: replace with `import { SWEETS_HERO_IMAGE } from "@/lib/universes-core"`.
  */
-export const SWEETS_CARD_IMAGE = {
-  src: "/images/Cake10/FB_IMG_1778413270396.jpg",
-  position: "50% 45%",
-} as const;
+export const SWEETS_CARD_IMAGE = SWEETS_HERO_IMAGE;
 
 /** The cocoa-topped box of the /tiramisu stage (same pixels: the hero morph lands on it). */
 export const TIRAMISU_CARD_IMAGE = { src: "/images/tiramisu/boxes/cust-square.png", position: "50% 50%" } as const;

@@ -8,7 +8,7 @@ import { InstagramStrip } from "@/components/home/InstagramStrip";
 import { StickyOrderBar } from "@/components/layout/StickyOrderBar";
 import { UniversePage } from "@/components/universe/UniversePage";
 import { byPhotoQuality } from "@/components/gallery/catalog";
-import { getAllPublishedCakes } from "@/lib/cakes-data";
+import { getCakesUniverseCakes } from "@/lib/universes";
 import type { Cake } from "@/lib/db-types";
 import { CONTACT } from "@/lib/constants";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
@@ -30,7 +30,7 @@ function gateCake(cakes: Cake[]): Cake | null {
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const locale = asLocale((await params).locale);
-  const [t, cakes] = await Promise.all([getTranslations({ locale, namespace: "home" }), getAllPublishedCakes()]);
+  const [t, cakes] = await Promise.all([getTranslations({ locale, namespace: "home" }), getCakesUniverseCakes()]);
   // meta_title already contains the brand (no "%s | Gateaux Patience" template).
   return pageMetadata({
     locale,
@@ -45,7 +45,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
 
-  const cake = gateCake(await getAllPublishedCakes());
+  const cake = gateCake(await getCakesUniverseCakes());
 
   return (
     <UniversePage>

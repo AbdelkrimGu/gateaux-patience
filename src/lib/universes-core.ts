@@ -59,14 +59,3 @@ export const SWEETS_HERO_IMAGE = {
   /** Keeps the K-E-N-Z-A row in frame on square / round crops. */
   position: "50% 45%",
 } as const;
-
-/**
- * Real photos of a cake WITH matching sweets (same order, same table), for
- * pairing blocks. Both are in public/, both are portrait 718×960.
- */
-export const SET_PHOTOS = {
-  /** Rapunzel cake + six princess cupcakes, on her sequin backdrop. */
-  princess: { src: "/images/Cake13/FB_IMG_1778413431122.jpg", width: 718, height: 960 },
-  /** CoComelon cake + rainbow-swirl cupcakes, on her sequin backdrop. */
-  cocomelon: { src: "/images/Cake1/FB_IMG_1778412896351.jpg", width: 718, height: 960 },
-} as const;

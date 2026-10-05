@@ -45,13 +45,5 @@
   "creations": {
     "title": "Déjà préparées pour leurs fêtes",
     "intro": "Des douceurs faites pour de vraies commandes."
-  },
-  "set": {
-    "title": "Le gâteau et ses douceurs, assortis.",
-    "text": "Même thème, mêmes couleurs : demandez des cupcakes ou des cake pops assortis à votre gâteau, et ajoutez des tiramisus au prénom pour compléter la table.",
-    "photo_alt": "Gâteau Raiponce entouré de six cupcakes décorés de princesses",
-    "caption": "Un gâteau Raiponce et ses cupcakes princesses, préparés pour la même fête.",
-    "cakes": "Choisir le gâteau",
-    "tiramisu": "Composer des tiramisus"
   }
 }

@@ -5,7 +5,8 @@ import { StickyOrderBar } from "@/components/layout/StickyOrderBar";
 import { SweetsHero } from "@/components/sweets/SweetsHero";
 import { SweetsMenu } from "@/components/sweets/SweetsMenu";
 import { SweetsCreations } from "@/components/sweets/SweetsCreations";
-import { MakeItASet } from "@/components/sweets/MakeItASet";
+import { UniversePage } from "@/components/universe/UniversePage";
+import { UniverseCrossSell } from "@/components/universe/UniverseCrossSell";
 import { SITE_URL } from "@/lib/constants";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { getSweetsCakes, SWEETS_HERO_IMAGE } from "@/lib/universes";
@@ -15,7 +16,7 @@ import { buildWhatsAppUrl, SWEET_TYPES } from "@/lib/whatsapp";
   /douceurs: the sweets universe (07-intent-flow-spec §5).
     hero (real sweets photo on the lettered board) -> la carte des douceurs
     (one WhatsApp tile per sweet type) -> real sweets already made (hidden
-    when none) -> "make it a set" (cake + tiramisu) -> sticky order bar.
+    when none) -> cross-sell to the other two universes -> sticky order bar.
   ISR like the other catalogue pages; the admin save routes revalidate it.
 */
 export const revalidate = 300;
@@ -89,13 +90,13 @@ export default async function DouceursPage({ params }: { params: Promise<{ local
   ]).replace(/</g, "\\u003c");
 
   return (
-    <>
+    <UniversePage>
       <SweetsHero locale={locale} waHref={waHref} />
       <SweetsMenu locale={locale} otherHref={waHref} />
       <SweetsCreations locale={locale} cakes={cakes} />
-      <MakeItASet locale={locale} />
+      <UniverseCrossSell current="sweets" />
       <StickyOrderBar waHref={waHref} reveal="scroll" />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
-    </>
+    </UniversePage>
   );
 }
