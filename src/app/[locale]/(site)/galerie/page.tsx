@@ -1,4 +1,3 @@
-import { ViewTransition } from "react";
 import { preload } from "react-dom";
 import type { Metadata } from "next";
 import { getImageProps } from "next/image";
@@ -17,6 +16,8 @@ import { assertUniqueRefs } from "@/lib/cake-ref";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { ogImage, pageMetadata } from "@/lib/seo";
 import { ViewTransitionStyles } from "@/components/gallery/ViewTransitionStyles";
+import { UniversePage } from "@/components/universe/UniversePage";
+import { UniverseCrossSell } from "@/components/universe/UniverseCrossSell";
 
 // ISR (see src/lib/revalidate.ts). Keep this page static: the ?c= filter is
 // read on the client (GalleryFilter), never from `searchParams` here.
@@ -98,7 +99,7 @@ export default async function GalleriePage({ params }: { params: Promise<{ local
   }
 
   return (
-    <ViewTransition default="none">
+    <UniversePage>
       <ViewTransitionStyles />
       <div className="pb-16 desk:pb-24">
         <header className="wrap pt-6 pb-2 desk:pt-14 desk:pb-4">
@@ -166,7 +167,9 @@ export default async function GalleriePage({ params }: { params: Promise<{ local
             </div>
           </div>
         </section>
+
+        <UniverseCrossSell current="cakes" className="pb-0 desk:pb-0" />
       </div>
-    </ViewTransition>
+    </UniversePage>
   );
 }

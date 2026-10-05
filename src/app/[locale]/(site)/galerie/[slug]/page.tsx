@@ -1,4 +1,3 @@
-import { ViewTransition } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -21,6 +20,8 @@ import { isWedding, occasionFor, pipingFor, pipingStyle } from "@/lib/piping";
 import { cn } from "@/lib/utils";
 import styles from "@/components/gallery/gallery.module.css";
 import { ViewTransitionStyles } from "@/components/gallery/ViewTransitionStyles";
+import { UniversePage } from "@/components/universe/UniversePage";
+import { UniverseCrossSell } from "@/components/universe/UniverseCrossSell";
 
 // ISR: every published cake is prerendered at build (× 3 locales from the
 // [locale] layout); new slugs render on first visit, then stay cached.
@@ -266,7 +267,7 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
   ]).replace(/</g, "\\u003c");
 
   return (
-    <ViewTransition default="none">
+    <UniversePage>
       <ViewTransitionStyles />
       {ecrin ? (
         <EcrinSurface as="section" aria-label={title} className="pt-2 pb-14 desk:pt-8 desk:pb-24">
@@ -311,7 +312,9 @@ export default async function CakeDetailPage({ params }: { params: Params }) {
         </section>
       )}
 
+      <UniverseCrossSell current="cakes" className="pt-0 desk:pt-0" />
+
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
-    </ViewTransition>
+    </UniversePage>
   );
 }

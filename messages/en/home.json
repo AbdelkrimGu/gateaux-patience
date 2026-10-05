@@ -1,34 +1,19 @@
 {
   "meta_title": "Gateaux Patience | Custom cakes in Sidi Bel Abbès",
-  "meta_desc": "Handmade custom cakes in Sidi Bel Abbès since {year}: birthdays, engagements, weddings, new babies and tiramisu with a name on it. Order on WhatsApp.",
-  "hero": {
-    "title": "The cake with their name on it.",
-    "lead": "Handmade in Sidi Bel Abbès since {year}, for birthdays, engagements, weddings and new babies.",
-    "caption": "The greeting and the name you type are written around the cake.",
-    "ref_aria": "See this cake, ref. {ref}",
-    "note": "The name goes into your message.",
-    "see_creations": "See the cakes"
+  "meta_desc": "Custom cakes, party sweets and tiramisu with a name on it, handmade in Sidi Bel Abbès since {year}. Order on WhatsApp.",
+  "gate": {
+    "title": "What are you craving?",
+    "subline": "Handmade to order in Sidi Bel Abbès.",
+    "choices_label": "Choose what you are craving"
   },
-  "make": {
-    "title": "What we make",
-    "cakes_title": "Custom cakes",
-    "cakes_text": "Characters, numbers, names: we start from your idea or a photo and make it in sugar.",
-    "cakes_action": "See the gallery",
-    "tiramisu_title": "Tiramisu with their name",
-    "tiramisu_text": "The name in white-chocolate letters, in a heart, oval or square box.",
-    "tiramisu_action": "Design my box",
-    "tiramisu_sample": "MOM",
-    "wedding_title": "Weddings & engagements",
-    "wedding_text": "For the proposal, the engagement or the wedding: a cake in your colors, with the words you choose.",
-    "wedding_action": "See wedding cakes"
-  },
-  "creations": {
-    "title": "Celebrated in Sidi Bel Abbès",
-    "all": "See all our cakes"
+  "brand": {
+    "title": "One kitchen, three ways to celebrate.",
+    "text": "Every order is made by hand in Sidi Bel Abbès, with the name, the date and the colors you choose.",
+    "since": "Since {year}"
   },
   "steps": {
     "title": "Order in three messages",
-    "s1": "Pick a design from the gallery, or send us your idea as a photo.",
+    "s1": "Pick a cake, some sweets or a tiramisu, or send us your idea as a photo.",
     "s2": "On WhatsApp, tell us the date, the number of guests and the name to write.",
     "s3": "Together we settle the design, the price, and pickup or delivery.",
     "lead_time": "Order at least {days, plural, one {# day} other {# days}} before the date.",

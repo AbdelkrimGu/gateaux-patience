@@ -57,7 +57,12 @@ export function Footer() {
           <ul className="grid">
             <li>
               <Link href="/galerie" className={linkClass}>
-                {t("nav.creations")}
+                {t("nav.cakes")}
+              </Link>
+            </li>
+            <li>
+              <Link href="/douceurs" className={linkClass}>
+                {t("nav.sweets")}
               </Link>
             </li>
             <li>

@@ -27,8 +27,26 @@
         animation-range: 420px 520px;
       }
       /* Keyboard users tabbing into it get it on screen. */
-      .reveal:focus-within {
+      .reveal:focus-within,
+      .gate:focus-within {
         animation: none;
+      }
+    }
+  }
+
+  /* Home (intent gate): the bar must never sit over the third card. Same
+     scroll reveal; without scroll timelines or with reduced motion it stays
+     hidden (the steps band and the header carry the order action). */
+  .gate {
+    visibility: hidden;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: scroll()) {
+      .gate {
+        visibility: visible;
+        animation: gp-bar-in linear both;
+        animation-timeline: scroll(root);
+        animation-range: 420px 520px;
       }
     }
   }

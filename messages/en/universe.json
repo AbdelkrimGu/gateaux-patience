@@ -1,0 +1,24 @@
+{
+  "switcher_label": "What we make",
+  "short": {
+    "cakes": "Cakes",
+    "sweets": "Sweets",
+    "tiramisu": "Tiramisu"
+  },
+  "title": {
+    "cakes": "Custom cakes",
+    "sweets": "Party sweets",
+    "tiramisu": "Tiramisu"
+  },
+  "inside": {
+    "cakes": "Birthdays, engagements, weddings",
+    "sweets": "Cupcakes, cake pops, cakesicles",
+    "tiramisu": "A name in white chocolate"
+  },
+  "cross_title": "You might also like",
+  "cross_lead": "Everything can go in the same message.",
+  "resume": {
+    "universe": "Pick up where you left off: {universe}",
+    "tiramisu": "Back to your tiramisu: {count, plural, one {# box} other {# boxes}}"
+  }
+}

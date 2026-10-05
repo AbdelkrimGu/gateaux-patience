@@ -1,0 +1,142 @@
+/* Cross-sell cards: the home gate's colour fields and scalloped photos, in
+   a compact size. Phone: two columns, photo on top. Desktop: photo at the
+   inline end. Layered so utilities passed via className still win. */
+@layer components {
+  .list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 24px;
+  }
+  .card {
+    --s: 18px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border-radius: 24px;
+    overflow: hidden;
+    background: var(--field);
+    color: var(--ink);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cakes {
+    --field: var(--color-dragee);
+    --ink: var(--color-framboise);
+    --text: var(--color-ink-soft);
+  }
+  .sweets {
+    --field: var(--color-t-menthe);
+    --ink: #0f6b5b;
+    --text: var(--color-ink-soft);
+  }
+  .tiramisu {
+    --field: var(--color-cacao);
+    --ink: var(--color-mascarpone);
+    --text: rgb(243 217 184 / 0.86);
+  }
+  .media {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    container-type: size;
+    -webkit-mask:
+      radial-gradient(circle calc(var(--s) / 2), #000 97%, #0000) 0 100% / var(--s) var(--s) repeat-x,
+      linear-gradient(#000 0 0) 0 0 / 100% calc(100% - var(--s) / 2) no-repeat;
+    mask:
+      radial-gradient(circle calc(var(--s) / 2), #000 97%, #0000) 0 100% / var(--s) var(--s) repeat-x,
+      linear-gradient(#000 0 0) 0 0 / 100% calc(100% - var(--s) / 2) no-repeat;
+  }
+  .copy {
+    display: block;
+    padding: 10px 14px 0;
+  }
+  .name {
+    color: var(--ink);
+  }
+  .inside {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    line-height: 1.35;
+    color: var(--text);
+  }
+  .inside:lang(ar) {
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .arrow {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin: auto 14px 14px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--field);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .card {
+      transition: transform var(--d-fast) var(--ease-out);
+    }
+    .card:active {
+      transform: scale(0.985);
+    }
+  }
+
+  @media (min-width: 900px) {
+    .list {
+      gap: 24px;
+      margin-top: 36px;
+    }
+    .card {
+      --s: 24px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 42%;
+      grid-template-rows: minmax(0, 1fr) auto;
+      min-height: 240px;
+      border-radius: 32px;
+    }
+    .media {
+      grid-column: 2;
+      grid-row: 1 / 3;
+      aspect-ratio: auto;
+      -webkit-mask:
+        radial-gradient(circle calc(var(--s) / 2), #000 97%, #0000) 0 0 / var(--s) var(--s) repeat-y,
+        linear-gradient(#000 0 0) calc(var(--s) / 2) 0 / calc(100% - var(--s) / 2) 100% no-repeat;
+      mask:
+        radial-gradient(circle calc(var(--s) / 2), #000 97%, #0000) 0 0 / var(--s) var(--s) repeat-y,
+        linear-gradient(#000 0 0) calc(var(--s) / 2) 0 / calc(100% - var(--s) / 2) 100% no-repeat;
+    }
+    :global([dir="rtl"]) .media {
+      -webkit-mask:
+        radial-gradient(circle calc(var(--s) / 2), #000 97%, #0000) 100% 0 / var(--s) var(--s) repeat-y,
+        linear-gradient(#000 0 0) 0 0 / calc(100% - var(--s) / 2) 100% no-repeat;
+      mask:
+        radial-gradient(circle calc(var(--s) / 2), #000 97%, #0000) 100% 0 / var(--s) var(--s) repeat-y,
+        linear-gradient(#000 0 0) 0 0 / calc(100% - var(--s) / 2) 100% no-repeat;
+    }
+    .copy {
+      grid-column: 1;
+      grid-row: 1;
+      padding: 28px 16px 0;
+      padding-inline-start: 28px;
+    }
+    .inside {
+      font-size: 15px;
+      margin-top: 8px;
+    }
+    .inside:lang(ar) {
+      font-size: 16px;
+    }
+    .arrow {
+      grid-column: 1;
+      grid-row: 2;
+      width: 48px;
+      height: 48px;
+      margin: 16px 0 26px;
+      margin-inline-start: 28px;
+    }
+  }
+}

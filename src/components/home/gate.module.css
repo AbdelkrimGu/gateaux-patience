@@ -1,0 +1,282 @@
+/*
+  The intent gate (07 §3): the question + three choice cards, all inside the
+  first phone viewport (390×844 and 360×740, every locale) with no scroll.
+
+  Phone: the gate fills the small viewport under the header (svh, so the
+  URL bar collapsing never resizes it: no CLS). The three cards share the
+  height left after the question; each is a colour field with the photo
+  flush to its inline end, cut with a scalloped edge like her cake boards.
+  Desktop (≥900): three tall cards side by side, photo on top with the
+  scallop on its lower edge.
+
+  Colour fields come from the photos and the palette: dragée for cakes
+  (her boards), mint for sweets (complements the pink cakesicles), cocoa for
+  tiramisu (white chocolate on cocoa). Titles are AA on their field.
+*/
+@layer components {
+  .gate {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100svh - var(--header-h));
+    padding-block: 2px 12px;
+  }
+
+  .title {
+    font-size: 34px;
+    max-width: 14ch;
+  }
+  .title:lang(ar) {
+    font-size: 40px;
+    max-width: none;
+  }
+  @media (max-height: 760px) and (max-width: 899px) {
+    .title {
+      font-size: 31px;
+    }
+    .title:lang(ar) {
+      font-size: 36px;
+    }
+  }
+
+  /* Subline, or the returning-visitor chip in the very same box (no CLS). */
+  .slot {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    margin-block: 2px 6px;
+    overflow: hidden;
+  }
+
+  .subline {
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--color-ink-soft);
+  }
+  .subline:lang(ar) {
+    font-size: 15px;
+  }
+
+  .list {
+    flex: 1;
+    display: grid;
+    grid-template-rows: repeat(3, minmax(124px, 1fr));
+    gap: 10px;
+    max-height: 660px;
+  }
+  .list > li {
+    display: flex;
+    min-height: 0;
+  }
+
+  .card {
+    --s: 22px; /* scallop size */
+    --media: 41%;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--media);
+    grid-template-rows: minmax(0, 1fr);
+    column-gap: 30px;
+    width: 100%;
+    border-radius: 28px;
+    overflow: hidden;
+    background: var(--field);
+    color: var(--ink);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cakes {
+    --field: var(--color-dragee);
+    --ink: var(--color-framboise);
+    --text: var(--color-ink-soft);
+  }
+  .sweets {
+    --field: var(--color-t-menthe);
+    --ink: #0f6b5b;
+    --text: var(--color-ink-soft);
+  }
+  .tiramisu {
+    --field: var(--color-cacao);
+    --ink: var(--color-mascarpone);
+    --text: rgb(243 217 184 / 0.86);
+  }
+
+  .copy {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    padding-block: 12px;
+    padding-inline-start: 18px;
+    min-width: 0;
+  }
+  .name:lang(ar) {
+    font-size: 26px;
+    line-height: 1.25;
+  }
+  .name {
+    display: block;
+    color: var(--ink);
+  }
+  .inside {
+    display: block;
+    margin-top: 6px;
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--text);
+  }
+  .inside:lang(ar) {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  /* Phone: the arrow sits on the seam between the colour field and the
+     scalloped photo, like a button on a ribbon. */
+  .arrow {
+    position: absolute;
+    z-index: 1;
+    bottom: 12px;
+    inset-inline-end: calc(var(--media) - 22px);
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--field);
+    box-shadow: 0 0 0 4px var(--field);
+  }
+
+  .media {
+    position: relative;
+    grid-column: 2;
+    grid-row: 1 / 3;
+    overflow: hidden;
+    container-type: size;
+    background: var(--field);
+    /* Convex scallops along the inline-start edge: a column of discs plus
+       the rest of the box. */
+    -webkit-mask:
+      radial-gradient(circle calc(var(--s) / 2), #000 97%, #0000) 0 0 / var(--s) var(--s) repeat-y,
+      linear-gradient(#000 0 0) calc(var(--s) / 2) 0 / calc(100% - var(--s) / 2) 100% no-repeat;
+    mask:
+      radial-gradient(circle calc(var(--s) / 2), #000 97%, #0000) 0 0 / var(--s) var(--s) repeat-y,
+      linear-gradient(#000 0 0) calc(var(--s) / 2) 0 / calc(100% - var(--s) / 2) 100% no-repeat;
+  }
+  :global([dir="rtl"]) .media {
+    -webkit-mask:
+      radial-gradient(circle calc(var(--s) / 2), #000 97%, #0000) 100% 0 / var(--s) var(--s) repeat-y,
+      linear-gradient(#000 0 0) 0 0 / calc(100% - var(--s) / 2) 100% no-repeat;
+    mask:
+      radial-gradient(circle calc(var(--s) / 2), #000 97%, #0000) 100% 0 / var(--s) var(--s) repeat-y,
+      linear-gradient(#000 0 0) 0 0 / calc(100% - var(--s) / 2) 100% no-repeat;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .card {
+      transition: transform var(--d-fast) var(--ease-out);
+    }
+    .card:active {
+      transform: scale(0.985);
+    }
+    .arrow {
+      transition: transform var(--d-base) var(--ease-out);
+    }
+    .card:hover .arrow,
+    .card:focus-visible .arrow {
+      transform: translateX(3px);
+    }
+    :global([dir="rtl"]) .card:hover .arrow,
+    :global([dir="rtl"]) .card:focus-visible .arrow {
+      transform: translateX(-3px);
+    }
+  }
+
+  /* --------------------------------------------------------- desktop */
+  @media (min-width: 900px) {
+    .gate {
+      min-height: min(calc(100svh - var(--header-h)), 980px);
+      padding-block: 8px 40px;
+    }
+    .title,
+    .title:lang(ar) {
+      font-size: clamp(52px, 4.4vw, 68px);
+      max-width: none;
+    }
+    .title:lang(ar) {
+      font-size: clamp(58px, 5vw, 76px);
+    }
+    .slot {
+      margin-block: 4px 18px;
+    }
+    .subline {
+      font-size: 18px;
+    }
+    .subline:lang(ar) {
+      font-size: 19px;
+    }
+    .list {
+      grid-template-rows: none;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 24px;
+      max-height: 720px;
+    }
+    .card {
+      --s: 30px;
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-rows: minmax(0, 1fr) auto;
+      column-gap: 16px;
+      border-radius: 36px;
+    }
+    .media {
+      grid-column: 1 / 3;
+      grid-row: 1;
+      min-height: 220px;
+      -webkit-mask:
+        radial-gradient(circle calc(var(--s) / 2), #000 97%, #0000) 0 100% / var(--s) var(--s) repeat-x,
+        linear-gradient(#000 0 0) 0 0 / 100% calc(100% - var(--s) / 2) no-repeat;
+      mask:
+        radial-gradient(circle calc(var(--s) / 2), #000 97%, #0000) 0 100% / var(--s) var(--s) repeat-x,
+        linear-gradient(#000 0 0) 0 0 / 100% calc(100% - var(--s) / 2) no-repeat;
+    }
+    :global([dir="rtl"]) .media {
+      -webkit-mask:
+        radial-gradient(circle calc(var(--s) / 2), #000 97%, #0000) 0 100% / var(--s) var(--s) repeat-x,
+        linear-gradient(#000 0 0) 0 0 / 100% calc(100% - var(--s) / 2) no-repeat;
+      mask:
+        radial-gradient(circle calc(var(--s) / 2), #000 97%, #0000) 0 100% / var(--s) var(--s) repeat-x,
+        linear-gradient(#000 0 0) 0 0 / 100% calc(100% - var(--s) / 2) no-repeat;
+    }
+    .copy {
+      grid-column: 1;
+      grid-row: 2;
+      align-self: start;
+      /* Same height on the three cards (two lines of title + two of
+         text), so the scalloped seams line up across the row. */
+      min-height: 158px;
+      padding: 18px 0 30px;
+      padding-inline-start: 28px;
+    }
+    .copy:lang(ar) {
+      min-height: 182px;
+    }
+    .name:lang(ar) {
+      font-size: 32px;
+    }
+    .inside {
+      font-size: 16px;
+      margin-top: 8px;
+    }
+    .inside:lang(ar) {
+      font-size: 17px;
+    }
+    .arrow {
+      position: static;
+      grid-column: 2;
+      grid-row: 2;
+      align-self: end;
+      width: 52px;
+      height: 52px;
+      margin: 0 0 28px;
+      margin-inline-end: 24px;
+      box-shadow: none;
+    }
+  }
+}

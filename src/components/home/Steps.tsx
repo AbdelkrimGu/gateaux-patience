@@ -2,7 +2,8 @@ import { getTranslations } from "next-intl/server";
 import { EcrinSurface } from "@/components/ui/EcrinSurface";
 import type { Locale } from "@/lib/db-types";
 import { LEAD_TIME_DAYS } from "@/lib/business";
-import { LiveWhatsAppButton } from "./LiveOrder";
+import { Button } from "@/components/ui/Button";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 /*
   How to order (B §7 steps band, on the écrin). A real sequence, so it is
@@ -36,9 +37,9 @@ export async function Steps({ locale }: { locale: Locale }) {
         {LEAD_TIME_DAYS !== null && (
           <p className="mt-8 font-medium text-dragee">{t("lead_time", { days: LEAD_TIME_DAYS })}</p>
         )}
-        <LiveWhatsAppButton locale={locale} className="mt-10 w-full desk:w-auto">
+        <Button href={buildWhatsAppUrl({ locale, kind: "general" })} icon="whatsapp" className="mt-10 w-full desk:w-auto">
           {t("cta")}
-        </LiveWhatsAppButton>
+        </Button>
       </div>
     </EcrinSurface>
   );

@@ -1,35 +1,57 @@
 import { useLocale, useTranslations } from "next-intl";
 import { LocaleLink as Link } from "@/i18n/LocaleLink";
 import { Wordmark } from "@/components/ui/Wordmark";
+import { HeaderSwitcher } from "@/components/universe/UniverseBar";
+import { UNIVERSES, type Universe } from "@/components/universe/model";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { PHONE_E164, PHONE_LOCAL } from "@/lib/constants";
 import { HeaderNav } from "./HeaderNav";
 
 /*
-  Site header (B §7): crown + wordmark, desktop links + "Commander" pill,
-  FR / ع / EN circles, 44px hamburger on mobile. Static (not sticky): on
-  phones the StickyOrderBar carries the order action.
+  Site header (B §7): crown + wordmark, FR / ع / EN circles, 44px hamburger
+  on mobile. Static (not sticky): on phones the universe strip
+  (UniverseBar, rendered right below by SiteChrome) sticks instead, and the
+  StickyOrderBar carries the order action.
+  Desktop: the universe switcher [Gâteaux | Douceurs | Tiramisu] sits next
+  to the wordmark, then "Mariages", "Comment commander" and the
+  "Commander" pill.
+  Named for view transitions (gp-site-header): it stays put while pages
+  slide under it (universe/transitions-css.ts).
 */
 
 export function Header({ orderHref }: { orderHref?: string }) {
   const t = useTranslations("common");
+  const tu = useTranslations("universe");
   const locale = useLocale();
 
+  const universeLabels = Object.fromEntries(UNIVERSES.map((u) => [u, tu(`short.${u}`)])) as Record<Universe, string>;
+
+  // Mobile menu: the three universes first, then the rest.
   const items = [
-    { href: "/galerie", label: t("nav.creations") },
-    { href: "/tiramisu", label: t("nav.tiramisu") },
+    { href: "/galerie", label: tu("title.cakes") },
+    { href: "/douceurs", label: tu("title.sweets") },
+    { href: "/tiramisu", label: tu("title.tiramisu") },
     { href: "/galerie?c=wedding", label: t("nav.weddings") },
+    { href: "/#commander", label: t("nav.how_to_order") },
+  ];
+  // Desktop: the switcher carries the universes; these follow it.
+  const deskItems = [
+    { href: "/galerie?c=wedding", label: t("nav.weddings"), wide: true },
     { href: "/#commander", label: t("nav.how_to_order") },
   ];
 
   return (
-    <header className="wrap flex h-(--header-h) items-center gap-3">
-      <Link href="/" aria-label={t("nav.home_aria")} className="me-auto rounded-lg no-underline">
+    <header className="wrap flex h-(--header-h) items-center gap-3 [view-transition-name:gp-site-header]">
+      <Link href="/" aria-label={t("nav.home_aria")} className="me-auto rounded-lg no-underline desk:me-0">
         <Wordmark layout="stacked" className="desk:hidden" />
         <Wordmark layout="inline" className="hidden desk:inline-flex" />
       </Link>
+      <div className="hidden desk:ms-8 desk:block">
+        <HeaderSwitcher labels={universeLabels} label={tu("switcher_label")} />
+      </div>
       <HeaderNav
         items={items}
+        deskItems={deskItems}
         navLabel={t("nav.primary_label")}
         langLabel={t("lang.label")}
         langs={{

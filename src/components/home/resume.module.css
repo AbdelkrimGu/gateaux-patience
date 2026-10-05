@@ -1,0 +1,49 @@
+@layer components {
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 100%;
+    min-height: 40px;
+    padding-inline: 14px 12px;
+    border-radius: 999px;
+    background: var(--color-white);
+    box-shadow: inset 0 0 0 1.5px var(--color-hairline);
+    color: var(--color-paillette);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.2;
+    text-decoration: none;
+  }
+  .chip:lang(ar) {
+    font-size: 15px;
+  }
+  .chip:hover {
+    box-shadow: inset 0 0 0 1.5px var(--color-paillette);
+  }
+  .dot {
+    flex: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--color-framboise);
+  }
+  .chip[data-u="sweets"] .dot {
+    background: var(--color-p-menthe);
+  }
+  .chip[data-u="tiramisu"] .dot {
+    background: var(--color-cacao);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .chip {
+      animation: gp-chip-in var(--d-base) var(--ease-out) both;
+    }
+  }
+}
+
+@keyframes gp-chip-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}

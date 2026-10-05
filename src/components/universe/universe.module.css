@@ -1,0 +1,141 @@
+/* Universe switcher, the phone strip that carries it, and the cross-sell cards.
+   Layered so Tailwind utilities passed via className still win. */
+@layer components {
+  /* ------------------------------------------------------------ switcher */
+  .switcher {
+    --pad: 4px;
+    --dir: 1;
+    position: relative;
+    isolation: isolate;
+    display: block;
+    padding: var(--pad);
+    border-radius: 999px;
+    background: var(--color-white);
+    box-shadow: inset 0 0 0 1.5px var(--color-hairline);
+  }
+  :global([dir="rtl"]) .switcher {
+    --dir: -1;
+  }
+  .switcher[data-u="cakes"] {
+    --u-bg: var(--color-framboise);
+    --u-ink: var(--color-white);
+  }
+  .switcher[data-u="sweets"] {
+    --u-bg: var(--color-p-menthe);
+    --u-ink: var(--color-white);
+  }
+  .switcher[data-u="tiramisu"] {
+    --u-bg: var(--color-cacao);
+    --u-ink: var(--color-mascarpone);
+  }
+
+  .track {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .segment {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding-inline: 8px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.1;
+    white-space: nowrap;
+    color: var(--color-paillette);
+    text-decoration: none;
+    transition: color var(--d-base) var(--ease-out);
+  }
+  .segment:lang(ar),
+  :global([lang="ar"]) .segment {
+    font-size: 16px;
+  }
+  .segment:not([data-on]):hover {
+    color: var(--color-framboise);
+  }
+  .segment[data-on] {
+    color: transparent;
+  }
+  .indicator {
+    position: absolute;
+    z-index: 0;
+    inset-block: var(--pad);
+    inset-inline-start: var(--pad);
+    width: calc((100% - 2 * var(--pad)) / 3);
+    border-radius: 999px;
+    background: var(--u-bg);
+    transform: translateX(calc(var(--i) * 100% * var(--dir)));
+    /* Carries the current label itself (the link's own text goes
+       transparent), so in a page transition the label travels with the
+       pill instead of hiding under it. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.1;
+    white-space: nowrap;
+    color: var(--u-ink);
+    pointer-events: none;
+  }
+  :global([lang="ar"]) .indicator {
+    font-size: 16px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .indicator {
+      transition:
+        transform var(--d-base) var(--ease-out),
+        background-color 120ms linear 120ms;
+    }
+  }
+
+  .header {
+    width: 360px;
+  }
+  .header .segment {
+    min-height: 40px;
+  }
+
+  /* ------------------------------------------- phone strip (sticky, top) */
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    padding: 6px var(--gutter) 8px;
+    background: var(--color-sucre);
+  }
+  .bar::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 1px;
+    background: rgb(22 19 29 / 0.08);
+    opacity: 0;
+    pointer-events: none;
+  }
+  @supports (animation-timeline: scroll()) {
+    .bar::after {
+      animation: gp-bar-line linear both;
+      animation-timeline: scroll(root);
+      animation-range: 40px 90px;
+    }
+  }
+  @media (min-width: 900px) {
+    .bar {
+      display: none;
+    }
+  }
+}
+
+@keyframes gp-bar-line {
+  to {
+    opacity: 1;
+  }
+}
