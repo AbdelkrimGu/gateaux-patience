@@ -30,12 +30,26 @@ const CSS = `
    are positioned in physical px anyway. */
 ::view-transition { right: auto; left: 0; }
 
-::view-transition-group(gp-site-header),
-::view-transition-group(gp-switch-bar) { animation: none; z-index: 40; }
+/* Header and phone strip (10-review M2). Leaving a scrolled page, the old
+   header is off screen and the old strip is stuck at the top, while the
+   new page starts at scroll 0. So: the header never moves (its group does
+   not animate) but fades in instead of popping over the old content; the
+   strip's group glides from its stuck spot to its resting place, in step
+   with the indicator. Only the new snapshots are drawn. */
+::view-transition-group(gp-site-header) { animation: none; z-index: 40; }
+::view-transition-group(gp-switch-bar) {
+  z-index: 40;
+  animation-duration: 380ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
 ::view-transition-old(gp-site-header),
 ::view-transition-old(gp-switch-bar) { display: none; }
-::view-transition-new(gp-site-header),
+::view-transition-new(gp-site-header) { animation: gp-vt-fade-in 180ms linear both; }
 ::view-transition-new(gp-switch-bar) { animation: none; }
+/* Gate -> universe: no strip on the gate, so it arrives (fades in) instead
+   of appearing over the gate's H1 at the first frame. */
+::view-transition-new(gp-switch-bar):only-child { animation: gp-vt-fade-in 200ms linear 120ms both; }
+::view-transition-new(gp-switch-ind):only-child { animation: gp-vt-fade-in 200ms linear 120ms both; }
 
 ::view-transition-group(gp-switch-ind) {
   z-index: 41;
@@ -72,8 +86,13 @@ html[dir="rtl"]::view-transition-new(.gp-back) { animation-name: gp-vt-fade-in, 
 }
 ::view-transition-old(.gp-hero),
 ::view-transition-new(.gp-hero) { height: 100%; object-fit: cover; }
-::view-transition-old(.gp-hero) { animation: gp-vt-fade-out 240ms linear both; }
-::view-transition-new(.gp-hero) { animation: gp-vt-fade-in 260ms linear 60ms both; }
+/* The arriving picture stays opaque underneath; only the card's picture
+   fades off it (normal blending: plus-lighter / two half-transparent
+   layers muddied the cocoa card over the dark stage, 10-review m1). */
+::view-transition-old(.gp-hero),
+::view-transition-new(.gp-hero) { mix-blend-mode: normal; }
+::view-transition-old(.gp-hero) { z-index: 1; animation: gp-vt-fade-out 260ms linear 40ms both; }
+::view-transition-new(.gp-hero) { animation: none; opacity: 1; }
 
 @keyframes gp-vt-to-start { to { transform: translateX(-32px); } }
 @keyframes gp-vt-to-end { to { transform: translateX(32px); } }

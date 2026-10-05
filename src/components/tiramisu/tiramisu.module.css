@@ -67,6 +67,11 @@
       animation: gp-puff 560ms var(--ease-out) both;
       animation-delay: calc(350ms + var(--i, 0) * 60ms + 300ms);
     }
+    /* Arrived from the home card (hero-morph.ts): the word is already there. */
+    :global([data-gp-arrived]) .letter,
+    :global([data-gp-arrived]) .letter::after {
+      animation: none;
+    }
   }
 
   /* ---- scalloped receipt edge (the one shape motif, B §9) */

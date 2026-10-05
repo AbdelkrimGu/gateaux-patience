@@ -59,7 +59,12 @@ export function landHero(u: Universe) {
   if (pending !== u || Date.now() - pendingAt > 8000) return;
   pending = null;
   const el = landingFor(u);
-  if (el) name(el, u);
+  if (el) {
+    name(el, u);
+    // The card already showed this picture (the tiramisu word, typed): the
+    // landing skips its own intro (tiramisu.module.css), no double animation.
+    el.dataset.gpArrived = "";
+  }
   // The transition captures the names synchronously after this commit;
   // drop them once it is over so later navigations start clean.
   window.setTimeout(clearHeroNames, 1200);

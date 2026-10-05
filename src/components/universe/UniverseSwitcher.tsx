@@ -14,11 +14,13 @@ import styles from "./universe.module.css";
   indicator in that universe's colour (pink, mint, cocoa: the colour fields
   of the home cards).
 
-  - The indicator moves on tap (optimistic, CSS transform), before the
-    route has even answered, so the control feels instant on 4G.
-  - It also has a view-transition-name, so across pages that render their
-    own switcher (site chrome -> the tiramisu wizard) it glides from one
-    position to the other inside the page transition.
+  - With View Transitions, the indicator has a view-transition-name and
+    the page transition glides it from the old spot to the new one (also
+    across pages that render their own switcher: site chrome -> the
+    tiramisu wizard); its label crossfades on the way. The three routes are
+    prefetched at idle, so the commit is near-instant.
+  - Without them, it moves on tap (optimistic CSS transform), before the
+    route has even answered.
   - Each link tags its navigation forward/back by switcher order
     (Link transitionTypes); transitions-css.ts slides the page that
     way, mirrored in RTL.
@@ -57,8 +59,14 @@ export function UniverseSwitcher({ current, labels, label, className, size = "st
     >
       {shown && (
         // Named inline: a CSS module would hash the view-transition-name.
+        // The three labels are stacked: the target's fades in mid-glide
+        // (not before the pill moves).
         <span aria-hidden="true" className={styles.indicator} style={{ viewTransitionName: "gp-switch-ind" }}>
-          {labels[shown]}
+          {UNIVERSES.map((u) => (
+            <span key={u} className={styles.indLabel} data-on={u === shown ? "" : undefined}>
+              {labels[u]}
+            </span>
+          ))}
         </span>
       )}
       <ul className={styles.track}>
@@ -72,7 +80,10 @@ export function UniverseSwitcher({ current, labels, label, className, size = "st
               onClick={(e) => {
                 if (u === current) return;
                 if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-                setPending({ to: u, from: current });
+                // With View Transitions the page transition glides the pill
+                // (old spot -> new spot). An optimistic CSS glide on top of it
+                // got snapshotted mid-way and jumped at the end (10-review M2).
+                if (!("startViewTransition" in document)) setPending({ to: u, from: current });
                 emitIntent(u, current ?? "home");
               }}
               className={styles.segment}

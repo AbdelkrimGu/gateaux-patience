@@ -73,9 +73,8 @@
     /* Carries the current label itself (the link's own text goes
        transparent), so in a page transition the label travels with the
        pill instead of hiding under it. */
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    place-items: center;
     padding-inline: 8px;
     font-size: 15px;
     font-weight: 500;
@@ -87,11 +86,32 @@
   :global([lang="ar"]) .indicator {
     font-size: 16px;
   }
+  .indLabel {
+    grid-area: 1 / 1;
+    opacity: 0;
+  }
+  .indLabel[data-on] {
+    opacity: 1;
+  }
   @media (prefers-reduced-motion: no-preference) {
     .indicator {
       transition:
         transform var(--d-base) var(--ease-out),
         background-color 120ms linear 120ms;
+    }
+    /* View Transitions glide the pill (transitions-css.ts): a CSS glide
+       here would be snapshotted mid-way. Colour still eases. */
+    @supports (view-transition-name: none) {
+      .indicator {
+        transition: background-color 120ms linear 120ms;
+      }
+    }
+    /* Old label out at once, new one in once the pill is under way. */
+    .indLabel {
+      transition: opacity 90ms linear;
+    }
+    .indLabel[data-on] {
+      transition: opacity 150ms linear 130ms;
     }
   }
 
