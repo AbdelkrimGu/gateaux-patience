@@ -14,6 +14,7 @@ import {
   Plus,
   ChevronRight,
   Tag,
+  Calculator,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,7 @@ const NAV = [
   { href: "/admin/cakes", label: "Gâteaux", icon: CakeSlice, exact: false },
   { href: "/admin/categories", label: "Catégories", icon: Tag, exact: false },
   { href: "/admin/orders", label: "Commandes", icon: ShoppingBag, exact: false },
+  { href: "/admin/pricing", label: "Calcul des prix", icon: Calculator, exact: false },
 ];
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
@@ -145,7 +147,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        {/* scroll-pb: a focused field is scrolled clear of sticky bottom bars (pricing result bar). */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 scroll-pb-32">
           {children}
         </main>
       </div>

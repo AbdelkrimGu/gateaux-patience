@@ -1,5 +1,27 @@
 import { MongoClient, Db, Collection } from "mongodb";
 import type { Cake, Category, Order } from "./db-types";
+import type {
+  CostItem,
+  PriceQuote,
+  PriceTemplate,
+  PricingSettings,
+  TemplatePriceChange,
+} from "./pricing-types";
+
+/** The pricing settings live in a single document with this id. */
+export type PricingSettingsDoc = PricingSettings & { id: "default" };
+
+/**
+ * Server-only fields, never sent to the client:
+ * - `pricingRev`: renewed on every write of the sheet (save or automatic
+ *   re-pricing), so concurrent writers can't overwrite each other's snapshots.
+ * - `pricingIssues`: per size, the unpriceable lines already reported in the
+ *   history (see repriceAllTemplates), so each is reported once.
+ */
+export type PriceTemplateDoc = PriceTemplate & {
+  pricingRev: string;
+  pricingIssues?: Record<string, string[]>;
+};
 
 const dbName = process.env.MONGODB_DB || "gateaux-patience";
 
@@ -52,6 +74,11 @@ async function initialize(db: Db) {
   const cakes = db.collection("cakes");
   const orders = db.collection("orders");
   const categories = db.collection("categories");
+  const pricingCosts = db.collection("pricing_costs");
+  const pricingQuotes = db.collection("pricing_quotes");
+  const pricingSettings = db.collection("pricing_settings");
+  const pricingTemplates = db.collection("pricing_templates");
+  const pricingTemplateHistory = db.collection("pricing_template_history");
 
   await Promise.all([
     cakes.createIndex({ id: 1 }, { unique: true }),
@@ -69,6 +96,16 @@ async function initialize(db: Db) {
     categories.createIndex({ id: 1 }, { unique: true }),
     categories.createIndex({ slug: 1 }, { unique: true }),
     categories.createIndex({ order: 1 }),
+    pricingCosts.createIndex({ id: 1 }, { unique: true }),
+    pricingCosts.createIndex({ kind: 1, name: 1 }),
+    pricingQuotes.createIndex({ id: 1 }, { unique: true }),
+    pricingQuotes.createIndex({ updatedAt: -1 }),
+    pricingSettings.createIndex({ id: 1 }, { unique: true }),
+    pricingTemplates.createIndex({ id: 1 }, { unique: true }),
+    pricingTemplates.createIndex({ updatedAt: -1 }),
+    pricingTemplates.createIndex({ cakeId: 1 }),
+    pricingTemplateHistory.createIndex({ id: 1 }, { unique: true }),
+    pricingTemplateHistory.createIndex({ templateId: 1, at: -1 }),
   ]);
 
   const existing = await categories.countDocuments({}, { limit: 1 });
@@ -118,4 +155,29 @@ export async function getOrdersCollection(): Promise<Collection<Order>> {
 export async function getCategoriesCollection(): Promise<Collection<Category>> {
   const db = await getDb();
   return db.collection<Category>("categories");
+}
+
+export async function getPricingCostsCollection(): Promise<Collection<CostItem>> {
+  const db = await getDb();
+  return db.collection<CostItem>("pricing_costs");
+}
+
+export async function getPricingQuotesCollection(): Promise<Collection<PriceQuote>> {
+  const db = await getDb();
+  return db.collection<PriceQuote>("pricing_quotes");
+}
+
+export async function getPricingSettingsCollection(): Promise<Collection<PricingSettingsDoc>> {
+  const db = await getDb();
+  return db.collection<PricingSettingsDoc>("pricing_settings");
+}
+
+export async function getPricingTemplatesCollection(): Promise<Collection<PriceTemplateDoc>> {
+  const db = await getDb();
+  return db.collection<PriceTemplateDoc>("pricing_templates");
+}
+
+export async function getPricingTemplateHistoryCollection(): Promise<Collection<TemplatePriceChange>> {
+  const db = await getDb();
+  return db.collection<TemplatePriceChange>("pricing_template_history");
 }
