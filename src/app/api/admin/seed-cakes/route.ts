@@ -13,13 +13,14 @@ import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
 import { getCakesCollection, getCategoriesCollection } from "@/lib/mongodb";
 import type { Cake, Category } from "@/lib/db-types";
+import { ADMIN_COOKIE, verifySessionToken } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function isAuthed() {
   const c = await cookies();
-  return c.get("admin_session")?.value === "authenticated";
+  return verifySessionToken(c.get(ADMIN_COOKIE)?.value);
 }
 
 const DEFAULT_CATEGORY_LABELS: Record<string, Category["labels"]> = {

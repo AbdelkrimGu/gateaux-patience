@@ -3,12 +3,13 @@ import { redirect } from "next/navigation";
 import AdminShell from "@/components/admin/AdminShell";
 import CakeForm from "@/components/admin/CakeForm";
 import { getCategories } from "@/lib/categories-data";
+import { ADMIN_COOKIE, verifySessionToken } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewCakePage() {
   const cookieStore = await cookies();
-  if (cookieStore.get("admin_session")?.value !== "authenticated") redirect("/admin/login");
+  if (!verifySessionToken(cookieStore.get(ADMIN_COOKIE)?.value)) redirect("/admin/login");
 
   const categories = await getCategories();
 

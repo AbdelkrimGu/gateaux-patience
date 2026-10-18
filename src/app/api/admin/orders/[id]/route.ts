@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { deleteOrder, updateOrder, type OrderPatch } from "@/lib/admin-data";
+import { ADMIN_COOKIE, verifySessionToken } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,7 +10,7 @@ const ALLOWED_STATUS = new Set(["new", "seen", "done"]);
 
 async function isAuthed() {
   const c = await cookies();
-  return c.get("admin_session")?.value === "authenticated";
+  return verifySessionToken(c.get(ADMIN_COOKIE)?.value);
 }
 
 export async function PUT(
@@ -17,7 +18,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Session expirée : reconnectez-vous." }, { status: 401 });
   }
   const { id } = await params;
   try {
@@ -39,7 +40,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Session expirée : reconnectez-vous." }, { status: 401 });
   }
   const { id } = await params;
   const ok = await deleteOrder(id);

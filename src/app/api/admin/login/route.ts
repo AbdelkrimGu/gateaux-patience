@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import {
+  ADMIN_COOKIE,
+  SESSION_MAX_AGE_S,
+  createSessionToken,
+  passwordMatches,
+} from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
-  const { password } = (await req.json()) as { password?: string };
+  let password: unknown;
+  try {
+    ({ password } = (await req.json()) as { password?: unknown });
+  } catch {
+    return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
+  }
   const adminPassword = process.env.ADMIN_PASSWORD;
 
   if (!adminPassword) {
@@ -15,16 +26,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (password !== adminPassword) {
+  if (typeof password !== "string" || !passwordMatches(password, adminPassword)) {
+    // Slows down password guessing (serverless: no shared memory for a real limiter).
+    await new Promise((r) => setTimeout(r, 500));
     return NextResponse.json({ error: "Mot de passe incorrect" }, { status: 401 });
   }
 
   const c = await cookies();
-  c.set("admin_session", "authenticated", {
+  c.set(ADMIN_COOKIE, createSessionToken()!, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: SESSION_MAX_AGE_S,
     path: "/",
   });
 
@@ -33,6 +46,6 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE() {
   const c = await cookies();
-  c.delete("admin_session");
+  c.delete(ADMIN_COOKIE);
   return NextResponse.json({ ok: true });
 }

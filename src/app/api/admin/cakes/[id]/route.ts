@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { deleteCake, getCakeById, updateCake, type CakePatch } from "@/lib/admin-data";
 import { deleteS3Objects } from "@/lib/s3";
+import { ADMIN_COOKIE, verifySessionToken } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function isAuthed() {
   const c = await cookies();
-  return c.get("admin_session")?.value === "authenticated";
+  return verifySessionToken(c.get(ADMIN_COOKIE)?.value);
 }
 
 export async function GET(
@@ -16,7 +17,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Session expirée : reconnectez-vous." }, { status: 401 });
   }
   const { id } = await params;
   const cake = await getCakeById(id);
@@ -29,7 +30,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Session expirée : reconnectez-vous." }, { status: 401 });
   }
   const { id } = await params;
   const existing = await getCakeById(id);
@@ -60,7 +61,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Session expirée : reconnectez-vous." }, { status: 401 });
   }
   const { id } = await params;
   const deleted = await deleteCake(id);

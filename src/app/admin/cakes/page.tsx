@@ -5,10 +5,11 @@ import { getCakes } from "@/lib/admin-data";
 import AdminShell from "@/components/admin/AdminShell";
 import DeleteCakeButton from "@/components/admin/DeleteCakeButton";
 import { Plus, Pencil } from "lucide-react";
+import { ADMIN_COOKIE, verifySessionToken } from "@/lib/admin-auth";
 
 export default async function AdminCakesPage() {
   const cookieStore = await cookies();
-  if (cookieStore.get("admin_session")?.value !== "authenticated") redirect("/admin/login");
+  if (!verifySessionToken(cookieStore.get(ADMIN_COOKIE)?.value)) redirect("/admin/login");
 
   const cakes = await getCakes();
 

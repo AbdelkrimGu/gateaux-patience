@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createCategory, getCategories, type CategoryInput } from "@/lib/categories-data";
+import { ADMIN_COOKIE, verifySessionToken } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function isAuthed() {
   const c = await cookies();
-  return c.get("admin_session")?.value === "authenticated";
+  return verifySessionToken(c.get(ADMIN_COOKIE)?.value);
 }
 
 export async function GET() {
   if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Session expirée : reconnectez-vous." }, { status: 401 });
   }
   const cats = await getCategories();
   return NextResponse.json(cats);
@@ -20,7 +21,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Session expirée : reconnectez-vous." }, { status: 401 });
   }
   let body: Partial<CategoryInput>;
   try {

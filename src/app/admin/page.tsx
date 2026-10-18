@@ -4,10 +4,11 @@ import { getCakes, getOrders } from "@/lib/admin-data";
 import AdminShell from "@/components/admin/AdminShell";
 import { CakeSlice, ShoppingBag, Star, Eye } from "lucide-react";
 import Link from "next/link";
+import { ADMIN_COOKIE, verifySessionToken } from "@/lib/admin-auth";
 
 export default async function AdminDashboard() {
   const cookieStore = await cookies();
-  if (cookieStore.get("admin_session")?.value !== "authenticated") {
+  if (!verifySessionToken(cookieStore.get(ADMIN_COOKIE)?.value)) {
     redirect("/admin/login");
   }
 

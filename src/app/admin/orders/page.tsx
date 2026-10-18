@@ -27,9 +27,15 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "new" | "seen" | "done">("all");
 
+  // Session expired: back to the login page instead of an empty list.
+  function checkSession(res: Response) {
+    if (res.status === 401) window.location.href = "/admin/login";
+    return res.ok;
+  }
+
   async function fetchOrders() {
     const res = await fetch("/api/admin/orders");
-    if (res.ok) {
+    if (checkSession(res)) {
       const data = await res.json();
       setOrders(data);
     }
@@ -41,17 +47,19 @@ export default function AdminOrdersPage() {
   }, []);
 
   async function updateStatus(id: string, status: Order["status"]) {
-    await fetch(`/api/admin/orders/${id}`, {
+    const res = await fetch(`/api/admin/orders/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
+    if (!checkSession(res)) return;
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
   }
 
   async function deleteOrder(id: string) {
     if (!confirm("Supprimer cette commande ?")) return;
-    await fetch(`/api/admin/orders/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/admin/orders/${id}`, { method: "DELETE" });
+    if (!checkSession(res)) return;
     setOrders((prev) => prev.filter((o) => o.id !== id));
   }
 

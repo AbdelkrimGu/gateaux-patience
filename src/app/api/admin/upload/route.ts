@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { ADMIN_COOKIE, verifySessionToken } from "@/lib/admin-auth";
 import {
   deleteS3Object,
   getPresignedUploadUrl,
@@ -17,12 +18,12 @@ interface FileSpec {
 
 async function isAuthed() {
   const c = await cookies();
-  return c.get("admin_session")?.value === "authenticated";
+  return verifySessionToken(c.get(ADMIN_COOKIE)?.value);
 }
 
 export async function POST(req: NextRequest) {
   if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Session expirée : reconnectez-vous." }, { status: 401 });
   }
   let body: { id?: string; cakeId?: string; scope?: string; files?: FileSpec[] };
   try {
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Session expirée : reconnectez-vous." }, { status: 401 });
   }
   try {
     const { url } = (await req.json()) as { url?: string };
