@@ -291,12 +291,20 @@ export function partsFromLabel(label: string): number | undefined {
 
 export type SizeState =
   | { kind: "broken"; culprits: string[] } // can't be priced right: a cost was deleted, units no longer match…
-  | { kind: "unfinished" } // nothing in it yet: no hours, no ingredient, no extra
+  | { kind: "unfinished" } // no ingredient and no extra yet: fixed costs + hours are not a price
   | { kind: "ok"; noHours: boolean };
 
-/** Hours and lines are what she fills in; fixed costs alone are not a price. */
+/**
+ * No ingredient and no extra: fixed costs and hours alone would show a
+ * misleadingly low price, so the size is « à compléter » until it has some.
+ */
 export function isUnfinished(v: { hours: number; lines: unknown[] }): boolean {
-  return !(v.hours > 0) && v.lines.length === 0;
+  return v.lines.length === 0;
+}
+
+/** What an unfinished size still needs, for « À compléter : … ». */
+export function unfinishedText(v: { hours: number }): string {
+  return v.hours > 0 ? "ingrédients" : "heures et ingrédients";
 }
 
 export function sizeState(

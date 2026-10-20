@@ -14,8 +14,8 @@ import { CakeThumb } from "./SheetDialogs";
 import SheetEditor, { clearStoredSheetDraft } from "./SheetEditor";
 import SheetHistory, { changeSentence, LatestChangeHint, type ChangeSummary, type HistoryState } from "./SheetHistory";
 import {
-  brokenSheets, liveKey, parseStoredSheetDraft, SHEET_DRAFT_KEY, sizeTitle, type CakeOption, type LiveSize,
-  type StoredSheetDraft,
+  brokenSheets, liveKey, parseStoredSheetDraft, SHEET_DRAFT_KEY, sizeTitle, unfinishedText, type CakeOption,
+  type LiveSize, type StoredSheetDraft,
 } from "./sheet-draft";
 import { Banner, CARD_CLASS, ConfirmDialog, ErrorBox, INPUT_CLASS, PRIMARY_BTN, SECONDARY_BTN, Sheet } from "./ui";
 
@@ -492,7 +492,7 @@ function SizeRow({
             {parts}
           </p>
           <p className={cn("text-xs truncate", brokenState ? "text-amber-700" : "text-gray-400")}>
-            {brokenState ? `À corriger : ${brokenState.culprits.join(", ")}` : "À compléter : heures et ingrédients"}
+            {brokenState ? `À corriger : ${brokenState.culprits.join(", ")}` : `À compléter : ${unfinishedText(v)}`}
           </p>
         </div>
         <button

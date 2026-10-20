@@ -309,7 +309,9 @@ export default function SheetEditor({
               {current.problem ? (
                 <span className="block text-sm font-semibold text-amber-700">Prix incomplet</span>
               ) : current.unfinished ? (
-                <span className="block text-sm font-semibold text-amber-700">À compléter : heures et ingrédients</span>
+                <span className="block text-sm font-semibold text-amber-700">
+                  À compléter : {current.noHours ? "heures et ingrédients" : "ingrédients"}
+                </span>
               ) : (
                 <span className="flex items-baseline gap-2">
                   <span className="text-xl font-bold text-rose-600 tabular-nums leading-tight">
