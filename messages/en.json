@@ -245,7 +245,7 @@
       "see_count": "{count, plural, one {See the cake} other {See all # cakes}}"
     },
     "house": {
-      "eyebrow": "From the workshop",
+      "eyebrow": "Our story",
       "title": "A note from the workshop",
       "greeting": "Hello!",
       "p1": "Since 2018, we have made every cake by hand in our workshop in Sidi Bel Abbès.",
@@ -299,7 +299,7 @@
     },
     "follow": {
       "eyebrow": "On Instagram",
-      "lead": "Our latest creations, fresh from the workshop.",
+      "lead": "More of our cakes on Instagram.",
       "cta": "Follow on Instagram",
       "stories_label": "Our categories",
       "grid_aria": "{title}: our creations on Instagram"
@@ -337,6 +337,19 @@
       "sent": "Your message is ready in WhatsApp.",
       "open_again": "Open WhatsApp again",
       "note": "Then we talk it over"
+    },
+    "category_display": {
+      "grossesse": "Pregnancy"
+    },
+    "category_short": {
+      "birthday-kids": "Kids",
+      "birthday-adults": "Adults",
+      "wedding": "Weddings",
+      "graduation": "Graduation",
+      "grossesse": "Baby",
+      "customs": "Custom",
+      "daily": "Everyday",
+      "desserts": "Desserts"
     }
   }
 }

@@ -65,6 +65,7 @@ export default function CurtainFooter({
       <footer
         ref={ref}
         data-tone="ink"
+          data-header-tone="ink"
         data-final-cta
         onFocus={onFocus}
         className={cn(

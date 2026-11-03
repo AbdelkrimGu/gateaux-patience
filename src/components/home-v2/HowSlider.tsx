@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useLocale } from "next-intl";
 import WhatsAppIcon from "@/components/gp/WhatsAppIcon";
 import Eyebrow from "@/components/gp/Eyebrow";
+import OutlinedNumeral from "@/components/gp/OutlinedNumeral";
 import { cn } from "@/lib/utils";
 
 const STEP = 100;
@@ -37,6 +38,7 @@ export default function HowSlider(props: HowSliderProps) {
   const [value, setValue] = useState(0);
   const valueRef = useRef(0);
   const raf = useRef(0);
+  const pointerDown = useRef(false);
   const step = Math.min(steps.length - 1, Math.round(value / STEP));
 
   const set = (v: number) => {
@@ -90,15 +92,28 @@ export default function HowSlider(props: HowSliderProps) {
           <h2 id="how-title" className="sr-only">
             {props.title}
           </h2>
-          <div key={step} className="hv2-step-in" aria-live="polite">
-            <p className="mt-5 flex items-baseline gap-3 font-display text-step-head font-semibold leading-[1.02] tracking-[-0.03em] rtl:leading-[1.3] rtl:tracking-normal">
-              <span className="tabular text-[0.5em] font-medium text-tone-fg/80">
-                {String(step + 1).padStart(2, "0")}
-              </span>
-              {steps[step].title}
-            </p>
-            <p className="mt-5 max-w-[38ch] text-step-body leading-[1.55] text-tone-fg/85">{steps[step].text}</p>
+          {/* Stable live region; only its content is re-keyed (re-animated). */}
+          <div aria-live="polite">
+            <div key={step} className="hv2-step-in">
+              <p className="mt-5 flex items-baseline gap-3 font-display text-step-head font-semibold leading-[1.02] tracking-[-0.03em] rtl:leading-[1.3] rtl:tracking-normal">
+                <span className="tabular text-[0.5em] font-medium text-tone-fg/80 md:hidden">
+                  {String(step + 1).padStart(2, "0")}
+                </span>
+                {steps[step].title}
+              </p>
+              <p className="mt-5 max-w-[38ch] text-step-body leading-[1.55] text-tone-fg/85">{steps[step].text}</p>
+            </div>
           </div>
+        </div>
+
+        {/* Desktop: the big outlined step number fills the panel. */}
+        <div aria-hidden="true" className="hidden flex-1 items-center md:flex">
+          <OutlinedNumeral
+            key={step}
+            value={step + 1}
+            stroke="cream"
+            className="hv2-step-in text-[clamp(8rem,14vw,13rem)] tracking-[-0.04em]"
+          />
         </div>
 
         {/* Phones: the photo + card inside the panel */}
@@ -134,10 +149,27 @@ export default function HowSlider(props: HowSliderProps) {
             aria-label={props.sliderLabel}
             aria-valuetext={steps[step].valueText}
             onChange={(e) => {
-              cancelAnimationFrame(raf.current);
-              set(Number(e.target.value));
+              const v = Number(e.target.value);
+              if (pointerDown.current) {
+                cancelAnimationFrame(raf.current);
+                set(v); // dragging: follow the finger
+              } else {
+                // Assistive tech nudges (iOS +1, Android %): move a whole step.
+                const to = (v > valueRef.current ? Math.ceil : Math.floor)(v / STEP) * STEP;
+                glideTo(Math.max(0, Math.min(max, to)));
+              }
             }}
-            onPointerUp={snap}
+            onPointerDown={() => {
+              pointerDown.current = true;
+            }}
+            onPointerUp={() => {
+              pointerDown.current = false;
+              snap();
+            }}
+            onPointerCancel={() => {
+              pointerDown.current = false;
+              snap();
+            }}
             onBlur={snap}
             onKeyDown={onKeyDown}
             className="hv2-range mt-1 block h-14 w-full cursor-grab active:cursor-grabbing"
@@ -163,7 +195,9 @@ export default function HowSlider(props: HowSliderProps) {
 function StepPhotos({ photos, step, sizes }: { photos: { src: string; alt: string }[]; step: number; sizes: string }) {
   return (
     <>
-      {photos.map((p, i) => (
+      {photos.map((p, i) =>
+        // Only the current step and its neighbours are mounted (and loaded).
+        Math.abs(i - step) > 1 ? null : (
         <Image
           key={p.src}
           src={p.src}
@@ -176,7 +210,8 @@ function StepPhotos({ photos, step, sizes }: { photos: { src: string; alt: strin
           )}
           style={{ objectPosition: "50% 45%" }}
         />
-      ))}
+        )
+      )}
     </>
   );
 }

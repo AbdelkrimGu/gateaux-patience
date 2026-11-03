@@ -45,17 +45,17 @@ export default async function FinaleGift({
   const order = await getOrderHref(locale);
 
   return (
-    <SectionTone tone="ink" aria-labelledby="finale-title" data-final-cta className="pb-20 pt-6 md:pb-28 md:pt-10">
+    <SectionTone tone="ink" aria-labelledby="finale-title" data-final-cta className="pb-8 pt-6 md:pb-12 md:pt-10">
       <div className="gp-container">
         <Reveal
           data-tone="raspberry"
           threshold={0.35}
           className="hv2-gift relative isolate overflow-hidden rounded-[32px] bg-gp-raspberry text-gp-cream md:rounded-[44px]"
         >
-          <div className="relative z-10 px-6 pb-14 pe-[19%] pt-20 sm:px-10 sm:pe-[30%] md:px-16 md:pb-20 md:pe-[30%] md:pt-24">
+          <div className="relative z-10 px-6 pb-14 pe-[26%] pt-20 sm:px-10 sm:pe-[30%] md:px-16 md:pb-20 md:pe-[30%] md:pt-24">
             <h2
               id="finale-title"
-              className="max-w-[12ch]font-display text-[clamp(2.9rem,1.5rem+5.6vw,6.4rem)] font-semibold leading-[0.92] tracking-[-0.045em] rtl:leading-[1.25] rtl:tracking-normal"
+              className="max-w-[12ch] font-display text-[clamp(2.9rem,1.5rem+5.6vw,6.4rem)] font-semibold leading-[0.92] tracking-[-0.045em] rtl:leading-[1.25] rtl:tracking-normal"
             >
               {t("title")}
             </h2>
@@ -82,30 +82,22 @@ export default async function FinaleGift({
             </ul>
           </div>
 
-          {/* The wrapping: decorative, never blocks clicks. */}
-          <span aria-hidden="true" className="hv2-ribbon-v pointer-events-none absolute inset-y-0 start-[84%] z-20 w-9 sm:start-[72%] sm:w-12 md:w-16" />
-          <span aria-hidden="true" className="hv2-ribbon-h pointer-events-none absolute inset-x-0 top-[40%] z-20 h-9 sm:h-11 md:h-14" />
-          <div
-            aria-hidden="true"
-            className="hv2-bow pointer-events-none absolute start-[calc(84%+1.125rem)] top-[calc(40%+1.125rem)] z-30 w-[118px] -translate-x-1/2 -translate-y-1/2 sm:start-[calc(72%+1.5rem)] sm:top-[calc(40%+1.375rem)] sm:w-[160px] md:start-[calc(72%+2rem)] md:top-[calc(40%+1.75rem)] md:w-[220px] rtl:translate-x-1/2"
-          >
+          {/* The wrapping (decorative, never blocks clicks; positions in home-v2.css). */}
+          <span aria-hidden="true" className="hv2-ribbon-v" />
+          <span aria-hidden="true" className="hv2-ribbon-h" />
+          <div aria-hidden="true" className="hv2-bow w-[118px] sm:w-[160px] md:w-[220px]">
             <Bow />
           </div>
 
-          {/* Once untied, the bow is set aside in the corner (wide screens). */}
-          <div
-            aria-hidden="true"
-            className="hv2-bow-rest pointer-events-none absolute bottom-[7%] end-[5%] z-0 hidden w-[180px] md:block lg:w-[210px]"
-          >
+          {/* Untied: the bow rests on the ribbon band, the "Pour vous" tag hangs from it. */}
+          <div aria-hidden="true" className="hv2-bow-rest flex w-[84px] flex-col items-center sm:w-[120px] md:w-[150px]">
             <Bow />
-          </div>
-
-          {/* The tag stays: it is the card on the gift. */}
-          <div aria-hidden="true" className="hv2-tag pointer-events-none absolute end-[7%] top-0 z-30 flex flex-col items-center">
-            <span className="block h-10 w-px bg-gp-cream/60 md:h-14" />
-            <span className="-mt-1 rounded-[8px] bg-gp-cream px-3.5 py-1 font-note text-[1.4rem] font-bold leading-tight text-gp-raspberry shadow-gp-chip md:text-[1.75rem]">
-              {t("for_you")}
-            </span>
+            <div className="hv2-tag -mt-3 flex flex-col items-center">
+              <span className="block h-7 w-px bg-gp-cream/70 md:h-10" />
+              <span className="-mt-1 whitespace-nowrap rounded-[8px] bg-gp-cream px-3 py-0.5 font-note text-[1.2rem] font-bold leading-tight text-gp-raspberry shadow-gp-chip md:px-3.5 md:py-1 md:text-[1.6rem]">
+                {t("for_you")}
+              </span>
+            </div>
           </div>
         </Reveal>
       </div>

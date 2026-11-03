@@ -61,7 +61,8 @@ export function orderText(t: OrderTranslator, opts: OrderOptions = {}): string {
 
   if (cakeTitle) lines.push(t("cake", { cake: cakeTitle }));
   else if (occasion && !text) lines.push(t("occasion", { occasion }));
-  else if (!text && !opts.details?.length) lines.push(t("generic"));
+  // No cake, no occasion: still say what this is about, even with details.
+  else if (!text) lines.push(t("generic"));
 
   for (const d of opts.details ?? []) {
     const value = tidy(d.value);

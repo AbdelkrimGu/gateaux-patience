@@ -299,7 +299,7 @@
     },
     "follow": {
       "eyebrow": "Sur Instagram",
-      "lead": "Nos dernières créations, tout juste sorties de l'atelier.",
+      "lead": "Plus de créations sur Instagram.",
       "cta": "Suivre sur Instagram",
       "stories_label": "Nos catégories",
       "grid_aria": "{title} : nos créations sur Instagram"
@@ -337,6 +337,19 @@
       "sent": "Votre message est prêt dans WhatsApp.",
       "open_again": "Rouvrir WhatsApp",
       "note": "Puis on en parle"
+    },
+    "category_display": {
+      "grossesse": "Grossesse"
+    },
+    "category_short": {
+      "birthday-kids": "Enfants",
+      "birthday-adults": "Adultes",
+      "wedding": "Mariage",
+      "graduation": "Diplôme",
+      "grossesse": "Grossesse",
+      "customs": "Sur mesure",
+      "daily": "Quotidien",
+      "desserts": "Desserts"
     }
   }
 }

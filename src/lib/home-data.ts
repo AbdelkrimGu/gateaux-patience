@@ -40,6 +40,8 @@ export interface HomeCake {
   /** Crimson / gold / chocolate cakes that suit hero and first cards. */
   onBrand: boolean;
   sensitive: boolean;
+  /** Shows an identifiable person: never on the home page, even as a fallback. */
+  personal: boolean;
   persons?: number;
   pieces?: number;
 }
@@ -110,6 +112,13 @@ const EXCLUDED_PHOTOS = new Set([
   "/images/Cake7/FB_IMG_1778413148725.jpg", // screenshot of a customer DM
 ]);
 
+/**
+ * Photos of identifiable people (a child's face on the topper): never shown in
+ * any home slot, not even as a fallback. The cake still counts in its category
+ * and stays in the gallery.
+ */
+const PERSONAL_SLUGS = new Set(["tarte-de-lespace-avec-fusee"]);
+
 function isSensitive(cake: Cake): boolean {
   if (SENSITIVE_SLUGS.has(cake.slug)) return true;
   const titles = Object.values(cake.translations ?? {}).map((t) => t?.title ?? "");
@@ -146,6 +155,7 @@ function toHomeCake(cake: Cake, locale: Locale): HomeCake {
     featured: Boolean(cake.featured),
     onBrand: ON_BRAND_SLUGS.includes(cake.slug),
     sensitive: isSensitive(cake),
+    personal: PERSONAL_SLUGS.has(cake.slug),
     persons: cake.persons,
     pieces: cake.pieces,
   };
@@ -169,7 +179,9 @@ function buildCategory(cat: Category, all: HomeCake[], locale: Locale): HomeCate
   const cakes = all
     .filter((c) => c.categorySlug === cat.slug && c.images.length > 0);
   if (cakes.length === 0) return null;
-  const photos = pickPhotos(cakes, 8);
+  // Personal photos never reach a home slot; the cake still counts.
+  const showable = cakes.filter((c) => !c.personal);
+  const photos = pickPhotos(showable.length > 0 ? showable : cakes, 8);
   return {
     id: cat.id,
     slug: cat.slug,

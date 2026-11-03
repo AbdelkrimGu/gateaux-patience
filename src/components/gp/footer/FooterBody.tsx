@@ -10,7 +10,7 @@ import WhatsAppIcon from "../WhatsAppIcon";
 import { NAV_ITEMS, localePath } from "../header/nav";
 
 const linkCls =
-  "inline-flex min-h-9 items-center gap-2 text-tone-fg/80 md:min-h-10 transition-colors duration-150 hover:text-tone-fg";
+  "inline-flex min-h-11 items-center gap-2 text-tone-fg/80 transition-colors duration-150 hover:text-tone-fg";
 
 /** Shared footer content (tagline, CTA, links, contact, social, credit). Used inside both footers. */
 export default function FooterBody({

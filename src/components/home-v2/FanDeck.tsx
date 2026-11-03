@@ -12,7 +12,7 @@ export interface FanDeckCategory {
   label: string;
   countLabel: string;
   href: string;
-  photos: { src: string; alt: string; href: string }[];
+  photos: { src: string; alt: string; href: string; sensitive: boolean }[];
 }
 
 // Fixed poses (never random: server and client must agree).
@@ -50,6 +50,12 @@ export default function FanDeck({
     (a, b) => Math.abs(a - c) - Math.abs(b - c) || a - b
   );
   const photos = Array.from({ length: m }, (_, pos) => best[byCloseness.indexOf(pos)]);
+  // Deal order: clean prints from the back to the front, licensed ones last.
+  const dealOrder = Array.from({ length: m }, (_, pos) => pos).sort(
+    (a, b) =>
+      Number(photos[a].sensitive) - Number(photos[b].sensitive) ||
+      byCloseness.indexOf(b) - byCloseness.indexOf(a)
+  );
   const mode = switched ? "in" : reveal;
 
   return (
@@ -70,7 +76,7 @@ export default function FanDeck({
                 style={
                   {
                     "--k": j - c,
-                    "--j": m - 1 - depth, // dealt back to front
+                    "--j": dealOrder.indexOf(j),
                     "--r": `${ROT[slot]}deg`,
                     "--y": `${Y[slot]}px`,
                     zIndex: m - depth,

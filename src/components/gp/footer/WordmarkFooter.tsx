@@ -18,6 +18,7 @@ export default function WordmarkFooter({
   return (
     <footer
       data-tone="ink"
+          data-header-tone="ink"
       data-final-cta
       className={cn("relative z-0 -mt-10 overflow-hidden bg-gp-ink pt-20 text-gp-cream md:pt-28", className)}
     >

@@ -44,7 +44,10 @@ export default async function SiteFrame({
         id="main"
         tabIndex={-1}
         className={cn(
-          "relative z-10 overflow-clip rounded-b-[32px] bg-gp-cream shadow-gp-lifted outline-none md:rounded-b-[40px]",
+          "relative z-10 overflow-clip bg-gp-cream outline-none",
+          // The lifted, rounded page only reads over a contrasting footer;
+          // over the wordmark footer (ink on ink) it leaves hairline arcs.
+          footer !== "wordmark" && "rounded-b-[32px] shadow-gp-lifted md:rounded-b-[40px]",
           mainClassName
         )}
       >
@@ -59,6 +62,7 @@ export default async function SiteFrame({
       ) : (
         <footer
           data-tone="ink"
+          data-header-tone="ink"
           data-final-cta
           className="relative z-0 -mt-10 bg-gp-ink pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-20 text-gp-cream md:pt-28"
         >

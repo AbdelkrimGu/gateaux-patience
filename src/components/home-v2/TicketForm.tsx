@@ -1,11 +1,11 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ChevronDown } from "lucide-react";
 import { BrandBadge } from "@/components/gp/Brand";
 import WhatsAppIcon from "@/components/gp/WhatsAppIcon";
-import { useOrderHref } from "@/lib/order";
+import { useOrderHref, WHATSAPP_DIGITS } from "@/lib/order";
 import { cn } from "@/lib/utils";
 import { useReveal } from "./useReveal";
 
@@ -35,8 +35,16 @@ export default function TicketForm({ occasions }: { occasions: { slug: string; l
   const [revealRef, reveal] = useReveal<HTMLDivElement>({ threshold: 0.3 });
   const [errors, setErrors] = useState<Errors>({});
   const [sentHref, setSentHref] = useState<string | null>(null);
-  const [today] = useState(() => (typeof window === "undefined" ? undefined : isoToday()));
+  // Set after mount: the server cannot know the visitor's day.
+  const [today, setToday] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- browser-only value, read once
+    setToday(isoToday());
+  }, []);
   const formRef = useRef<HTMLFormElement>(null);
+  const tw = useTranslations("order_wa");
+  // Without JavaScript the form still opens WhatsApp with a generic message.
+  const fallbackText = `${tw("hello")}\n${tw("generic")}`;
 
   const id = (f: Field) => `${uid}-${f}`;
 
@@ -52,7 +60,9 @@ export default function TicketForm({ occasions }: { occasions: { slug: string; l
     if (!occasion) next.occasion = t("err_occasion");
     if (!date) next.date = t("err_date");
     else if (date < isoToday()) next.date = t("err_date_past");
-    if (parts && !(/^\d{1,4}$/.test(parts) && Number(parts) >= 1 && Number(parts) <= 2000)) {
+    // A number field returns "" for letters: read badInput too.
+    const partsEl = e.currentTarget.elements.namedItem("parts") as HTMLInputElement | null;
+    if (partsEl?.validity.badInput || (parts && !(/^\d{1,4}$/.test(parts) && Number(parts) >= 1 && Number(parts) <= 2000))) {
       next.parts = t("err_parts");
     }
     setErrors(next);
@@ -91,7 +101,7 @@ export default function TicketForm({ occasions }: { occasions: { slug: string; l
     ) : null;
 
   const control =
-    "min-h-11 w-full rounded-none border-0 border-b-2 border-gp-ink/15 bg-transparent px-0 pb-1 pt-2 text-end font-display text-[1.0625rem] font-semibold text-gp-ink placeholder:font-text placeholder:font-normal placeholder:text-gp-ink/40 focus:border-gp-raspberry focus:outline-none focus-visible:outline-none aria-[invalid=true]:border-gp-raspberry";
+    "min-h-11 w-full rounded-none border-0 border-b-2 border-gp-ink/15 bg-transparent px-0 pb-1 pt-2 text-end font-display text-[1.0625rem] font-semibold text-gp-ink placeholder:font-text placeholder:font-normal placeholder:text-gp-ink/65 focus:border-gp-raspberry aria-[invalid=true]:border-gp-raspberry";
 
   const row = (f: Field, label: string, input: React.ReactNode) => (
     <div className="py-1.5">
@@ -130,6 +140,9 @@ export default function TicketForm({ occasions }: { occasions: { slug: string; l
           ref={formRef}
           noValidate
           data-tone="cream"
+          action={`https://wa.me/${WHATSAPP_DIGITS}`}
+          method="get"
+          target="_blank"
           onSubmit={onSubmit}
           aria-labelledby="ticket-title"
           className="hv2-ticket hv2-ticket-edge relative bg-gp-cream px-6 pb-12 pt-10 text-gp-ink md:px-9"
@@ -142,12 +155,13 @@ export default function TicketForm({ occasions }: { occasions: { slug: string; l
             <p className="mt-1 text-step-small text-gp-ink/70">{t("ticket_sub")}</p>
           </div>
           <div aria-hidden="true" className="my-6 border-t-2 border-dashed border-gp-ink/20" />
+          <input type="hidden" name="text" value={fallbackText} />
 
           {row(
             "occasion",
             t("occasion"),
             <>
-              <select {...aria("occasion")} defaultValue="" className={cn(control, "appearance-none pe-6 [text-align-last:end]")}>
+              <select {...aria("occasion")} aria-required="true" defaultValue="" className={cn(control, "appearance-none pe-6 [text-align-last:end]")}>
                 <option value="" disabled>
                   {t("choose")}
                 </option>
@@ -164,7 +178,7 @@ export default function TicketForm({ occasions }: { occasions: { slug: string; l
           {row(
             "date",
             t("date"),
-            <input {...aria("date")} type="date" min={today} suppressHydrationWarning className={cn(control, "[color-scheme:light]")} />
+            <input {...aria("date")} aria-required="true" type="date" min={today} className={cn(control, "[color-scheme:light]")} />
           )}
           {row(
             "parts",

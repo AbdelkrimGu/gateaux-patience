@@ -41,7 +41,7 @@ export default async function PromiseTiles({ locale, photos }: { locale: string;
               data-tone={tile.tone}
               style={{ "--i": i } as React.CSSProperties}
               className={cn(
-                "hv2-tile relative flex min-h-[25rem] w-[min(78vw,20rem)] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-[30px] p-6 text-tone-fg md:min-h-[30rem] md:w-auto md:rounded-[34px] md:p-8",
+                "hv2-tile relative flex min-h-[300px] w-[min(72vw,19rem)] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-[30px] p-6 text-tone-fg md:min-h-[30rem] md:w-auto md:rounded-[34px] md:p-8",
                 tile.cls,
                 OFFSET[i]
               )}

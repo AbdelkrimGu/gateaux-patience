@@ -62,7 +62,10 @@ for (const size of [96, 192, 384]) {
 //  - wordmark-color.webp: original crimson/gold letters with alpha (for ink)
 //  - wordmark-mask.webp:  white + alpha, used as a CSS mask so the wordmark
 //    can take any token colour (see components/gp/BrandWordmark.tsx)
-const WM = { left: 100, top: 560, width: 860, height: 240 };
+// Starts 30px above the letters so the phoenix feather rising out of the "P"
+// can be feathered out gradually instead of being cut flat.
+const WM = { left: 100, top: 530, width: 860, height: 270 };
+const FEATHER = 56; // px of gradual fade at the top of the crop
 const { data, info } = await sharp(SRC)
   .extract(WM)
   .removeAlpha()
@@ -84,8 +87,8 @@ for (let y = 0; y < info.height; y++) {
     const sx = x + WM.left;
     const sy = y + WM.top;
     if (sy < 606 && sx > 176 && sx < 556) a = 0;
-    // Fade the phoenix tail where the crop cuts it at the top.
-    if (y < 14) a *= y / 14;
+    // Feather the phoenix tail where the crop cuts it at the top (eased).
+    if (y < FEATHER) a *= Math.pow(y / FEATHER, 1.6);
     const alpha = Math.round(a * 255);
     color[o] = r; color[o + 1] = g; color[o + 2] = b; color[o + 3] = alpha;
     mask[o] = 255; mask[o + 1] = 255; mask[o + 2] = 255; mask[o + 3] = alpha;

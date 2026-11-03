@@ -17,7 +17,7 @@ export default async function HeroSoiree({ locale, cards }: { locale: string; ca
   const order = await getOrderHref(locale);
 
   return (
-    <SectionTone tone="ink" aria-labelledby="hero-title" className="hv2-hero relative isolate overflow-hidden">
+    <SectionTone tone="ink" aria-labelledby="hero-title" className="relative isolate overflow-hidden">
       <div className="gp-container relative pt-[calc(var(--gp-header-h)+env(safe-area-inset-top,0px)+1.75rem)] text-center md:pt-[calc(var(--gp-header-h)+3rem)]">
         <p className="mx-auto inline-flex min-h-9 items-center rounded-full bg-gp-champagne px-4 text-step-small font-medium text-gp-ink md:min-h-10 md:px-5">
           {t("badge")}
@@ -29,7 +29,7 @@ export default async function HeroSoiree({ locale, cards }: { locale: string; ca
           >
             {t("title_before")} <span className="text-gp-gold">{t("title_accent")}</span>{" "}
             {t("title_after")}
-            <span className="text-gp-raspberry hv2-stop">.</span>
+            <span className="text-gp-raspberry">.</span>
           </h1>
           <HandNote
             size="md"
@@ -47,7 +47,7 @@ export default async function HeroSoiree({ locale, cards }: { locale: string; ca
           label={t("cards_label")}
           cards={cards.map((c) => ({
             src: c.src,
-            label: c.label,
+            shortLabel: c.shortLabel,
             href: c.galleryHref,
             ariaLabel: t("card_aria", { label: c.label, cake: c.alt }),
           }))}

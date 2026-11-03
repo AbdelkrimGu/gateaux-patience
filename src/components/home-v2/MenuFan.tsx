@@ -35,7 +35,7 @@ export default async function MenuFan({
             label: c.label,
             countLabel: String(c.count),
             href: c.href,
-            photos: c.photos.map((p) => ({ src: p.src, alt: p.alt, href: p.href })),
+            photos: c.photos.map((p) => ({ src: p.src, alt: p.alt, href: p.href, sensitive: p.sensitive })),
           }))}
         />
       </div>

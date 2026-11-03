@@ -7,7 +7,8 @@ import { useDirSign, useReducedMotionSafe } from "@/components/gp/hooks";
 
 export interface BowlCard {
   src: string;
-  label: string;
+  /** Short label printed on the card; the full one is in `ariaLabel`. */
+  shortLabel: string;
   href: string;
   ariaLabel: string;
 }
@@ -52,6 +53,8 @@ export default function BowlCarousel({ cards, label }: { cards: BowlCard[]; labe
     list.push({ ...cards[i % cards.length], dup: true });
   }
   const n = list.length;
+  // Re-run the effect when the cards change (refs would go stale otherwise).
+  const signature = cards.map((c) => c.src).join("|");
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -88,7 +91,12 @@ export default function BowlCarousel({ cards, label }: { cards: BowlCard[]; labe
     let last = 0;
     let tween: { from: number; to: number; t0: number; ms: number } | null = null;
 
-    const drift = () => (reduced || hover || focusWithin || drag.active ? 0 : -dir * SPEED);
+    // Drift only once the visitor has interacted (scroll, pointer, focus): until
+    // then the bowl forms once and holds still, so the page settles.
+    let interacted = false;
+    const drift = () => (reduced || !interacted || hover || focusWithin || drag.active ? 0 : -dir * SPEED);
+    // RTL: the slots are mirrored so Arabic visitors meet the picks in order.
+    const slot = (i: number) => slotOf(i, n) * dir;
 
     const wrapTrack = (u: number) => ((((u + T / 2) % T) + T) % T) - T / 2;
 
@@ -99,7 +107,7 @@ export default function BowlCarousel({ cards, label }: { cards: BowlCard[]; labe
       for (let i = 0; i < n; i++) {
         const el = els[i];
         if (!el) continue;
-        const u = wrapTrack(slotOf(i, n) * P + offset);
+        const u = wrapTrack(slot(i) * P + offset);
         const p = u / half;
         const a = Math.min(Math.abs(p), 1);
         const g =
@@ -135,7 +143,7 @@ export default function BowlCarousel({ cards, label }: { cards: BowlCard[]; labe
         offset += vel * dt;
       }
       render();
-      const settled = reduced ? !tween && Math.abs(vel) < 1 : false;
+      const settled = (reduced || warp >= 1) && !tween && !drag.active && Math.abs(vel) < 1 && drift() === 0;
       if (visible && !document.hidden && !settled) raf = requestAnimationFrame(frame);
       else last = 0;
     };
@@ -149,6 +157,7 @@ export default function BowlCarousel({ cards, label }: { cards: BowlCard[]; labe
     const onDown = (e: PointerEvent) => {
       if (e.button !== 0) return;
       ready = true;
+      interacted = true;
       drag.active = true;
       drag.id = e.pointerId;
       drag.x = drag.lastX = e.clientX;
@@ -198,13 +207,18 @@ export default function BowlCarousel({ cards, label }: { cards: BowlCard[]; labe
     // Keyboard: bring the focused card to the centre.
     const onFocusIn = (e: FocusEvent) => {
       ready = true;
+      interacted = true;
       focusWithin = true;
       const i = els.indexOf(e.target as HTMLAnchorElement);
       if (i < 0) return;
       // The browser may scroll the overflow box to reveal the link: undo it.
       wrap.scrollLeft = 0;
-      const u = wrapTrack(slotOf(i, n) * P + offset);
+      const u = wrapTrack(slot(i) * P + offset);
       tween = { from: offset, to: offset - u, t0: performance.now(), ms: 650 };
+      start();
+    };
+    const onPageScroll = () => {
+      interacted = true;
       start();
     };
     const onFocusOut = (e: FocusEvent) => {
@@ -239,6 +253,7 @@ export default function BowlCarousel({ cards, label }: { cards: BowlCard[]; labe
     wrap.addEventListener("pointerleave", onLeave);
     wrap.addEventListener("focusin", onFocusIn);
     wrap.addEventListener("focusout", onFocusOut);
+    window.addEventListener("scroll", onPageScroll, { passive: true, once: true });
     wrap.dataset.live = "";
 
     // Stay off the critical path: the flat row (CSS) shows until the page has
@@ -258,6 +273,7 @@ export default function BowlCarousel({ cards, label }: { cards: BowlCard[]; labe
 
     return () => {
       window.removeEventListener("load", whenIdle);
+      window.removeEventListener("scroll", onPageScroll);
       if (window.cancelIdleCallback) window.cancelIdleCallback(idleId);
       window.clearTimeout(idleId);
       cancelAnimationFrame(raf);
@@ -275,7 +291,7 @@ export default function BowlCarousel({ cards, label }: { cards: BowlCard[]; labe
       wrap.removeEventListener("focusout", onFocusOut);
       delete wrap.dataset.live;
     };
-  }, [n, dir, reduced]);
+  }, [n, dir, reduced, signature]);
 
   return (
     <div
@@ -297,15 +313,17 @@ export default function BowlCarousel({ cards, label }: { cards: BowlCard[]; labe
           aria-hidden={c.dup || undefined}
           tabIndex={c.dup ? -1 : undefined}
           className="hv2-bowl-card"
-          style={{ "--k": slotOf(i, n) } as React.CSSProperties}
+          style={{ "--k": slotOf(i, n) * dir } as React.CSSProperties}
         >
           <Image
             src={c.src}
             alt=""
             fill
             draggable={false}
-            sizes="(min-width: 768px) 230px, 160px"
-            loading={Math.abs(slotOf(i, n)) <= 1 ? "eager" : "lazy"}
+            sizes="(min-width: 768px) 228px, 176px"
+            // The three cards in view at first paint load first; the rest lazily.
+            preload={!c.dup && Math.abs(slotOf(i, n)) <= 1}
+            loading={!c.dup && Math.abs(slotOf(i, n)) <= 1 ? undefined : "lazy"}
             className="object-cover"
             style={{ objectPosition: "50% 45%" }}
           />
@@ -315,7 +333,7 @@ export default function BowlCarousel({ cards, label }: { cards: BowlCard[]; labe
             }}
             className="hv2-bowl-label"
           >
-            {c.label}
+            {c.shortLabel}
           </span>
         </Link>
       ))}

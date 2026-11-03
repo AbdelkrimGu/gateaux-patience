@@ -37,8 +37,8 @@ export function BrandBadge({
   );
 }
 
-/** Aspect ratio of public/brand/wordmark-mask.webp (819 × 222). */
-export const WORDMARK_RATIO = 819 / 222;
+/** Aspect ratio of public/brand/wordmark-mask.webp (819 × 251). */
+export const WORDMARK_RATIO = 819 / 251;
 
 /**
  * The logo's script wordmark "Gateaux Patience", painted in any colour

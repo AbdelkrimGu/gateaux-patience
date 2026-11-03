@@ -14,7 +14,9 @@ export default async function TicketSection({
 }) {
   const t = await getTranslations({ locale, namespace: "home.ticket" });
   return (
-    <SectionTone tone="ink" aria-labelledby="ticket-title" className="py-20 md:py-32">
+    // data-final-cta: the phone sticky order pill hides here (it covered the
+    // submit button, and tapping it would drop what was typed).
+    <SectionTone tone="ink" aria-labelledby="ticket-title" data-final-cta className="py-20 md:py-32">
       <div className="gp-container grid gap-12 md:grid-cols-12 md:gap-10">
         <div className="md:col-span-5 md:pt-16">
           <Eyebrow>{t("eyebrow")}</Eyebrow>

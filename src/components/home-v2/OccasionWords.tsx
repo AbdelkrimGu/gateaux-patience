@@ -52,40 +52,33 @@ export default function OccasionWords({
     setActive(i);
   };
 
-  // Desktop: the word nearest to the middle of the viewport is the active one.
+  // Desktop: the word crossing the middle line of the viewport is the active
+  // one. An IntersectionObserver on a zero-height middle band: no layout reads
+  // on scroll. (The list is display:none on phones, so nothing fires there.)
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 768px)");
-    let frame = 0;
-    const read = () => {
-      frame = 0;
-      if (!mq.matches || !listRef.current) return;
-      const list = listRef.current.getBoundingClientRect();
-      const mid = window.innerHeight / 2;
-      if (list.bottom < 0 || list.top > window.innerHeight) return;
-      let best = -1;
-      let dist = Infinity;
-      wordRefs.current.forEach((el, i) => {
-        if (!el) return;
-        const r = el.getBoundingClientRect();
-        const d = Math.abs(r.top + r.height / 2 - mid);
-        if (d < dist) {
-          dist = d;
-          best = i;
-        }
-      });
-      if (best >= 0) select(best);
-    };
-    const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(read);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (frame) cancelAnimationFrame(frame);
-    };
+    const els = wordRefs.current.filter((el): el is HTMLButtonElement => Boolean(el));
+    if (els.length === 0 || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        const hit = entries.filter((e) => e.isIntersecting).pop();
+        if (hit) select(els.indexOf(hit.target as HTMLButtonElement));
+      },
+      { rootMargin: "-50% 0px -50% 0px", threshold: 0 }
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
   }, []);
 
-  const cur = items[active];
+  // The caption (label + CTAs) swaps halfway through the photo reveal.
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    if (shown === active) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const id = window.setTimeout(() => setShown(active), reduced ? 0 : 380);
+    return () => window.clearTimeout(id);
+  }, [active, shown]);
+
+  const cur = items[shown] ?? items[0];
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-12 md:gap-10">
@@ -150,12 +143,14 @@ export default function OccasionWords({
       <div className="min-w-0 md:col-span-7">
         <div className="md:sticky md:top-[calc(var(--gp-header-h)+max(1.5rem,(100svh-var(--gp-header-h)-min(76svh,680px))/2))]">
           <div className="relative aspect-[4/5] overflow-hidden rounded-[30px] bg-gp-ink/10 md:aspect-auto md:h-[min(76svh,680px)] md:rounded-[36px]">
-            {items.map((o, i) => (
+            {/* Only the active photo and the one it covers are mounted (and loaded). */}
+            {items.map((o, i) =>
+              i !== active && i !== prev ? null : (
               <div
                 key={o.slug}
                 aria-hidden={i !== active}
                 className="hv2-occ-photo absolute inset-0"
-                data-state={i === active ? "on" : i === prev ? "prev" : "off"}
+                data-state={i === active ? "on" : "prev"}
               >
                 <Image
                   src={o.main.src}
@@ -166,7 +161,8 @@ export default function OccasionWords({
                   style={{ objectPosition: "50% 45%" }}
                 />
               </div>
-            ))}
+              )
+            )}
             <span
               aria-hidden="true"
               className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] h-[58%] bg-gradient-to-t from-gp-ink/80 via-gp-ink/35 to-transparent"
@@ -194,7 +190,6 @@ export default function OccasionWords({
 
             <div className="absolute inset-x-0 bottom-0 z-[4] p-5 text-gp-cream md:p-9">
               <p
-                aria-live="polite"
                 className="font-display text-[clamp(1.75rem,1.2rem+1.6vw,2.6rem)] font-semibold leading-[1] tracking-[-0.035em] rtl:leading-[1.3] rtl:tracking-normal"
               >
                 {cur.label}

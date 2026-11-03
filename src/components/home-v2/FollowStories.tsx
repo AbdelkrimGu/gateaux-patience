@@ -109,6 +109,8 @@ export default async function FollowStories({
           </ul>
         </nav>
 
+        {/* Photos shown nowhere else on the page: 6, 3, or none (circles + pill remain). */}
+        {grid.length > 0 ? (
         <ul className="mt-10 grid grid-cols-3 gap-1.5 md:mt-14 md:gap-3">
           {grid.map((p) => (
             <li key={p.src}>
@@ -131,6 +133,7 @@ export default async function FollowStories({
             </li>
           ))}
         </ul>
+        ) : null}
       </Reveal>
     </SectionTone>
   );
