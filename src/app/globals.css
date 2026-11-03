@@ -256,7 +256,7 @@
     --tone-cta-bg: var(--gp-raspberry);
     --tone-cta-fg: var(--gp-cream);
     --tone-ring: var(--gp-raspberry);
-    --tone-muted-a: 0.6;
+    --tone-muted-a: 0.68;
   }
   [data-tone="champagne"] {
     --tone-bg: var(--gp-champagne);
@@ -265,7 +265,7 @@
     --tone-cta-bg: var(--gp-raspberry);
     --tone-cta-fg: var(--gp-cream);
     --tone-ring: var(--gp-raspberry);
-    --tone-muted-a: 0.62;
+    --tone-muted-a: 0.7;
   }
   [data-tone="raspberry"] {
     --tone-bg: var(--gp-raspberry);
@@ -274,7 +274,7 @@
     --tone-cta-bg: var(--gp-cream);
     --tone-cta-fg: var(--gp-raspberry);
     --tone-ring: var(--gp-cream);
-    --tone-muted-a: 0.8;
+    --tone-muted-a: 0.86;
   }
   [data-tone="ink"] {
     --tone-bg: var(--gp-ink);
@@ -398,5 +398,422 @@
 @keyframes gp-dash {
   to {
     stroke-dashoffset: -28;
+  }
+}
+
+/* ==========================================================================
+   Home line-up 2 "Soirée royale" (components/home-v2). Every effect reads
+   `data-reveal` from a tiny island: "idle" (server HTML, no JS, reduced
+   motion, already on screen) is ALWAYS the final readable state; "wait" is
+   armed offscreen only; "in" plays the section's one motion moment.
+   ========================================================================== */
+@layer components {
+  /* Royal evening: the dashed CTA ring turns gold on ink. */
+  [data-tone="ink"] .gp-ring {
+    color: rgb(var(--gp-gold));
+  }
+
+  /* 1 · Bowl carousel. Static (pre-JS / reduced motion) = a flat row; JS writes
+     transform + clip-path per frame with the same origin, so nothing jumps. */
+  .hv2-bowl {
+    --bowl-h: clamp(232px, 19vw, 300px);
+    /* Room for the near edge of the turned cards (perspective). */
+    height: calc(var(--bowl-h) * 1.14);
+    container-type: inline-size;
+  }
+  .hv2-bowl-card {
+    position: absolute;
+    left: 0;
+    top: calc(var(--bowl-h) * 0.07);
+    display: block;
+    width: calc(var(--bowl-h) * 0.76);
+    height: var(--bowl-h);
+    overflow: hidden;
+    border-radius: 14px;
+    background: rgb(var(--gp-cream) / 0.08);
+    transform-origin: 50% 50%;
+    transform: translate3d(calc(50cqw + var(--k) * max(140px, 12.5cqw) - var(--bowl-h) * 0.38), 0, 0)
+      scale(0.8);
+    will-change: transform;
+    -webkit-user-drag: none;
+  }
+  .hv2-bowl-card:focus-visible {
+    outline-offset: -4px;
+  }
+  .hv2-bowl-label {
+    position: absolute;
+    left: 50%;
+    bottom: 9%;
+    max-width: 110px;
+    transform: translateX(-50%) scale(1.25);
+    transform-origin: 50% 100%;
+    border-radius: 12px;
+    background: rgb(var(--gp-ink) / 0.74);
+    padding: 3px 10px 4px;
+    color: rgb(var(--gp-cream));
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    width: max-content;
+    will-change: transform;
+  }
+
+  /* 2 · Four tiles: rise in sequence, photos tuck into the corners. */
+  .hv2-blush {
+    background:
+      linear-gradient(rgb(var(--gp-raspberry) / 0.12), rgb(var(--gp-raspberry) / 0.12)),
+      rgb(var(--gp-cream));
+  }
+  .hv2-tiles {
+    scrollbar-width: none;
+  }
+  .hv2-tiles .hv2-tile {
+    transition:
+      transform 950ms var(--gp-ease) calc(var(--i) * 110ms),
+      opacity 600ms var(--gp-ease) calc(var(--i) * 110ms);
+  }
+  .hv2-tiles .hv2-tuck {
+    transition:
+      translate 1100ms var(--gp-ease) calc(var(--i) * 110ms + 260ms),
+      scale 1100ms var(--gp-ease) calc(var(--i) * 110ms + 260ms);
+  }
+  .hv2-tiles[data-reveal="wait"] .hv2-tile {
+    transform: translateY(90px);
+    opacity: 0;
+  }
+  .hv2-tiles[data-reveal="wait"] .hv2-tuck {
+    translate: 34% -38%;
+    scale: 1.14;
+  }
+  [dir="rtl"] .hv2-tiles[data-reveal="wait"] .hv2-tuck {
+    translate: -34% -38%;
+  }
+
+  /* 3 · Fan of prints, dealt from the deck (and re-dealt on pill change). */
+  .hv2-fan {
+    --card-w: clamp(140px, 40vw, 190px);
+    --spread: clamp(46px, 13vw, 60px);
+    height: calc(var(--card-w) * 1.25 + 56px);
+  }
+  @media (min-width: 768px) {
+    .hv2-fan {
+      --card-w: clamp(200px, 23vw, 320px);
+      --spread: clamp(110px, 16vw, 232px);
+    }
+  }
+  .hv2-fan-card {
+    --x: calc(var(--k) * var(--spread));
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: var(--card-w);
+    transform: translateX(-50%) translate(var(--x), var(--y)) rotate(var(--r));
+    transition: transform 320ms var(--gp-ease);
+  }
+  [dir="rtl"] .hv2-fan-card {
+    --x: calc(var(--k) * var(--spread) * -1);
+  }
+  .hv2-fan-card:hover,
+  .hv2-fan-card:focus-within {
+    z-index: 10 !important;
+    transform: translateX(-50%) translate(var(--x), calc(var(--y) - 16px)) rotate(calc(var(--r) * 0.4));
+  }
+  .hv2-fan[data-reveal="wait"] .hv2-fan-card {
+    opacity: 0;
+    transform: translateX(-50%) translate(calc(var(--x) * 0.15), 170px) rotate(-12deg) scale(0.9);
+  }
+  .hv2-fan[data-reveal="in"] .hv2-fan-card {
+    animation: hv2-deal 780ms var(--gp-ease) calc(var(--j) * 85ms) backwards;
+  }
+
+  /* 4 · Occasion card: the new photo clip-reveals over the previous one. */
+  .hv2-occ-photo {
+    z-index: 0;
+    clip-path: inset(100% 0 0 0);
+    transition: clip-path 0s linear 800ms;
+  }
+  .hv2-occ-photo[data-state="prev"] {
+    z-index: 1;
+    clip-path: inset(0);
+    transition: none;
+  }
+  .hv2-occ-photo[data-state="on"] {
+    z-index: 2;
+    clip-path: inset(0);
+    transition: clip-path 780ms var(--gp-ease);
+  }
+  .hv2-occ-photo img {
+    transform: scale(1.07);
+    transition: transform 1300ms var(--gp-ease);
+  }
+  .hv2-occ-photo[data-state="on"] img {
+    transform: none;
+  }
+  .hv2-occ-insets {
+    z-index: 3;
+    animation: hv2-pop 650ms var(--gp-ease) 200ms backwards;
+  }
+
+  /* 5 · The scrubber: native range, the thumb is a round cake photo. */
+  .hv2-range {
+    --track: rgb(var(--gp-cream) / 0.28);
+    --fill: rgb(var(--gp-cream));
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    touch-action: pan-y;
+  }
+  .hv2-range:focus-visible {
+    outline: none;
+  }
+  .hv2-range::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 9999px;
+    background: linear-gradient(to right, var(--fill) var(--p), var(--track) var(--p));
+  }
+  [dir="rtl"] .hv2-range::-webkit-slider-runnable-track {
+    background: linear-gradient(to left, var(--fill) var(--p), var(--track) var(--p));
+  }
+  .hv2-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 56px;
+    height: 56px;
+    margin-top: -25px;
+    border: 3px solid rgb(var(--gp-cream));
+    border-radius: 50%;
+    background: var(--thumb) center / cover, rgb(var(--gp-champagne));
+    box-shadow: 0 12px 24px -8px rgb(var(--gp-ink) / 0.55);
+    transition: transform 150ms var(--gp-ease);
+  }
+  .hv2-range:active::-webkit-slider-thumb {
+    transform: scale(1.08);
+  }
+  .hv2-range:focus-visible::-webkit-slider-thumb {
+    outline: 3px solid rgb(var(--gp-cream));
+    outline-offset: 3px;
+  }
+  .hv2-range::-moz-range-track {
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--track);
+  }
+  .hv2-range::-moz-range-progress {
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--fill);
+  }
+  .hv2-range::-moz-range-thumb {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgb(var(--gp-cream));
+    border-radius: 50%;
+    background: var(--thumb) center / cover, rgb(var(--gp-champagne));
+    box-shadow: 0 12px 24px -8px rgb(var(--gp-ink) / 0.55);
+  }
+  .hv2-step-in {
+    animation: hv2-rise 520ms var(--gp-ease) backwards;
+  }
+  .hv2-bubble {
+    animation: hv2-pop 560ms var(--gp-ease) 80ms backwards;
+  }
+
+  /* 6 · The crown stamp. */
+  .hv2-stamp {
+    transform: rotate(-10deg);
+  }
+  .hv2-stamp-ring {
+    opacity: 0;
+  }
+  .hv2-house[data-reveal="wait"] .hv2-stamp {
+    opacity: 0;
+    transform: scale(1.9) rotate(-32deg);
+  }
+  .hv2-house[data-reveal="in"] .hv2-stamp {
+    animation: hv2-stamp 820ms var(--gp-ease) 250ms both;
+  }
+  .hv2-house[data-reveal="in"] .hv2-stamp-ring {
+    animation: hv2-ring 950ms var(--gp-ease) 690ms both;
+  }
+  .hv2-house[data-reveal="in"] .hv2-house-print {
+    animation: hv2-thud 420ms var(--gp-ease) 690ms both;
+  }
+
+  /* 7 · The ticket prints out of the slot. */
+  .hv2-ticket {
+    transition: transform 1300ms var(--gp-ease) 120ms;
+  }
+  .hv2-ticket-wrap[data-reveal="wait"] .hv2-ticket {
+    transform: translateY(-101%);
+  }
+  .hv2-ticket-edge {
+    -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 22px 100%;
+    mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 22px 100%;
+  }
+
+  /* 9 · Story rings draw (raspberry → gold). */
+  .hv2-ring circle {
+    stroke-dasharray: 1 1;
+    stroke-dashoffset: 0;
+  }
+  .hv2-stories[data-reveal="wait"] .hv2-ring circle {
+    stroke-dashoffset: 1;
+  }
+  .hv2-stories[data-reveal="in"] .hv2-ring circle {
+    transition: stroke-dashoffset 1200ms var(--gp-ease) calc(120ms + var(--i) * 110ms);
+  }
+
+  /* 10 · The gift: gold satin ribbons + bow, unwrapped on enter (≤ 1 s). */
+  .hv2-gift {
+    --satin-dark: color-mix(in srgb, rgb(var(--gp-gold)) 70%, rgb(var(--gp-ink)));
+  }
+  .hv2-ribbon-v,
+  .hv2-ribbon-h {
+    box-shadow: 0 14px 26px -12px rgb(var(--gp-ink) / 0.55);
+  }
+  .hv2-ribbon-v {
+    background: linear-gradient(
+      90deg,
+      var(--satin-dark),
+      rgb(var(--gp-gold)) 20%,
+      rgb(var(--gp-champagne)) 46%,
+      rgb(var(--gp-gold)) 64%,
+      var(--satin-dark)
+    );
+    transform: translateY(-103%);
+  }
+  .hv2-ribbon-h {
+    background: linear-gradient(
+      180deg,
+      var(--satin-dark),
+      rgb(var(--gp-gold)) 20%,
+      rgb(var(--gp-champagne)) 46%,
+      rgb(var(--gp-gold)) 64%,
+      var(--satin-dark)
+    );
+    transform: translateX(103%);
+  }
+  [dir="rtl"] .hv2-ribbon-h {
+    transform: translateX(-103%);
+  }
+  .hv2-bow > svg {
+    opacity: 0;
+    transform: translateY(-70%) rotate(-14deg) scale(0.86);
+    filter: drop-shadow(0 12px 14px rgb(var(--gp-ink) / 0.35));
+  }
+  .hv2-bow-fill {
+    fill: rgb(var(--gp-gold));
+    stroke: var(--satin-dark);
+  }
+  .hv2-bow-line {
+    stroke: rgb(var(--gp-champagne));
+  }
+  .hv2-bow-knot {
+    fill: rgb(var(--gp-champagne));
+    stroke: var(--satin-dark);
+  }
+  .hv2-tag {
+    transform: rotate(-4deg);
+    transform-origin: 50% 0;
+  }
+  .hv2-bow-rest {
+    transform: rotate(16deg);
+  }
+  .hv2-gift[data-reveal="wait"] .hv2-bow-rest {
+    opacity: 0;
+    transform: translateY(-48px) rotate(-6deg);
+  }
+  .hv2-gift[data-reveal="in"] .hv2-bow-rest {
+    transition:
+      opacity 450ms var(--gp-ease) 620ms,
+      transform 800ms var(--gp-ease) 600ms;
+  }
+  .hv2-gift[data-reveal="wait"] .hv2-ribbon-v,
+  .hv2-gift[data-reveal="wait"] .hv2-ribbon-h,
+  .hv2-gift[data-reveal="wait"] .hv2-bow > svg {
+    opacity: 1;
+    transform: none;
+  }
+  .hv2-gift[data-reveal="in"] .hv2-ribbon-v {
+    transition: transform 760ms var(--gp-ease) 140ms;
+  }
+  .hv2-gift[data-reveal="in"] .hv2-ribbon-h {
+    transition: transform 760ms var(--gp-ease) 220ms;
+  }
+  .hv2-gift[data-reveal="in"] .hv2-bow > svg {
+    transition:
+      transform 640ms var(--gp-ease),
+      opacity 420ms var(--gp-ease) 180ms;
+  }
+  .hv2-gift[data-reveal="in"] .hv2-tag {
+    animation: hv2-swing 1500ms var(--gp-ease) 260ms both;
+  }
+}
+
+@keyframes hv2-deal {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translate(calc(var(--x) * 0.15), 170px) rotate(-12deg) scale(0.9);
+  }
+  30% {
+    opacity: 1;
+  }
+}
+@keyframes hv2-pop {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+}
+@keyframes hv2-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes hv2-stamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.9) rotate(-32deg);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(0.93) rotate(-8deg);
+  }
+  78% {
+    transform: scale(1.03) rotate(-10.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-10deg);
+  }
+}
+@keyframes hv2-ring {
+  0% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+@keyframes hv2-thud {
+  35% {
+    transform: translateY(5px) scale(0.992);
+  }
+}
+@keyframes hv2-swing {
+  0% {
+    transform: rotate(-12deg);
+  }
+  35% {
+    transform: rotate(5deg);
+  }
+  65% {
+    transform: rotate(-6deg);
+  }
+  100% {
+    transform: rotate(-4deg);
   }
 }

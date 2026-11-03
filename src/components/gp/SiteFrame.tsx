@@ -16,6 +16,8 @@ export interface SiteFrameProps {
   pill?: "auto" | "off";
   /** Extra classes on <main> (e.g. a page background). */
   mainClassName?: string;
+  /** Footer order CTA (off when the page already ends on a CTA section). */
+  footerCta?: boolean;
 }
 
 /**
@@ -30,6 +32,7 @@ export default async function SiteFrame({
   overlay = true,
   pill = "auto",
   mainClassName,
+  footerCta = true,
 }: SiteFrameProps) {
   const categories = await getNavCategories(locale);
 
@@ -52,7 +55,7 @@ export default async function SiteFrame({
           <FooterBody />
         </CurtainFooter>
       ) : footer === "wordmark" ? (
-        <WordmarkFooter />
+        <WordmarkFooter showCta={footerCta} />
       ) : (
         <footer
           data-tone="ink"

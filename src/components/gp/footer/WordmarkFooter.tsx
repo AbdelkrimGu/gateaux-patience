@@ -8,9 +8,11 @@ import { cn } from "@/lib/utils";
  */
 export default function WordmarkFooter({
   showTagline = true,
+  showCta = true,
   className,
 }: {
   showTagline?: boolean;
+  showCta?: boolean;
   className?: string;
 }) {
   return (
@@ -19,7 +21,7 @@ export default function WordmarkFooter({
       data-final-cta
       className={cn("relative z-0 -mt-10 overflow-hidden bg-gp-ink pt-20 text-gp-cream md:pt-28", className)}
     >
-      <FooterBody showTagline={showTagline} />
+      <FooterBody showTagline={showTagline} showCta={showCta} />
       <div className="mt-10 md:mt-14">
         <WordmarkRise />
       </div>

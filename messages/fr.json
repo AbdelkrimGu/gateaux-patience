@@ -206,13 +206,14 @@
       "title_accent": "main",
       "title_after": "pour vos plus beaux jours",
       "note": "100 % artisanal",
-      "lead": "Anniversaires, mariages, diplômes : chaque gâteau est imaginé avec vous et fait à la main, à vos couleurs.",
+      "lead": "Anniversaires, mariages, diplômes : chaque gâteau est imaginé avec vous et fait à la main, à vos couleurs.",
       "cta": "Commander sur WhatsApp",
       "cta_note": "Parlons de votre gâteau",
-      "cards_label": "Nos catégories"
+      "cards_label": "Nos catégories",
+      "card_aria": "{label} — voir la galerie ({cake})"
     },
     "promise": {
-      "sentence": "Chaque gâteau est <u>fait main</u>, <u>sur mesure</u>, à Sidi Bel Abbès depuis 2018 : vous choisissez, on en parle sur WhatsApp, et Patience le crée <u>pour votre jour</u>.",
+      "sentence": "Chaque gâteau est <u>fait main</u>, <u>sur mesure</u>, à Sidi Bel Abbès depuis 2018 : vous choisissez, on en parle sur WhatsApp, et Patience le crée <u>pour votre jour</u>.",
       "coda": "Avec patience, évidemment.",
       "t1_title": "Fait main",
       "t1_text": "Chaque gâteau est fait à la main, dans notre atelier.",
@@ -221,7 +222,8 @@
       "t3_title": "Depuis 2018",
       "t3_text": "Des gâteaux pour vos fêtes, année après année.",
       "t4_title": "Sidi Bel Abbès",
-      "t4_text": "C'est ici que naît chacun de vos gâteaux."
+      "t4_text": "C'est ici que naît chacun de vos gâteaux.",
+      "title_sr": "Nos promesses"
     },
     "menu": {
       "eyebrow": "La carte",
@@ -229,22 +231,28 @@
       "count": "{count, plural, one {# gâteau} other {# gâteaux}}",
       "custom_group": "À personnaliser",
       "tiramisu_row": "Boîte tiramisu personnalisée",
-      "see_all": "Voir toute la galerie"
+      "see_all": "Voir toute la galerie",
+      "pills_label": "Choisir une catégorie",
+      "see_gallery": "Voir la galerie",
+      "see_aria": "Voir la galerie : {label}"
     },
     "occasions": {
       "eyebrow": "Pour chaque occasion",
-      "title": "Que fêtez-vous ?",
+      "title": "Que fêtez-vous ?",
       "cta": "Commander ce gâteau sur WhatsApp",
-      "see": "Voir les gâteaux"
+      "see": "Voir les gâteaux",
+      "list_label": "Les occasions",
+      "see_count": "{count, plural, one {Voir le gâteau} other {Voir les # gâteaux}}"
     },
     "house": {
       "eyebrow": "De l'atelier",
       "title": "Un mot de la maison",
-      "greeting": "Bonjour !",
+      "greeting": "Bonjour !",
       "p1": "Depuis 2018, nous faisons chaque gâteau à la main, dans notre atelier de Sidi Bel Abbès.",
       "p2": "Nous partons de votre idée (une couleur, un thème, un prénom) pour créer un gâteau qui vous ressemble.",
       "p3": "Merci de nous confier vos plus beaux jours.",
-      "signoff": "Avec patience,"
+      "signoff": "Avec patience,",
+      "signature_aria": "Gateaux Patience"
     },
     "steps": {
       "eyebrow": "Comment ça marche",
@@ -254,56 +262,81 @@
       "s2_title": "Contactez-nous",
       "s2_text": "Écrivez-nous sur WhatsApp avec la date et l'occasion.",
       "s3_title": "Personnalisez",
-      "s3_text": "Taille, saveur, décor, message : on règle chaque détail ensemble.",
+      "s3_text": "Taille, saveur, décor, message : on règle chaque détail ensemble.",
       "s4_title": "Savourez",
       "s4_text": "Votre gâteau, fait main rien que pour vous, est prêt pour la fête.",
       "chip_size": "Taille",
       "chip_flavour": "Saveur",
       "chip_decor": "Décor",
       "chip_message": "Message",
-      "sticker": "Bon appétit !",
-      "inspiration": "votre inspiration"
+      "sticker": "Bon appétit !",
+      "inspiration": "votre inspiration",
+      "slider_label": "Les étapes",
+      "drag_hint": "Faites glisser le gâteau pour voir chaque étape",
+      "step_value": "Étape {n} sur {total} : {title}",
+      "step_button": "Étape {n} : {title}",
+      "chosen": "Modèle choisi"
     },
     "faq": {
       "eyebrow": "Questions",
       "title": "Vos questions",
-      "q1": "Comment commander ?",
-      "a1": "Choisissez un modèle dans la galerie, ou venez avec votre idée, puis écrivez-nous sur WhatsApp : nous définissons ensemble la taille, la saveur et le décor.",
-      "q2": "Que peut-on personnaliser ?",
+      "q1": "Comment commander ?",
+      "a1": "Choisissez un modèle dans la galerie, ou venez avec votre idée, puis écrivez-nous sur WhatsApp : nous définissons ensemble la taille, la saveur et le décor.",
+      "q2": "Que peut-on personnaliser ?",
       "a2": "La taille, la saveur, le décor, les couleurs, le thème et le message écrit sur le gâteau.",
-      "q3": "Où êtes-vous ?",
+      "q3": "Où êtes-vous ?",
       "a3": "Notre atelier est à Sidi Bel Abbès, en Algérie.",
-      "q4": "Peut-on écrire un message sur le tiramisu ?",
-      "a4": "Oui : sur la page Tiramisu, vous écrivez votre message et voyez le résultat en direct avant de commander.",
-      "q5": "Où voir plus de créations ?",
+      "q4": "Peut-on écrire un message sur le tiramisu ?",
+      "a4": "Oui : sur la page Tiramisu, vous écrivez votre message et voyez le résultat en direct avant de commander.",
+      "q5": "Où voir plus de créations ?",
       "a5": "Toute la galerie est ici, sur le site, et nos dernières créations sont sur Instagram ({handle}).",
-      "q6": "Combien ça coûte ?",
-      "a6": "Le prix dépend de la taille et du décor : demandez votre devis sur WhatsApp."
+      "q6": "Combien ça coûte ?",
+      "a6": "Le prix dépend de la taille et du décor : demandez votre devis sur WhatsApp.",
+      "lead": "Ce qu'on nous demande le plus souvent, en quelques mots.",
+      "q_mark": "Q.",
+      "more": "Une autre question ? Écrivez-nous",
+      "a5_rich": "Toute la galerie est ici, sur le site, et nos dernières créations sont sur Instagram : <handle></handle>."
     },
     "follow": {
       "eyebrow": "Sur Instagram",
       "lead": "Nos dernières créations, tout juste sorties de l'atelier.",
-      "cta": "Suivre sur Instagram"
+      "cta": "Suivre sur Instagram",
+      "stories_label": "Nos catégories",
+      "grid_aria": "{title} : nos créations sur Instagram"
     },
     "finale": {
-      "title": "Une date en tête ?",
-      "lead": "Dites-nous l'occasion, la date et vos envies : on en parle sur WhatsApp.",
+      "title": "Une date en tête ?",
+      "lead": "Dites-nous l'occasion, la date et vos envies : on en parle sur WhatsApp.",
       "field_label": "Votre message",
-      "placeholder": "Bonjour ! Je voudrais un gâteau pour…",
+      "placeholder": "Bonjour ! Je voudrais un gâteau pour…",
       "send": "Envoyer sur WhatsApp",
       "pills_label": "Ou choisissez l'occasion",
       "for_you": "Pour vous"
     },
     "ticket": {
       "title": "Votre message",
-      "lead": "Ce qu'il faut nous dire pour commencer : on prépare le message WhatsApp pour vous.",
+      "lead": "Ce qu'il faut nous dire pour commencer : on prépare le message WhatsApp pour vous.",
       "occasion": "Occasion",
       "date": "Date",
       "parts": "Parts",
       "flavour": "Saveur",
       "decor": "Décor",
       "choose": "Choisir…",
-      "submit": "Préparer mon message WhatsApp"
+      "submit": "Préparer mon message WhatsApp",
+      "eyebrow": "Pour commencer",
+      "ticket_sub": "Votre message pour WhatsApp",
+      "other": "Autre occasion",
+      "parts_placeholder": "ex. 20",
+      "flavour_placeholder": "ex. chocolat",
+      "decor_placeholder": "ex. fleurs, prénom",
+      "err_occasion": "Choisissez une occasion.",
+      "err_date": "Indiquez la date de votre fête.",
+      "err_date_past": "Cette date est déjà passée.",
+      "err_parts": "Indiquez le nombre de parts en chiffres.",
+      "hint": "WhatsApp s'ouvre avec votre message : vous pouvez le modifier avant de l'envoyer.",
+      "sent": "Votre message est prêt dans WhatsApp.",
+      "open_again": "Rouvrir WhatsApp",
+      "note": "Puis on en parle"
     }
   }
 }

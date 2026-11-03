@@ -104,7 +104,11 @@ const SENSITIVE_WORDS =
   /cocomelon|spider|minecraft|minnie|mini-?mouse|mickey|raiponce|rapunzel|superman|batman|disney|marvel|frozen|reine des neiges|elsa|pok[eé]mon|sonic|mario|barbie|paw patrol|pat.?patrouille|stitch|festina|hello kitty/i;
 
 /** Photos that are not cake pictures (e.g. a screenshot of a comment). */
-const EXCLUDED_PHOTOS = new Set(["/images/Cake9/FB_IMG_1778413230416.jpg"]);
+const EXCLUDED_PHOTOS = new Set([
+  "/images/Cake9/FB_IMG_1778413230416.jpg",
+  "/images/Cake1/FB_IMG_1778412913118.jpg", // screenshot of a customer DM
+  "/images/Cake7/FB_IMG_1778413148725.jpg", // screenshot of a customer DM
+]);
 
 function isSensitive(cake: Cake): boolean {
   if (SENSITIVE_SLUGS.has(cake.slug)) return true;

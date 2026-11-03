@@ -1,19 +1,19 @@
 import { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import SiteFrame from "@/components/gp/SiteFrame";
-import HeroSection from "@/components/home/HeroSection";
-import FeaturedCakes from "@/components/home/FeaturedCakes";
-import CategoriesSection from "@/components/home/CategoriesSection";
-import AboutSection from "@/components/home/AboutSection";
-import HowToOrderSection from "@/components/home/HowToOrderSection";
-import SocialCTASection from "@/components/home/SocialCTASection";
-import {
-  getCategoryImageGroups,
-  getFeaturedCakes,
-  getHeroCakes,
-} from "@/lib/cakes-data";
-import { getCategories } from "@/lib/categories-data";
 import { unstable_noStore as noStore } from "next/cache";
+import SiteFrame from "@/components/gp/SiteFrame";
+import { getHomeData } from "@/lib/home-data";
+import { buildSoireeData } from "@/components/home-v2/data";
+import HeroSoiree from "@/components/home-v2/HeroSoiree";
+import PromiseTiles from "@/components/home-v2/PromiseTiles";
+import MenuFan from "@/components/home-v2/MenuFan";
+import OccasionsSection from "@/components/home-v2/OccasionsSection";
+import HowSection from "@/components/home-v2/HowSection";
+import HouseStamp from "@/components/home-v2/HouseStamp";
+import TicketSection from "@/components/home-v2/TicketSection";
+import FaqWords from "@/components/home-v2/FaqWords";
+import FollowStories from "@/components/home-v2/FollowStories";
+import FinaleGift from "@/components/home-v2/FinaleGift";
 
 export const dynamic = "force-dynamic";
 
@@ -40,9 +40,12 @@ export async function generateMetadata({
   };
 }
 
-// The current sections stay until the two line-ups (refine/creme-velours,
-// refine/soiree-royale) replace them; the new frame (header, curtain footer,
-// sticky pill) is already in place.
+/**
+ * Home, line-up 2 "Soirée royale" (dark, logo-like; peak & end = the gift):
+ * ink hero → ink promises → cream fan → champagne occasions → raspberry steps
+ * → cream house → ink ticket → cream questions → champagne stories → ink gift
+ * → giant gold wordmark footer.
+ */
 export default async function HomePage({
   params,
 }: {
@@ -51,20 +54,25 @@ export default async function HomePage({
   const { locale } = await params;
   setRequestLocale(locale);
   noStore();
-  const [hero, featured, categories, floatingGroups] = await Promise.all([
-    getHeroCakes(5),
-    getFeaturedCakes(6),
-    getCategories(),
-    getCategoryImageGroups(24, 4),
-  ]);
+  const data = buildSoireeData(await getHomeData(locale));
+  const occasions = data?.occasionLabels ?? [];
+
   return (
-    <SiteFrame locale={locale} footer="curtain">
-      <HeroSection hero={hero} floatingGroups={floatingGroups} />
-      <FeaturedCakes cakes={featured} />
-      <CategoriesSection categories={categories} />
-      <AboutSection />
-      <HowToOrderSection />
-      <SocialCTASection />
+    <SiteFrame locale={locale} footer="wordmark" footerCta={false}>
+      <HeroSoiree locale={locale} cards={data?.hero ?? []} />
+      {data ? (
+        <>
+          <PromiseTiles locale={locale} photos={data.tiles} />
+          <MenuFan locale={locale} categories={data.fan} defaultSlug={data.fanDefault} />
+          <OccasionsSection locale={locale} occasions={data.occasions} />
+          <HowSection locale={locale} slider={data.slider} />
+          <HouseStamp locale={locale} photo={data.signature} />
+        </>
+      ) : null}
+      <TicketSection locale={locale} occasions={occasions} />
+      <FaqWords locale={locale} />
+      {data ? <FollowStories locale={locale} stories={data.stories} grid={data.grid} /> : null}
+      <FinaleGift locale={locale} occasions={occasions} />
     </SiteFrame>
   );
 }

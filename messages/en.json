@@ -209,7 +209,8 @@
       "lead": "Birthdays, weddings, graduations: every cake is imagined with you and made by hand, in your colors.",
       "cta": "Order on WhatsApp",
       "cta_note": "Let's talk about your cake",
-      "cards_label": "Our categories"
+      "cards_label": "Our categories",
+      "card_aria": "{label} — see the gallery ({cake})"
     },
     "promise": {
       "sentence": "Every cake is <u>made by hand</u>, <u>made to order</u>, in Sidi Bel Abbès since 2018: you choose, we talk it over on WhatsApp, and Patience makes it <u>for your day</u>.",
@@ -221,7 +222,8 @@
       "t3_title": "Since 2018",
       "t3_text": "Cakes for your celebrations, year after year.",
       "t4_title": "Sidi Bel Abbès",
-      "t4_text": "Where every one of your cakes is made."
+      "t4_text": "Where every one of your cakes is made.",
+      "title_sr": "Our promises"
     },
     "menu": {
       "eyebrow": "The menu",
@@ -229,13 +231,18 @@
       "count": "{count, plural, one {# cake} other {# cakes}}",
       "custom_group": "To personalize",
       "tiramisu_row": "Personalized tiramisu box",
-      "see_all": "See the whole gallery"
+      "see_all": "See the whole gallery",
+      "pills_label": "Choose a category",
+      "see_gallery": "See the gallery",
+      "see_aria": "See the gallery: {label}"
     },
     "occasions": {
       "eyebrow": "For every occasion",
       "title": "What are you celebrating?",
       "cta": "Order this cake on WhatsApp",
-      "see": "See the cakes"
+      "see": "See the cakes",
+      "list_label": "Occasions",
+      "see_count": "{count, plural, one {See the cake} other {See all # cakes}}"
     },
     "house": {
       "eyebrow": "From the workshop",
@@ -244,7 +251,8 @@
       "p1": "Since 2018, we have made every cake by hand in our workshop in Sidi Bel Abbès.",
       "p2": "We start from your idea (a color, a theme, a name) and make a cake that feels like you.",
       "p3": "Thank you for trusting us with your happiest days.",
-      "signoff": "With patience,"
+      "signoff": "With patience,",
+      "signature_aria": "Gateaux Patience"
     },
     "steps": {
       "eyebrow": "How it works",
@@ -262,7 +270,12 @@
       "chip_decor": "Decoration",
       "chip_message": "Message",
       "sticker": "Bon appétit!",
-      "inspiration": "your inspiration"
+      "inspiration": "your inspiration",
+      "slider_label": "The steps",
+      "drag_hint": "Drag the cake to see each step",
+      "step_value": "Step {n} of {total}: {title}",
+      "step_button": "Step {n}: {title}",
+      "chosen": "Chosen design"
     },
     "faq": {
       "eyebrow": "Questions",
@@ -278,12 +291,18 @@
       "q5": "Where can I see more of your cakes?",
       "a5": "The whole gallery is right here on the site, and our latest creations are on Instagram ({handle}).",
       "q6": "How much does it cost?",
-      "a6": "The price depends on the size and decoration: ask for your quote on WhatsApp."
+      "a6": "The price depends on the size and decoration: ask for your quote on WhatsApp.",
+      "lead": "What people ask us most, in a few words.",
+      "q_mark": "Q.",
+      "more": "Another question? Message us",
+      "a5_rich": "The full gallery is right here on the site, and our latest creations are on Instagram: <handle></handle>."
     },
     "follow": {
       "eyebrow": "On Instagram",
       "lead": "Our latest creations, fresh from the workshop.",
-      "cta": "Follow on Instagram"
+      "cta": "Follow on Instagram",
+      "stories_label": "Our categories",
+      "grid_aria": "{title}: our creations on Instagram"
     },
     "finale": {
       "title": "Have a date in mind?",
@@ -303,7 +322,21 @@
       "flavour": "Flavor",
       "decor": "Decoration",
       "choose": "Choose…",
-      "submit": "Prepare my WhatsApp message"
+      "submit": "Prepare my WhatsApp message",
+      "eyebrow": "To get started",
+      "ticket_sub": "Your message for WhatsApp",
+      "other": "Another occasion",
+      "parts_placeholder": "e.g. 20",
+      "flavour_placeholder": "e.g. chocolate",
+      "decor_placeholder": "e.g. flowers, name",
+      "err_occasion": "Choose an occasion.",
+      "err_date": "Add the date of your party.",
+      "err_date_past": "This date has already passed.",
+      "err_parts": "Enter the number of servings as a number.",
+      "hint": "WhatsApp opens with your message: you can edit it before sending.",
+      "sent": "Your message is ready in WhatsApp.",
+      "open_again": "Open WhatsApp again",
+      "note": "Then we talk it over"
     }
   }
 }

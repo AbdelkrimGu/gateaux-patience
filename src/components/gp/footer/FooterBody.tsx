@@ -13,7 +13,14 @@ const linkCls =
   "inline-flex min-h-9 items-center gap-2 text-tone-fg/80 md:min-h-10 transition-colors duration-150 hover:text-tone-fg";
 
 /** Shared footer content (tagline, CTA, links, contact, social, credit). Used inside both footers. */
-export default function FooterBody({ showTagline = true }: { showTagline?: boolean }) {
+export default function FooterBody({
+  showTagline = true,
+  showCta = true,
+}: {
+  showTagline?: boolean;
+  /** Off when the page's last section is already the order CTA. */
+  showCta?: boolean;
+}) {
   const t = useTranslations("footer_gp");
   const tf = useTranslations("frame");
   const locale = useLocale();
@@ -33,9 +40,11 @@ export default function FooterBody({ showTagline = true }: { showTagline?: boole
             <p className="mt-4 max-w-[42ch] md:mt-5 text-[0.9375rem] leading-relaxed text-tone-muted md:text-base">
               {t("pitch")}
             </p>
-            <DashedRingCta href={order()} srHint={tf("opens_whatsapp")} size="md" className="mt-6 md:mt-8">
-              {tf("order_full")}
-            </DashedRingCta>
+            {showCta ? (
+              <DashedRingCta href={order()} srHint={tf("opens_whatsapp")} size="md" className="mt-6 md:mt-8">
+                {tf("order_full")}
+              </DashedRingCta>
+            ) : null}
           </div>
         ) : null}
 
