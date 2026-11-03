@@ -81,7 +81,8 @@ export default function Squiggle({
 
   return (
     <svg
-      ref={ref}
+      // Controlled marks need no IntersectionObserver.
+      ref={drawn === undefined ? ref : undefined}
       aria-hidden="true"
       focusable="false"
       viewBox={mark.viewBox}

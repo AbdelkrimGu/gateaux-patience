@@ -1,29 +1,68 @@
-"use client";
-
 import Image from "next/image";
-import { useTranslations } from "next-intl";
 import { Check, Heart } from "lucide-react";
 import { BrandBadge, BrandWordmark } from "@/components/gp/Brand";
 import WhatsAppIcon from "@/components/gp/WhatsAppIcon";
 import type { HomePhoto } from "@/lib/home-data";
 import { cn } from "@/lib/utils";
 
+/*
+ * The "watch an order" phone and its four screens. No hooks and no
+ * "use client": the phone list on small screens renders on the server, and
+ * the desktop scrubber (a client island) imports the same markup. All strings
+ * come in as props.
+ */
+
 export interface StoryPhotos {
-  /** The cake the visitor "chooses" (shown in the gallery, the message, the polaroid). */
+  /** The cake the visitor "chooses" (gallery, message, finished cake). */
   chosen: HomePhoto;
-  /** Three other gallery tiles. */
+  /** Another cake, pinned beside the phone as "your inspiration". */
+  inspiration: HomePhoto;
+  /** Other gallery tiles (different cakes). */
   others: HomePhoto[];
   /** The finished cake (another photo of the chosen cake when there is one). */
   finished: HomePhoto;
 }
 
-/** The phone body. Its screen is always 280 × 580 (scale the whole phone for small sizes). */
-export function Phone({ children, className }: { children: React.ReactNode; className?: string }) {
+export interface ScreenLabels {
+  gallery: string;
+  waLabel: string;
+  waInput: string;
+  /** Prefilled greeting + cake line, as the real WhatsApp message. */
+  message: string;
+  personalise: string;
+  chips: string[];
+  sticker: string;
+}
+
+const BRAND = "Gateaux Patience";
+
+/** Keeps the Latin brand name in one piece inside Arabic text. */
+function withBrand(text: string) {
+  const parts = text.split(BRAND);
+  return parts.map((part, i) => (
+    <span key={i}>
+      {part}
+      {i < parts.length - 1 ? <bdi className="whitespace-nowrap">{BRAND}</bdi> : null}
+    </span>
+  ));
+}
+
+/** The phone body. Screen 280 wide; `short` = 9:15 frame for the small phones. */
+export function Phone({
+  children,
+  className,
+  short = false,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  short?: boolean;
+}) {
   return (
     <div
       aria-hidden="true"
       className={cn(
-        "relative h-[600px] w-[300px] rounded-[46px] bg-[color-mix(in_srgb,rgb(var(--gp-ink))_88%,rgb(var(--gp-cream)))] p-[10px] shadow-[0_40px_80px_-30px_rgb(0_0_0/0.6)] ring-1 ring-gp-cream/10",
+        "relative w-[300px] rounded-[46px] bg-[color-mix(in_srgb,rgb(var(--gp-ink))_88%,rgb(var(--gp-cream)))] p-[10px] shadow-[0_40px_80px_-30px_rgb(0_0_0/0.6)] ring-1 ring-gp-cream/10",
+        short ? "h-[500px]" : "h-[600px]",
         className
       )}
     >
@@ -35,27 +74,27 @@ export function Phone({ children, className }: { children: React.ReactNode; clas
   );
 }
 
-function ChatHeader() {
-  const t = useTranslations("home.steps");
+function ChatHeader({ labels }: { labels: ScreenLabels }) {
   return (
     <div className="flex items-center gap-2.5 bg-gp-raspberry px-4 pb-3 pt-11 text-gp-cream">
       <BrandBadge size={34} />
       <div className="min-w-0 leading-tight">
-        <p className="truncate text-[15px] font-semibold">Gateaux Patience</p>
+        <p className="truncate text-[15px] font-semibold">
+          <bdi>{BRAND}</bdi>
+        </p>
         <p className="flex items-center gap-1 text-[12px] opacity-85">
           <WhatsAppIcon className="h-3 w-3" />
-          {t("wa_label")}
+          {labels.waLabel}
         </p>
       </div>
     </div>
   );
 }
 
-function ChatInput() {
-  const t = useTranslations("home.steps");
+function ChatInput({ labels }: { labels: ScreenLabels }) {
   return (
     <div className="absolute inset-x-3 bottom-3 flex items-center gap-2 rounded-full bg-white/70 py-1.5 pe-1.5 ps-4 ring-1 ring-gp-ink/10">
-      <span className="flex-1 text-[13px] text-gp-ink/70">{t("wa_input")}</span>
+      <span className="flex-1 text-[13px] text-gp-ink/70">{labels.waInput}</span>
       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gp-raspberry text-gp-cream">
         <WhatsAppIcon className="h-4 w-4" />
       </span>
@@ -63,8 +102,7 @@ function ChatInput() {
   );
 }
 
-function OutBubble({ photo, compact = false }: { photo: HomePhoto; compact?: boolean }) {
-  const tw = useTranslations("order_wa");
+function OutBubble({ photo, labels, compact = false }: { photo: HomePhoto; labels: ScreenLabels; compact?: boolean }) {
   return (
     <div
       className={cn(
@@ -75,11 +113,7 @@ function OutBubble({ photo, compact = false }: { photo: HomePhoto; compact?: boo
       <span className={cn("relative block overflow-hidden rounded-[13px]", compact ? "aspect-[2/1]" : "aspect-square")}>
         <Image src={photo.src} alt="" width={220} height={220} className="h-full w-full object-cover" />
       </span>
-      {!compact ? (
-        <p className="px-2 pb-1 pt-2 text-[13px] leading-snug">
-          {tw("hello")} {tw("cake", { cake: photo.alt })}
-        </p>
-      ) : null}
+      {!compact ? <p className="px-2 pb-1 pt-2 text-[13px] leading-snug">{withBrand(labels.message)}</p> : null}
     </div>
   );
 }
@@ -88,23 +122,26 @@ function OutBubble({ photo, compact = false }: { photo: HomePhoto; compact?: boo
 const d = (i: number) => ({ "--d": i }) as React.CSSProperties;
 
 /**
- * One screen of the "watch an order" phone. `live` = its items stagger in
- * (CSS transitions: opacity + transform) each time the screen becomes
- * `active`; otherwise the final state is shown, static.
+ * One screen of the phone. `live` = its items stagger in (CSS transitions:
+ * opacity + transform) each time the screen becomes `active`; otherwise the
+ * final state is shown, static.
  */
 export function OrderScreen({
   step,
   photos,
+  labels,
   live,
   active = true,
+  short = false,
 }: {
   step: number;
   photos: StoryPhotos;
+  labels: ScreenLabels;
   live: boolean;
   active?: boolean;
+  /** Content laid out for the 9:15 small phone. */
+  short?: boolean;
 }) {
-  const t = useTranslations("home.steps");
-  const tf = useTranslations("frame");
   const screen = { "data-live": live || undefined, "data-active": active };
 
   if (step === 0) {
@@ -112,7 +149,7 @@ export function OrderScreen({
     return (
       <div {...screen} className="gp-screen absolute inset-0 px-4 pt-12">
         <p style={d(0)} className="gp-in font-display text-[22px] font-semibold tracking-[-0.03em] rtl:tracking-normal">
-          {tf("gallery")}
+          {labels.gallery}
         </p>
         <div className="mt-3 grid grid-cols-2 gap-2">
           {tiles.map((p, i) => {
@@ -139,33 +176,34 @@ export function OrderScreen({
             );
           })}
         </div>
-        <p style={d(tiles.length + 1)} className="gp-in mt-3 truncate text-[13px] font-medium text-gp-ink/70">
-          {photos.chosen.alt}
-        </p>
+        {!short ? (
+          <p style={d(tiles.length + 1)} className="gp-in mt-3 truncate text-[13px] font-medium text-gp-ink/70">
+            {photos.chosen.alt}
+          </p>
+        ) : null}
       </div>
     );
   }
 
   if (step === 1 || step === 2) {
-    const chips = [t("chip_size"), t("chip_flavour"), t("chip_decor"), t("chip_message")];
     return (
       <div
         {...screen}
         className="gp-screen absolute inset-0 flex flex-col bg-[color-mix(in_srgb,rgb(var(--gp-champagne))_45%,rgb(var(--gp-cream)))]"
       >
-        <ChatHeader />
+        <ChatHeader labels={labels} />
         <div className="flex flex-1 flex-col justify-end gap-3 px-3 pb-[68px]">
           <div style={d(0)} className="gp-in">
-            <OutBubble photo={photos.chosen} compact={step === 2} />
+            <OutBubble photo={photos.chosen} labels={labels} compact={step === 2} />
           </div>
           {step === 2 ? (
             <div
               style={d(1)}
               className="gp-in w-[84%] rounded-[18px] rounded-es-[6px] bg-white/80 p-3 shadow-[0_6px_14px_-10px_rgb(var(--gp-ink)/0.4)] ring-1 ring-gp-ink/5"
             >
-              <p className="text-[13px] font-semibold text-gp-raspberry">{t("s3_title")}</p>
+              <p className="text-[13px] font-semibold text-gp-raspberry">{labels.personalise}</p>
               <ul className="mt-2 flex flex-wrap gap-1.5">
-                {chips.map((c, i) => (
+                {labels.chips.map((c, i) => (
                   <li
                     key={c}
                     style={d(i + 2)}
@@ -179,7 +217,7 @@ export function OrderScreen({
             </div>
           ) : null}
         </div>
-        <ChatInput />
+        <ChatInput labels={labels} />
       </div>
     );
   }
@@ -187,19 +225,28 @@ export function OrderScreen({
   // step 3: the finished cake
   return (
     <div {...screen} className="gp-screen absolute inset-0 px-4 pt-12">
-      <div style={d(0)} className="gp-in relative aspect-[4/5] overflow-hidden rounded-[22px] bg-gp-champagne">
+      <div
+        style={d(0)}
+        className={cn("gp-in relative overflow-hidden rounded-[22px] bg-gp-champagne", short ? "aspect-square" : "aspect-[4/5]")}
+      >
         <Image src={photos.finished.src} alt="" width={248} height={310} className="h-full w-full object-cover" />
       </div>
       <p
         style={{ ...d(2), rotate: "var(--gp-sticker-rot)" } as React.CSSProperties}
-        className="gp-pop absolute end-3 top-[54%] rounded-full bg-gp-raspberry px-4 py-1.5 font-note text-[22px] font-bold leading-tight text-gp-cream shadow-gp-chip [--gp-sticker-rot:-6deg] rtl:text-[18px] rtl:[--gp-sticker-rot:6deg]"
+        className={cn(
+          "gp-pop absolute end-3 rounded-full bg-gp-raspberry px-4 py-1.5 font-note text-[22px] font-bold leading-tight text-gp-cream shadow-gp-chip [--gp-sticker-rot:-6deg] rtl:text-[18px] rtl:[--gp-sticker-rot:6deg]",
+          short ? "top-[52%]" : "top-[54%]"
+        )}
       >
-        {t("sticker")}
+        {labels.sticker}
       </p>
-      <p style={d(1)} className="gp-in mt-5 text-center font-display text-[17px] font-semibold tracking-[-0.02em] rtl:tracking-normal">
+      <p
+        style={d(1)}
+        className="gp-in mt-5 text-center font-display text-[17px] font-semibold tracking-[-0.02em] rtl:tracking-normal"
+      >
         {photos.finished.alt}
       </p>
-      <div style={d(3)} className="gp-in mt-6 flex justify-center">
+      <div style={d(3)} className="gp-in mt-5 flex justify-center">
         <BrandWordmark decorative className="w-[150px] text-gp-raspberry" />
       </div>
     </div>

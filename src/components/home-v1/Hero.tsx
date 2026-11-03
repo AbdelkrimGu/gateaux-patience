@@ -2,7 +2,6 @@ import { getTranslations } from "next-intl/server";
 import DashedRingCta from "@/components/gp/DashedRingCta";
 import HandNote from "@/components/gp/HandNote";
 import SectionTone from "@/components/gp/SectionTone";
-import Squiggle from "@/components/gp/Squiggle";
 import { getOrderHref } from "@/lib/order-server";
 import BowlCarousel, { type BowlCard } from "./BowlCarousel";
 
@@ -59,13 +58,7 @@ export default async function Hero({
           </h1>
         </div>
 
-        <div className="relative mt-5 md:mt-6">
-          <Squiggle
-            variant="ticks"
-            delay={500}
-            strokeWidth={3}
-            className="absolute -top-3 start-[-3.25rem] hidden h-9 w-9 text-gp-raspberry lg:block"
-          />
+        <div className="mt-5 md:mt-6">
           <p className="mx-auto max-w-[36ch] text-step-lead leading-[1.45] text-gp-ink/70 md:max-w-[44ch] rtl:leading-[1.7]">
             {t("lead")}
           </p>
@@ -73,11 +66,17 @@ export default async function Hero({
       </div>
 
       <div className="mt-7 md:mt-9">
-        <BowlCarousel cards={cards} label={t("cards_label")} startIndex={startIndex} />
+        <BowlCarousel
+          cards={cards}
+          label={t("cards_label")}
+          pauseLabel={t("pause")}
+          playLabel={t("play")}
+          startIndex={startIndex}
+        />
       </div>
 
       {/* Phones: note below the pill; tablets/desktop: note at the start side. */}
-      <div data-hero-cta className="gp-container mt-8 flex justify-center md:mt-10">
+      <div data-hero-cta className="gp-container mt-4 flex justify-center md:mt-6">
         <DashedRingCta
           href={order()}
           srHint={tf("opens_whatsapp")}

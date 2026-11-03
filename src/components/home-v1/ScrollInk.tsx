@@ -21,9 +21,10 @@ function tokenize(source: string): Token[] {
   let m: RegExpExecArray | null;
   let pendingSpace = false; // whitespace seen at the end of the previous plain run
   const push = (text: string, key: boolean) => {
-    const words = text.split(/\s+/).filter(Boolean);
-    if (words.length) out.push({ words, key, spaced: pendingSpace || /^\s/.test(text) });
-    pendingSpace = words.length ? /\s$/.test(text) : pendingSpace || /\s/.test(text);
+    // Split on breaking spaces only: U+00A0 / U+202F (French "vous : ") glue words.
+    const words = text.split(/[ \t\r\n]+/).filter(Boolean);
+    if (words.length) out.push({ words, key, spaced: pendingSpace || /^[ \t\r\n]/.test(text) });
+    pendingSpace = words.length ? /[ \t\r\n]$/.test(text) : pendingSpace || /[ \t\r\n]/.test(text);
   };
   while ((m = re.exec(source))) {
     push(source.slice(last, m.index), false);
@@ -52,14 +53,22 @@ export default function ScrollInk({ source, className }: { source: string; class
     [tokens]
   );
 
-  const [inked, setInked] = useState(total); // server: fully inked
+  // Word index where each key phrase ends, in order: phrase k is drawn once inked past it.
+  const keyEnds = useMemo(() => ends.filter((_, r) => tokens[r].key), [ends, tokens]);
+  const keyRank = useMemo(() => {
+    let k = 0;
+    return tokens.map((t) => (t.key ? k++ : -1));
+  }, [tokens]);
+  // Only the number of drawn phrases lives in state (re-render ≤ 3 times), the
+  // per-word ink is a CSS variable written on scroll.
+  const [drawn, setDrawn] = useState(keyEnds.length); // server: all drawn
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start 85%", "end 45%"] });
 
   const apply = (p: number) => {
     const v = p * (total + 1);
     ref.current?.style.setProperty("--ink", v.toFixed(3));
-    const whole = Math.floor(v);
-    setInked((cur) => (cur === whole ? cur : whole));
+    const count = keyEnds.filter((e) => v >= e).length;
+    setDrawn((cur) => (cur === count ? cur : count));
   };
   useMotionValueEvent(scrollYProgress, "change", (p) => {
     if (!reduced) apply(p);
@@ -121,7 +130,7 @@ export default function ScrollInk({ source, className }: { source: string; class
                   ))}
                   <Squiggle
                     variant="underline"
-                    drawn={reduced || inked >= ends[wd.run]}
+                    drawn={reduced || keyRank[wd.run] < drawn}
                     duration={700}
                     strokeWidth={2.6}
                     className="absolute inset-x-0 -bottom-[0.14em] h-[0.26em] w-full text-gp-raspberry"

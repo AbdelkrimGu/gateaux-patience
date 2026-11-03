@@ -29,9 +29,12 @@ export default async function HouseNote({ locale }: { locale: string }) {
   );
 
   return (
-    <SectionTone tone="champagne" aria-labelledby="house-title" className="overflow-x-clip">
-      <div className="gp-container grid gap-12 py-20 md:grid-cols-12 md:gap-8 md:py-32">
-        <div className="md:sticky md:top-32 md:col-span-5 md:self-start md:pt-10 lg:col-span-4">
+    <SectionTone tone="champagne" aria-labelledby="house-title" data-house-scene className="gp-house overflow-x-clip">
+      {/* md+ and tall enough: the whole scene is pinned under the header while
+          the letter comes out (see .gp-house in home-v1.css). */}
+      <div className="gp-house-stage">
+      <div className="gp-house-grid gp-container grid gap-12 py-20 md:grid-cols-12 md:items-center md:gap-8 md:py-32">
+        <div className="md:col-span-5 lg:col-span-4">
           <Eyebrow>{t("eyebrow")}</Eyebrow>
           <h2
             id="house-title"
@@ -61,6 +64,7 @@ export default async function HouseNote({ locale }: { locale: string }) {
             }
           />
         </div>
+      </div>
       </div>
     </SectionTone>
   );

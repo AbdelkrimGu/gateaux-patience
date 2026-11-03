@@ -63,10 +63,14 @@ export default function SiteHeader({ categories, overlay = true, pill = "auto" }
       const header = headerRef.current;
       if (!header) return;
       setScrolled(window.scrollY > 8);
-      const y = Math.min(header.offsetHeight / 2, window.innerHeight - 1);
+      // Probe just under the header's bottom edge (what the eye reads as
+      // "the section below"), and resolve the tone at section level: a section
+      // may override it with data-header-tone (e.g. a cream card on raspberry).
+      const y = Math.min(header.offsetHeight + 1, window.innerHeight - 1);
       const stack = document.elementsFromPoint(window.innerWidth / 2, y);
       const under = stack.find((el) => !header.contains(el));
-      const value = under?.closest<HTMLElement>("[data-tone]")?.dataset.tone as Tone | undefined;
+      const host = under?.closest<HTMLElement>("[data-header-tone], section[data-tone]");
+      const value = (host?.dataset.headerTone ?? host?.dataset.tone) as Tone | undefined;
       setTone(value && TONES.includes(value) ? value : "cream");
     };
     const schedule = () => {

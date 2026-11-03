@@ -16,12 +16,14 @@ const QUESTIONS = [1, 2, 3, 4, 5, 6] as const;
 export default async function Faq({ locale }: { locale: string }) {
   const t = await getTranslations({ locale, namespace: "home.faq" });
   const order = await getOrderHref(locale);
+  const tf = await getTranslations({ locale, namespace: "frame" });
   const linkCls =
     "font-medium text-gp-raspberry underline decoration-gp-raspberry/35 underline-offset-[5px] hover:decoration-gp-raspberry";
   const rich = {
     wa: (chunks: React.ReactNode) => (
       <a href={order()} target="_blank" rel="noopener noreferrer" className={linkCls}>
         {chunks}
+        <span className="sr-only"> ({tf("opens_whatsapp")})</span>
       </a>
     ),
     tiramisu: (chunks: React.ReactNode) => (

@@ -25,7 +25,9 @@ export default function Composer({ occasions }: { occasions: string[] }) {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const href = order(text.trim() ? { text } : picked ? { occasion: picked } : {});
-    window.open(href, "_blank", "noopener,noreferrer");
+    // Same tab: in-app browsers (Instagram, Facebook) ignore window.open popups,
+    // and wa.me hands over to the WhatsApp app anyway.
+    window.location.assign(href);
   };
 
   const pick = (label: string) => {
@@ -39,7 +41,6 @@ export default function Composer({ occasions }: { occasions: string[] }) {
       <form
         action={`https://wa.me/${WHATSAPP_DIGITS}`}
         method="get"
-        target="_blank"
         onSubmit={submit}
         className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-2 sm:rounded-[30px] sm:bg-gp-cream sm:p-2 sm:shadow-[0_24px_50px_-24px_rgb(var(--gp-ink)/0.55)]"
       >

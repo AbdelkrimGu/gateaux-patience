@@ -18,10 +18,11 @@ export interface Folder {
 
 /** Folder colours in order: raspberry → champagne → blush → ink. */
 const SKINS = [
-  { tone: "raspberry", bg: "bg-gp-raspberry" },
-  { tone: "champagne", bg: "bg-gp-champagne" },
-  { tone: "cream", bg: "gp-blush" },
-  { tone: "ink", bg: "bg-gp-ink" },
+  // On the raspberry folder the CTA goes ink, so it isn't a twin of the sticky pill.
+  { tone: "raspberry", bg: "bg-gp-raspberry", cta: "bg-gp-ink text-gp-cream" },
+  { tone: "champagne", bg: "bg-gp-champagne", cta: "bg-tone-cta-bg text-tone-cta-fg" },
+  { tone: "cream", bg: "gp-blush", cta: "bg-tone-cta-bg text-tone-cta-fg" },
+  { tone: "ink", bg: "bg-gp-ink", cta: "bg-tone-cta-bg text-tone-cta-fg" },
 ] as const;
 
 /**
@@ -48,9 +49,10 @@ export default async function PartyFolders({ locale, folders }: { locale: string
         </h2>
 
         <ol
-          className="mt-10 md:mt-12"
+          className="gp-folders mt-10 md:mt-12"
           style={
             {
+              "--n": n,
               timelineScope: folders.map((_, i) => `--gpf${i}`).join(", "),
             } as React.CSSProperties
           }
@@ -62,7 +64,7 @@ export default async function PartyFolders({ locale, folders }: { locale: string
               <li
                 key={f.slug}
                 data-covered-by={coveredBy}
-                className="gp-folder sticky pt-9 [top:calc(var(--gp-header-h)+12px+var(--i)*36px)] md:pt-11 md:[top:calc(var(--gp-header-h)+16px+var(--i)*48px)]"
+                className="gp-folder relative pt-9 md:pt-11"
                 style={
                   {
                     "--i": i,
@@ -91,7 +93,11 @@ export default async function PartyFolders({ locale, folders }: { locale: string
                     <span className="truncate">{f.label}</span>
                   </span>
 
-                  <div className="p-5 md:p-8">
+                  {/* Fades out while the next folder covers it: only its edge and tab stay. */}
+                  <div
+                    className="gp-folder-content p-5 md:p-8"
+                    style={coveredBy ? ({ animationTimeline: coveredBy } as React.CSSProperties) : undefined}
+                  >
                     <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
                       <h3
                         id={`folder-${f.slug}`}
@@ -104,7 +110,10 @@ export default async function PartyFolders({ locale, folders }: { locale: string
                           href={order({ occasion: f.label })}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="group inline-flex min-h-12 items-center gap-2.5 rounded-full bg-tone-cta-bg px-6 text-[0.9375rem] font-semibold text-tone-cta-fg shadow-gp-chip transition-transform duration-150 ease-gp hover:-translate-y-px active:scale-[0.97]"
+                          className={cn(
+                            "group inline-flex min-h-12 items-center gap-2.5 rounded-full px-6 text-[0.9375rem] font-semibold shadow-gp-chip transition-transform duration-150 ease-gp hover:-translate-y-px active:scale-[0.97]",
+                            skin.cta
+                          )}
                         >
                           <WhatsAppIcon className="h-[18px] w-[18px] shrink-0" />
                           {t("cta")}
@@ -159,6 +168,8 @@ export default async function PartyFolders({ locale, folders }: { locale: string
               </li>
             );
           })}
+          {/* Rest stop: the whole stack stays pinned a beat before it scrolls away. */}
+          <li aria-hidden="true" className="gp-folder-rest" />
         </ol>
       </div>
     </SectionTone>

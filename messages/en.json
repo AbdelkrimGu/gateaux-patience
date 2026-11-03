@@ -209,10 +209,22 @@
       "lead": "Birthdays, weddings, graduations: every cake is imagined with you and made by hand, in your colors.",
       "cta": "Order on WhatsApp",
       "cta_note": "Let's talk about your cake",
-      "cards_label": "Our categories"
+      "cards_label": "Our categories",
+      "pause": "Pause the carousel",
+      "play": "Play the carousel",
+      "short": {
+        "birthday-kids": "Kids",
+        "birthday-adults": "Adults",
+        "wedding": "Wedding",
+        "graduation": "Graduation",
+        "grossesse": "Pregnancy",
+        "customs": "Custom",
+        "daily": "Everyday",
+        "desserts": "Desserts"
+      }
     },
     "promise": {
-      "sentence": "Every cake is <u>made by hand</u>, <u>made to order</u>, in Sidi Bel Abbès since 2018: you choose, we talk it over on WhatsApp, and Patience makes it <u>for your day</u>.",
+      "sentence": "Every cake is <u>made by hand</u>, <u>made to order</u>, in Sidi Bel Abbès since 2018: you choose, we talk it over on WhatsApp, and we make it <u>for your day</u>.",
       "coda": "With patience, of course.",
       "t1_title": "Made by hand",
       "t1_text": "Every cake is made by hand in our workshop.",
@@ -235,7 +247,7 @@
     "occasions": {
       "eyebrow": "For every occasion",
       "title": "What are you celebrating?",
-      "cta": "Order for this occasion",
+      "cta": "Order on WhatsApp",
       "see": "See the cakes"
     },
     "house": {
@@ -287,14 +299,14 @@
     },
     "follow": {
       "eyebrow": "On Instagram",
-      "lead": "Our latest creations, fresh from the workshop.",
+      "lead": "Even more creations on Instagram.",
       "cta": "Follow on Instagram"
     },
     "finale": {
       "title": "Have a date in mind?",
       "lead": "Tell us the occasion, the date and what you have in mind: let's talk on WhatsApp.",
       "field_label": "Your message",
-      "placeholder": "Hello! I'd like a cake for…",
+      "placeholder": "A cake for my daughter's birthday…",
       "send": "Send on WhatsApp",
       "pills_label": "Or pick the occasion",
       "for_you": "For you",

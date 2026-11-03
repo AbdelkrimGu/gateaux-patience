@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { useMotionValueEvent, useScroll } from "motion/react";
 import { useReducedMotionSafe } from "@/components/gp/hooks";
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const easeOut = (v: number) => 1 - (1 - v) ** 3;
+/** Same query as .gp-house in home-v1.css: the scene is pinned. */
+const PIN_QUERY = "(min-width: 768px) and (min-height: 760px)";
 
 /**
  * 5 · The letter comes out of the envelope as the section scrolls in: the
@@ -29,11 +31,21 @@ export default function Envelope({
   const signRef = useRef<HTMLDivElement>(null);
   const shift = useRef(0); // px; 0 = letter out (server render, reduced motion)
 
-  const { scrollYProgress } = useScroll({ target: wrapRef, offset: ["start 92%", "end 85%"] });
+  const sceneRef = useRef<HTMLElement | null>(null);
+  const pinned = useRef(false);
+  // The pinned scene (md+, tall enough screens) is the section around us.
+  useLayoutEffect(() => {
+    sceneRef.current = wrapRef.current?.closest<HTMLElement>("[data-house-scene]") ?? null;
+  }, []);
+
+  // Phones / short screens: the envelope's own pass through the viewport.
+  const { scrollYProgress: own } = useScroll({ target: wrapRef, offset: ["start 92%", "end 85%"] });
+  // Pinned scene: the scroll spent while the stage is stuck.
+  const { scrollYProgress: scene } = useScroll({ target: sceneRef, offset: ["start start", "end end"] });
 
   // One write per frame: transform / clip-path only.
   const paint = useCallback(() => {
-    const p = scrollYProgress.get();
+    const p = pinned.current ? Math.min(1, scene.get() * 1.15) : own.get();
     const s = shift.current;
     const rise = easeOut(clamp01((p - 0.18) / 0.6));
     const flap = s === 0 ? 180 : 180 * easeOut(clamp01(p / 0.26));
@@ -44,9 +56,25 @@ export default function Envelope({
       flapRef.current.style.zIndex = flap < 90 ? "30" : "0";
     }
     if (signRef.current) signRef.current.style.clipPath = `inset(-20% ${((1 - sign) * 100).toFixed(1)}% -20% 0)`;
-  }, [scrollYProgress]);
+  }, [own, scene]);
 
-  useMotionValueEvent(scrollYProgress, "change", paint);
+  // No scroll writes at all under reduced motion (the letter stays out).
+  const onScroll = () => {
+    if (shift.current !== 0) paint();
+  };
+  useMotionValueEvent(own, "change", onScroll);
+  useMotionValueEvent(scene, "change", onScroll);
+
+  useEffect(() => {
+    const mq = window.matchMedia(PIN_QUERY);
+    const sync = () => {
+      pinned.current = mq.matches;
+      paint();
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, [paint]);
 
   // How far down the letter starts: its top a third of the way into the envelope.
   useEffect(() => {
@@ -69,7 +97,7 @@ export default function Envelope({
   }, [reduced, paint]);
 
   return (
-    <div ref={wrapRef} className="relative mx-auto w-full max-w-[560px]">
+    <div ref={wrapRef} className="gp-house-env relative mx-auto w-full max-w-[560px]">
       {/* Letter slot: clipped at its own bottom edge (inside the envelope). */}
       <div className="relative z-10 mx-[5%] [clip-path:inset(-100vh_-60px_0_-60px)]">
         <div

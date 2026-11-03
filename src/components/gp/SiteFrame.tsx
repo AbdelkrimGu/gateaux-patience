@@ -56,6 +56,7 @@ export default async function SiteFrame({
       ) : (
         <footer
           data-tone="ink"
+          data-header-tone="ink"
           data-final-cta
           className="relative z-0 -mt-10 bg-gp-ink pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-20 text-gp-cream md:pt-28"
         >

@@ -39,6 +39,7 @@ export default function StickyOrderPill({ suppressed = false }: { suppressed?: b
     };
     read();
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
 
     const visible = new Set<Element>();
     const finalIO = new IntersectionObserver((entries) => {
@@ -54,6 +55,7 @@ export default function StickyOrderPill({ suppressed = false }: { suppressed?: b
     return () => {
       finalIO.disconnect();
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
       if (frame) cancelAnimationFrame(frame);
     };
   }, []);

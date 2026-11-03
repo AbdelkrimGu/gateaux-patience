@@ -8,9 +8,13 @@ import type { HomeCake, HomeCategory, HomeData, HomePhoto } from "@/lib/home-dat
  */
 export interface PhotoPicker {
   /** Up to `n` photos from `pool` (default: every photo), least used first. */
-  take(n: number, opts?: { pool?: HomePhoto[]; allowSensitive?: boolean }): HomePhoto[];
+  take(n: number, opts?: { pool?: HomePhoto[]; allowSensitive?: boolean; exclude?: Set<string> }): HomePhoto[];
   /** Photos of one category. */
-  ofCategory(cat: HomeCategory, n: number, opts?: { allowSensitive?: boolean }): HomePhoto[];
+  ofCategory(cat: HomeCategory, n: number, opts?: { allowSensitive?: boolean; exclude?: Set<string> }): HomePhoto[];
+  /** Up to `n` photos of one category, each from a different cake (non-sensitive). */
+  ofCategoryDistinct(cat: HomeCategory, n: number): HomePhoto[];
+  /** Up to `n` photos never handed out before (non-sensitive), catalogue order. */
+  takeUnused(n: number): HomePhoto[];
   /** The first photo of a cake (marked as used). */
   ofCake(cake: HomeCake): HomePhoto | null;
 }
@@ -34,8 +38,10 @@ export function createPhotoPicker(data: HomeData): PhotoPicker {
   const used = (p: HomePhoto) => uses.get(p.src) ?? 0;
   const mark = (p: HomePhoto) => uses.set(p.src, used(p) + 1);
 
-  function take(n: number, opts: { pool?: HomePhoto[]; allowSensitive?: boolean } = {}) {
-    const pool = (opts.pool ?? all).filter((p) => opts.allowSensitive || !p.sensitive);
+  function take(n: number, opts: { pool?: HomePhoto[]; allowSensitive?: boolean; exclude?: Set<string> } = {}) {
+    const pool = (opts.pool ?? all).filter(
+      (p) => (opts.allowSensitive || !p.sensitive) && !opts.exclude?.has(p.src)
+    );
     // Stable sort: least used first, catalogue order within a level; sensitive last.
     const ranked = pool
       .map((p, i) => ({ p, i }))
@@ -56,7 +62,22 @@ export function createPhotoPicker(data: HomeData): PhotoPicker {
   return {
     take,
     ofCategory(cat, n, opts) {
-      return take(n, { pool: cakePhotos(cat.cakes), allowSensitive: opts?.allowSensitive });
+      return take(n, { pool: cakePhotos(cat.cakes), allowSensitive: opts?.allowSensitive, exclude: opts?.exclude });
+    },
+    ofCategoryDistinct(cat, n) {
+      const out: HomePhoto[] = [];
+      for (const cake of cat.cakes) {
+        if (out.length >= n) break;
+        if (cake.sensitive) continue;
+        const [p] = take(1, { pool: cakePhotos([cake]) });
+        if (p) out.push(p);
+      }
+      return out;
+    },
+    takeUnused(n) {
+      const out = all.filter((p) => !p.sensitive && used(p) === 0).slice(0, n);
+      out.forEach(mark);
+      return out;
     },
     ofCake(cake) {
       const src = cake.images[0];

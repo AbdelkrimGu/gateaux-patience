@@ -8,7 +8,7 @@ import HandNote from "@/components/gp/HandNote";
 import OutlinedNumeral from "@/components/gp/OutlinedNumeral";
 import { useReducedMotionSafe } from "@/components/gp/hooks";
 import { cn } from "@/lib/utils";
-import { OrderScreen, Phone, type StoryPhotos } from "./OrderScreens";
+import { OrderScreen, Phone, type ScreenLabels, type StoryPhotos } from "./OrderScreens";
 
 export interface StoryStep {
   title: string;
@@ -27,12 +27,14 @@ export default function WatchOrderScrub({
   steps,
   inspiration,
   photos,
+  labels,
 }: {
   eyebrow: string;
   title: string;
   steps: StoryStep[];
   inspiration: string;
   photos: StoryPhotos;
+  labels: ScreenLabels;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotionSafe();
@@ -40,10 +42,11 @@ export default function WatchOrderScrub({
   const n = steps.length;
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
   useMotionValueEvent(scrollYProgress, "change", (p) => {
+    // Hidden below md (display:none → no offsetParent): nothing to do on phones.
+    if (!ref.current?.offsetParent) return;
     const next = Math.min(n - 1, Math.max(0, Math.floor(p * n * 0.999)));
     setStep((cur) => (cur === next ? cur : next));
   });
-
 
   return (
     <div ref={ref} className="relative hidden md:block" style={{ height: `calc(${n} * 70svh + 100svh)` }}>
@@ -52,7 +55,7 @@ export default function WatchOrderScrub({
           <div className="col-span-6 lg:col-span-5">
             <Eyebrow>{eyebrow}</Eyebrow>
             <h2
-              className="mt-3 font-display text-step-lead font-semibold leading-tight tracking-[-0.02em] text-gp-cream/80 rtl:tracking-normal"
+              className="mt-3 font-display text-step-head font-semibold leading-[1.02] tracking-[-0.035em] rtl:leading-[1.3] rtl:tracking-normal"
             >
               {title}
             </h2>
@@ -83,7 +86,7 @@ export default function WatchOrderScrub({
                     stroke="raspberry"
                     className="gp-num-ink text-[clamp(6rem,10vw,9.5rem)] tracking-[-0.04em]"
                   />
-                  <p className="mt-4 font-display text-step-head font-semibold leading-[1.02] tracking-[-0.035em] rtl:leading-[1.3] rtl:tracking-normal">
+                  <p className="mt-4 font-display text-[clamp(1.6rem,1.1rem+1.2vw,2.35rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-gp-cream/90 rtl:leading-[1.35] rtl:tracking-normal">
                     {s.title}
                   </p>
                   <p className="mt-4 max-w-[38ch] text-step-body leading-[1.6] text-gp-cream/75">{s.text}</p>
@@ -114,7 +117,7 @@ export default function WatchOrderScrub({
                       i === step ? "opacity-100" : "pointer-events-none opacity-0"
                     )}
                   >
-                    <OrderScreen step={i} photos={photos} live={!reduced} active={i === step} />
+                    <OrderScreen step={i} photos={photos} labels={labels} live={!reduced} active={i === step} />
                   </div>
                 ))}
               </Phone>
@@ -124,7 +127,7 @@ export default function WatchOrderScrub({
             <div aria-hidden="true" className="absolute start-0 top-[8%] hidden w-[11.5rem] xl:block xl:start-[2%]">
               <div className="-rotate-6 rounded-[16px] bg-gp-cream p-2 pb-3 shadow-gp-print rtl:rotate-6">
                 <span className="relative block aspect-square overflow-hidden rounded-[10px]">
-                  <Image src={photos.chosen.src} alt="" width={176} height={176} className="h-full w-full object-cover" />
+                  <Image src={photos.inspiration.src} alt="" width={176} height={176} className="h-full w-full object-cover" />
                 </span>
               </div>
               <HandNote arrow="end" rotate={-6} size="sm" as="span" className="mt-3 ms-6 text-gp-gold" decorative>

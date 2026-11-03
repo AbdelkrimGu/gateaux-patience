@@ -27,12 +27,18 @@ export default function StripRows({ rows }: { rows: [HomePhoto[], HomePhoto[]] }
     const p = scrollYProgress.get();
     const shifts = [-TRAVEL * p, -TRAVEL * (1 - p)];
     rowRefs.current.forEach((el, r) => {
-      if (el) el.style.transform = reduced ? "" : `translate3d(${(shifts[r] * dir).toFixed(2)}%, 0, 0)`;
+      if (el) el.style.transform = `translate3d(${(shifts[r] * dir).toFixed(2)}%, 0, 0)`;
     });
-  }, [scrollYProgress, dir, reduced]);
+  }, [scrollYProgress, dir]);
 
-  useMotionValueEvent(scrollYProgress, "change", paint);
-  useEffect(paint, [paint]);
+  // Reduced motion: no scroll writes at all (rows stay put and scroll sideways).
+  useMotionValueEvent(scrollYProgress, "change", () => {
+    if (!reduced) paint();
+  });
+  useEffect(() => {
+    if (reduced) rowRefs.current.forEach((el) => el && (el.style.transform = ""));
+    else paint();
+  }, [paint, reduced]);
 
   return (
     <div ref={ref} className="space-y-3 md:space-y-4">
@@ -54,12 +60,13 @@ export default function StripRows({ rows }: { rows: [HomePhoto[], HomePhoto[]] }
                     : "h-[9.5rem] w-[9.5rem] md:h-[15rem] md:w-[15rem]"
                 )}
               >
+                {/* Fixed intrinsic size: a 1x/2x srcset instead of ~16 widths per tile. */}
                 <Image
                   src={p.src}
                   alt={p.alt}
-                  fill
-                  sizes={r === 0 ? "(min-width: 768px) 320px, 184px" : "(min-width: 768px) 240px, 152px"}
-                  className="object-cover"
+                  width={r === 0 ? 320 : 240}
+                  height={r === 0 ? 320 : 240}
+                  className="h-full w-full object-cover"
                 />
               </li>
             ))}

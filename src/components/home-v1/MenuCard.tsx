@@ -13,8 +13,7 @@ export interface MenuRow {
 }
 export interface MenuGroup {
   label: string;
-  /** Number of cakes in the category; omitted for the "to personalise" group. */
-  count?: number;
+
   href?: string;
   rows: MenuRow[];
 }
@@ -29,7 +28,7 @@ export default async function MenuCard({ locale, groups }: { locale: string; gro
   let row = 0;
 
   return (
-    <SectionTone tone="raspberry" aria-labelledby="menu-title" className="relative py-16 md:py-24">
+    <SectionTone tone="raspberry" data-header-tone="raspberry" aria-labelledby="menu-title" className="relative py-16 md:py-24">
       <div
         data-tone="cream"
         className="gp-scallop mx-auto w-[calc(100%-24px)] max-w-[620px] bg-gp-cream px-6 py-16 text-gp-ink md:px-12 md:py-20"
@@ -55,11 +54,7 @@ export default async function MenuCard({ locale, groups }: { locale: string; gro
                 ) : (
                   g.label
                 )}
-                {g.count ? (
-                  <span className="ms-2 font-medium normal-case tracking-normal text-gp-ink/70">
-                    · {t("count", { count: g.count })}
-                  </span>
-                ) : null}
+
               </h3>
               <ul className="mt-3">
                 {g.rows.map((r) => {
@@ -68,17 +63,20 @@ export default async function MenuCard({ locale, groups }: { locale: string; gro
                     <li key={r.href + r.name}>
                       <Link
                         href={r.href}
-                        className="group flex min-h-[60px] items-center gap-3 rounded-xl py-1.5 transition-colors duration-150"
+                        className="group flex min-h-[60px] items-end gap-3 rounded-xl py-1.5 transition-colors duration-150"
                         style={{ "--i": i } as React.CSSProperties}
                       >
-                        <span className="text-step-body leading-snug text-gp-ink transition-colors duration-150 group-hover:text-gp-raspberry">
-                          {r.name}
-                        </span>
-                        <span
-                          aria-hidden="true"
-                          className="gp-leader relative top-[0.45em] min-w-6 flex-1 border-b-2 border-dotted border-gp-ink/30"
-                        />
-                        <span className="gp-thumb relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-gp-champagne ring-2 ring-gp-cream shadow-gp-chip transition-transform duration-300 ease-gp group-hover:scale-110">
+                        {/* Dotted leader runs from the end of the name's last line to the
+                            photo: it sits behind the name, whose cream background hides it. */}
+                        <span className="relative min-w-0 flex-1">
+                          <span
+                            aria-hidden="true"
+                            className="gp-leader absolute inset-x-0 bottom-[0.42em] border-b-2 border-dotted border-gp-ink/30"
+                          />
+                          <span className="relative bg-gp-cream pe-2 text-step-body leading-snug text-gp-ink transition-colors duration-150 group-hover:text-gp-raspberry">
+                            {r.name}
+                          </span>
+                        </span>                        <span className="gp-thumb relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-gp-champagne ring-2 ring-gp-cream shadow-gp-chip transition-transform duration-300 ease-gp group-hover:scale-110">
                           <Image src={r.thumb} alt="" width={48} height={48} className="h-full w-full object-cover" />
                         </span>
                       </Link>

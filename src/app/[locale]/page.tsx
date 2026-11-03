@@ -44,31 +44,64 @@ export async function generateMetadata({
 
 const BOWL_CARDS = 10;
 const TIRAMISU_THUMB = "/images/tiramisu/hero/hero-1.png";
+/** Owner titles with a typo: never the face of a section (they stay in the gallery). */
+const NOT_A_STAR = new Set(["gateau-remise-diplome"]);
+
+/** Reorders photos so the same cake doesn't appear twice in a row (round-robin by cake). */
+function spreadByCake(photos: HomePhoto[]): HomePhoto[] {
+  const groups = new Map<string, HomePhoto[]>();
+  for (const p of photos) groups.set(p.cakeSlug, [...(groups.get(p.cakeSlug) ?? []), p]);
+  const queues = [...groups.values()];
+  const out: HomePhoto[] = [];
+  while (out.length < photos.length) for (const q of queues) if (q.length) out.push(q.shift()!);
+  return out;
+}
 
 /** Shapes the catalogue into what each section shows, spreading photos so the same picture rarely repeats. */
-function plan(data: HomeData, customGroup: string, tiramisuRow: string) {
+function plan(
+  data: HomeData,
+  customGroup: string,
+  tiramisuRow: string,
+  shortLabel: (slug: string) => string | undefined
+) {
   const pick = createPhotoPicker(data);
   const cats = data.categories;
+  const byCount = [...cats].sort((a, b) => b.count - a.count);
 
-  // 1 · Bowl: every category's cover, then more photos of the best-stocked ones (marked duplicates).
-  const cards: BowlCard[] = [];
+  // 1 · Bowl: one card per category (short label) + on-brand cakes (no label) up
+  // to 10, so no label repeats in view. Ordered by how on-brand the photo is,
+  // then laid round the ring from the middle outwards (0, +1, −1, +2, …): the
+  // first phone view leads with crimson / gold / chocolate.
+  type Ranked = { card: BowlCard; rank: number };
+  const ranked: Ranked[] = [];
+  const rankOf = (slug: string) => {
+    const i = data.cakes.findIndex((k) => k.slug === slug);
+    return i < 0 ? 999 : i;
+  };
   for (const c of cats) {
     const [p] = pick.ofCategory(c, 1);
-    if (p) cards.push({ src: p.src, alt: p.alt, label: c.label, href: c.href });
+    if (!p) continue;
+    ranked.push({
+      rank: rankOf(p.cakeSlug),
+      card: { slug: `cat-${c.slug}`, src: p.src, name: c.label, label: shortLabel(c.slug) ?? c.label, href: c.href },
+    });
   }
-  const byCount = [...cats].sort((a, b) => b.count - a.count);
-  for (let round = 0; cards.length < BOWL_CARDS && round < 4; round++) {
-    for (const c of byCount) {
-      if (cards.length >= BOWL_CARDS) break;
-      const [p] = pick.ofCategory(c, 1);
-      if (p && !cards.some((k) => k.src === p.src)) {
-        cards.push({ src: p.src, alt: p.alt, label: c.label, href: c.href, duplicate: true });
-      }
-    }
+  const covered = new Set(ranked.map((r) => r.card.src));
+  for (const k of data.cakes) {
+    if (ranked.length >= BOWL_CARDS) break;
+    if (k.sensitive || NOT_A_STAR.has(k.slug) || covered.has(k.images[0])) continue;
+    const p = pick.ofCake(k);
+    if (!p) continue;
+    ranked.push({ rank: rankOf(k.slug), card: { slug: `cake-${k.slug}`, src: p.src, name: k.title, href: k.href } });
   }
-  // The best on-brand cake's category sits in the middle at first.
-  const best = data.cakes.find((c) => !c.sensitive);
-  const startIndex = Math.max(0, cards.findIndex((k) => k.href.endsWith(`=${best?.categorySlug}`)));
+  ranked.sort((a, b) => a.rank - b.rank);
+  const n = ranked.length;
+  const cards: BowlCard[] = new Array(n);
+  ranked.forEach((r, j) => {
+    const pos = j === 0 ? 0 : j % 2 === 1 ? (j + 1) / 2 : -j / 2;
+    cards[(pos + n) % n] = r.card;
+  });
+  const startIndex = 0;
 
   // 3 · Menu: categories with 2–3 named cakes (sensitive ones only if nothing else), + tiramisu.
   const groups: MenuGroup[] = cats.map((c) => {
@@ -79,49 +112,48 @@ function plan(data: HomeData, customGroup: string, tiramisuRow: string) {
       href: k.href,
       thumb: pick.ofCake(k)?.src ?? c.cover.src,
     }));
-    return { label: c.label, count: c.count, href: c.href, rows };
+    return { label: c.label, href: c.href, rows };
   });
   groups.push({ label: customGroup, rows: [{ name: tiramisuRow, href: "/tiramisu", thumb: TIRAMISU_THUMB }] });
 
-  // 4 · Folders: the four best-stocked occasions, three photos each.
+  // 4 · Folders: the four best-stocked occasions, three different cakes each when possible.
   const folders: Folder[] = byCount.slice(0, 4).map((c) => {
-    let photos = pick.ofCategory(c, 3);
-    if (photos.length < 3) photos = [...photos, ...pick.ofCategory(c, 3 - photos.length, { allowSensitive: true })];
+    let photos = pick.ofCategoryDistinct(c, 3);
+    if (photos.length < 3) {
+      const exclude = new Set(photos.map((p) => p.src));
+      photos = [...photos, ...pick.ofCategory(c, 3 - photos.length, { allowSensitive: true, exclude })];
+    }
     return { slug: c.slug, label: c.label, href: c.href, photos };
   });
 
-  // 6 · Story: a cake with two photos (chosen in the gallery → the finished cake).
-  const hero = data.cakes.find((c) => !c.sensitive && c.images.length >= 2) ?? data.cakes[0];
+  // 6 · Story: the best on-brand cake (chocolate heart) from gallery to table;
+  // a different cake as "your inspiration"; five other cakes in the gallery.
+  const star = data.cakes.find((k) => !k.sensitive && !NOT_A_STAR.has(k.slug)) ?? data.cakes[0];
   let story: StoryPhotos | null = null;
-  if (hero) {
-    const chosen: HomePhoto = { src: hero.images[0], alt: hero.title, cakeSlug: hero.slug, sensitive: hero.sensitive };
-    const finished: HomePhoto = { ...chosen, src: hero.images[1] ?? hero.images[0] };
-    const seen = new Set([hero.slug]);
-    const others = pick
-      .take(12)
-      .filter((p) => !seen.has(p.cakeSlug) && Boolean(seen.add(p.cakeSlug)))
-      .slice(0, 5); // five different cakes for the gallery screen
-    story = { chosen, others, finished };
+  if (star) {
+    const chosen: HomePhoto = { src: star.images[0], alt: star.title, cakeSlug: star.slug, sensitive: star.sensitive };
+    const finished: HomePhoto = { ...chosen, src: star.images[1] ?? star.images[0] };
+    const seen = new Set([star.slug, ...NOT_A_STAR]);
+    const distinct = pick
+      .take(16)
+      .filter((p) => !seen.has(p.cakeSlug) && Boolean(seen.add(p.cakeSlug)));
+    const [inspiration, ...others] = distinct;
+    story = { chosen, finished, inspiration: inspiration ?? chosen, others: others.slice(0, 5) };
   }
 
-
-  // 8 · Strip: 14 photos, least shown first.
-  let strip = pick.take(14);
-  if (strip.length < 14) strip = [...strip, ...pick.take(14 - strip.length, { allowSensitive: true })];
+  // 8 · Strip: photos not shown anywhere above first, then the least shown, to
+  // 14 tiles (two rows must stay wider than the screen while they drift);
+  // spread so two photos of one cake never sit side by side.
+  let strip = pick.takeUnused(14);
+  if (strip.length < 14) {
+    const exclude = new Set(strip.map((p) => p.src));
+    strip = [...strip, ...pick.take(14 - strip.length, { exclude })];
+  }
+  strip = spreadByCake(strip);
   const rows: [HomePhoto[], HomePhoto[]] = [strip.filter((_, i) => i % 2 === 0), strip.filter((_, i) => i % 2 === 1)];
 
-  return {
-    cards,
-    startIndex,
-    groups,
-    folders,
-    story,
-
-    rows,
-    occasions: cats.map((c) => c.label),
-  };
+  return { cards, startIndex, groups, folders, story, rows, occasions: cats.map((c) => c.label) };
 }
-
 export default async function HomePage({
   params,
 }: {
@@ -130,11 +162,13 @@ export default async function HomePage({
   const { locale } = await params;
   setRequestLocale(locale);
   noStore();
-  const [data, tm] = await Promise.all([
+  const [data, tm, th] = await Promise.all([
     getHomeData(locale),
     getTranslations({ locale, namespace: "home.menu" }),
+    getTranslations({ locale, namespace: "home.hero" }),
   ]);
-  const p = plan(data, tm("custom_group"), tm("tiramisu_row"));
+  const short = (slug: string) => (th.has(`short.${slug}`) ? th(`short.${slug}`) : undefined);
+  const p = plan(data, tm("custom_group"), tm("tiramisu_row"), short);
 
   return (
     <SiteFrame locale={locale} footer="curtain">

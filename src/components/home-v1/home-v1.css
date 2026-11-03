@@ -16,26 +16,50 @@
 .gp-bowl[data-dragging="true"] {
   cursor: grabbing;
 }
-/* Server / reduced-motion state: a flat, centred row (JS overrides transform). */
+/* Server state (before hydration): a flat, centred row (JS overrides transform). */
 .gp-bowl-card {
   transform: translate3d(calc(var(--i) * (var(--bowl-cw) * 0.8 + 14px) * var(--gp-dir)), 0, 0) scale(0.8);
+  backface-visibility: hidden;
 }
-.gp-bowl[data-live="true"] .gp-bowl-card {
-  border-radius: 0;
-}
-/* Label: same visual size whatever the card's scale (--s, 0.8 in the static row). */
-.gp-bowl-card {
-  --s: 0.8;
-}
+/* In-card label for the static row (1/0.8: same visual size as live tags). */
 .gp-bowl-label {
-  max-width: calc(92% * var(--s));
-  transform: scale(calc(1 / var(--s)));
+  transform: scale(1.25);
   transform-origin: var(--gp-origin-start, left) bottom;
 }
 [dir="rtl"] .gp-bowl-label {
   --gp-origin-start: right;
 }
-
+/* Live ring: in-card labels give way to the overlay tags (and vice versa). */
+.gp-bowl-tag {
+  display: none;
+}
+.gp-bowl[data-live="true"] .gp-bowl-tag {
+  display: block;
+}
+.gp-bowl[data-live="true"] .gp-bowl-label {
+  display: none;
+}
+/* Reduced motion: no ring, a row you can swipe through, one card per snap. */
+@media (prefers-reduced-motion: reduce) {
+  .gp-bowl {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-inline: 16px;
+    scroll-padding-inline: 16px;
+    cursor: auto;
+  }
+  .gp-bowl-card {
+    flex: 0 0 auto;
+    transform: none;
+    scroll-snap-align: center;
+  }
+  .gp-bowl-label {
+    transform: none;
+  }
+}
 /* ---- 2 · Scroll-ink sentence: --ink (words inked so far) is set on scroll. */
 .gp-ink-word {
   /* 0.5 floor: un-inked words stay ≥ 3:1 on cream (large text, WCAG AA). */
@@ -113,19 +137,70 @@
 [dir="rtl"] .gp-folder-tab {
   clip-path: polygon(18px 0, 100% 0, 100% 100%, 0 100%);
 }
-/* The folder being covered settles back a little (scroll-driven, no JS;
-   browsers without scroll timelines simply skip it). */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .gp-folder[data-covered-by] .gp-folder-body {
-      animation: gp-folder-settle linear both;
-      animation-range: entry 0% entry 100%;
-      transform-origin: 50% 0;
+/* Sticky stacking only when a folder fits on screen (≥ 720px tall viewports);
+   shorter screens (landscape phones, small laptops) get plain flow. */
+.gp-folder {
+  --step: 36px;
+  --pad: 12px;
+}
+@media (min-width: 768px) {
+  .gp-folder {
+    --step: 48px;
+    --pad: 16px;
+  }
+}
+@media (min-height: 720px) {
+  .gp-folder {
+    position: sticky;
+    top: calc(var(--gp-header-h) + var(--pad) + var(--i) * var(--step));
+    /* Every folder releases at the same scroll position: the staircase
+       leaves in one piece instead of collapsing. */
+    margin-bottom: calc((var(--n) - 1 - var(--i)) * var(--step));
+  }
+  .gp-folder-rest {
+    height: 30vh;
+  }
+}
+/* Keyboard focus is never inside a covered folder. */
+.gp-folder:focus-within {
+  z-index: 50 !important;
+}
+
+/* The folder being covered: its content fades out (only its coloured edge and
+   tab stay) and it settles back slightly. Scroll-driven CSS on the next
+   folder's view timeline, no JS. */
+@media (min-height: 720px) {
+  @supports (animation-timeline: view()) {
+    /* Fade while the next folder's top travels the last ~180px to its own
+       sticky spot (cover offsets: viewport height − that spot − distance). */
+    .gp-folder[data-covered-by] .gp-folder-content {
+      --gp-next-top: calc(var(--gp-header-h) + var(--pad) + (var(--i) + 1) * var(--step));
+      animation: gp-folder-hide linear both;
+      animation-range: cover calc(100vh - var(--gp-next-top) - 220px) cover calc(100vh - var(--gp-next-top) - 40px);
     }
-    .gp-folder[data-covered-by] .gp-folder-shade {
-      animation: gp-folder-shade linear both;
-      animation-range: entry 0% entry 100%;
+    @media (prefers-reduced-motion: no-preference) {
+      .gp-folder[data-covered-by] .gp-folder-body {
+        animation: gp-folder-settle linear both;
+        animation-range: entry 0% entry 100%;
+        transform-origin: 50% 0;
+      }
+      .gp-folder[data-covered-by] .gp-folder-shade {
+        animation: gp-folder-shade linear both;
+        animation-range: entry 0% entry 100%;
+      }
     }
+  }
+  /* No scroll timelines (older Safari/Firefox): push the content below the
+     band a covered folder still shows, so no sliver of text peeks out. */
+  @supports not (animation-timeline: view()) {
+    .gp-folder[data-covered-by] .gp-folder-content {
+      padding-top: calc(var(--step) + 1.25rem);
+    }
+  }
+}
+@keyframes gp-folder-hide {
+  to {
+    opacity: 0;
   }
 }
 @keyframes gp-folder-settle {
@@ -138,7 +213,6 @@
     opacity: 1;
   }
 }
-
 /* ---- 8 · Instagram strip: reduced motion = swipeable rows -------------- */
 @media (prefers-reduced-motion: reduce) {
   .gp-strip-row {
@@ -191,4 +265,24 @@
   opacity: 1;
   transform: none;
   transition-delay: calc(var(--d, 0) * 110ms + 120ms);
+}
+/* ---- 5 · House note: pinned scene on md+ screens tall enough for it ----- */
+@media (min-width: 768px) and (min-height: 760px) {
+  .gp-house {
+    height: 170vh;
+  }
+  .gp-house-stage {
+    position: sticky;
+    top: var(--gp-header-h);
+    height: calc(100svh - var(--gp-header-h));
+    display: flex;
+    align-items: center;
+  }
+  .gp-house-grid {
+    padding-block: 24px;
+  }
+  /* Letter out + envelope fit in the stage (text ≈ 420px + 0.6 × width). */
+  .gp-house-env {
+    max-width: min(560px, calc((100svh - var(--gp-header-h) - 48px - 420px) / 0.6));
+  }
 }
