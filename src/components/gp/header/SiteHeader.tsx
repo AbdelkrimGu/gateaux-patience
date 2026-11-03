@@ -63,14 +63,14 @@ export default function SiteHeader({ categories, overlay = true, pill = "auto" }
       const header = headerRef.current;
       if (!header) return;
       setScrolled(window.scrollY > 8);
-      // Probe just under the header's bottom edge (what the eye reads as
-      // "the section below"), and resolve the tone at section level: a section
-      // may override it with data-header-tone (e.g. a cream card on raspberry).
+      // Probe just under the header's bottom edge (what the header is about to
+      // cover), and resolve the tone at section level so inner tinted blocks
+      // (tiles, tickets, cards) don't flip the header.
       const y = Math.min(header.offsetHeight + 1, window.innerHeight - 1);
       const stack = document.elementsFromPoint(window.innerWidth / 2, y);
       const under = stack.find((el) => !header.contains(el));
-      const host = under?.closest<HTMLElement>("[data-header-tone], section[data-tone]");
-      const value = (host?.dataset.headerTone ?? host?.dataset.tone) as Tone | undefined;
+      const zone = under?.closest<HTMLElement>("[data-header-tone], section[data-tone]");
+      const value = (zone?.dataset.headerTone ?? zone?.dataset.tone) as Tone | undefined;
       setTone(value && TONES.includes(value) ? value : "cream");
     };
     const schedule = () => {
@@ -102,10 +102,12 @@ export default function SiteHeader({ categories, overlay = true, pill = "auto" }
         data-solid={solid}
         className="gp-header fixed inset-x-0 top-0 z-40 pt-[env(safe-area-inset-top,0px)] text-tone-fg"
       >
-        <div className="gp-container flex h-[var(--gp-header-h)] items-center justify-between gap-4 lg:gap-6">
+        <div className="gp-container flex h-[var(--gp-header-h)] items-center justify-between gap-2 sm:gap-4 lg:gap-6">
           <Link href="/" className="flex shrink-0 items-center gap-2.5 rounded-full" aria-label={t("home_aria")}>
             <BrandBadge size={40} className="md:h-11 md:w-11" />
-            <span className="whitespace-nowrap font-display text-[1.0625rem] font-semibold tracking-[-0.02em] max-[359px]:sr-only md:text-[1.1875rem] rtl:tracking-normal">
+            {/* 15px on phones: in Arabic the name is set in Readex Pro (wider), and the
+                row must keep the burger inside the 16px gutter at 390px. */}
+            <span className="whitespace-nowrap font-display text-[0.9375rem] font-semibold tracking-[-0.02em] max-[379px]:sr-only sm:text-[1rem] md:text-[1.1875rem] rtl:tracking-normal">
               Gateaux Patience
             </span>
           </Link>
@@ -127,7 +129,7 @@ export default function SiteHeader({ categories, overlay = true, pill = "auto" }
             )}
           </nav>
 
-          <div className="flex items-center gap-1 lg:gap-3">
+          <div className="flex items-center sm:gap-1 lg:gap-3">
             <LangSwitch />
             <a
               href={order()}

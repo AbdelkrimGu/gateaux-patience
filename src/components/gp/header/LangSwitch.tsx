@@ -29,7 +29,7 @@ export default function LangSwitch({ className, onNavigate }: { className?: stri
         return (
           <Fragment key={l}>
             {i > 0 ? (
-              <span aria-hidden="true" className="px-0.5 text-tone-fg/35">
+              <span aria-hidden="true" className="hidden px-0.5 text-tone-fg/35 lg:inline">
                 ·
               </span>
             ) : null}
@@ -42,7 +42,7 @@ export default function LangSwitch({ className, onNavigate }: { className?: stri
               aria-label={t(`lang_${l}` as "lang_fr")}
               onClick={onNavigate}
               className={cn(
-                "inline-flex h-11 min-w-8 items-center justify-center rounded-full px-1.5 text-[0.875rem] font-semibold transition-colors duration-150",
+                "inline-flex h-11 min-w-9 items-center justify-center sm:min-w-10 lg:min-w-11 rounded-full px-1.5 text-[0.875rem] font-semibold transition-colors duration-150",
                 l === "ar" && "text-[1.05rem]",
                 current ? "text-tone-accent" : "text-tone-fg/70 hover:text-tone-fg"
               )}

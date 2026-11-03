@@ -123,6 +123,8 @@ function plan(
       const exclude = new Set(photos.map((p) => p.src));
       photos = [...photos, ...pick.ofCategory(c, 3 - photos.length, { allowSensitive: true, exclude })];
     }
+    // Never the same image twice in a folder: fewer distinct photos → fewer tiles.
+    photos = photos.filter((p, i) => photos.findIndex((q) => q.src === p.src) === i);
     return { slug: c.slug, label: c.label, href: c.href, photos };
   });
 

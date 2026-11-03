@@ -136,7 +136,7 @@ export default async function PartyFolders({ locale, folders }: { locale: string
                       </div>
                     </div>
 
-                    <ul className="-mx-5 mt-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] md:mx-0 md:mt-7 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 md:pb-0">
+                    <ul className={cn("-mx-5 mt-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] md:mx-0 md:mt-7 md:grid md:gap-4 md:overflow-visible md:px-0 md:pb-0", f.photos.length < 3 ? "md:grid-cols-2" : "md:grid-cols-3")}>
                       {f.photos.map((p) => (
                         <li key={p.src} className="w-[62%] shrink-0 snap-start md:w-auto">
                           <Link href={`/galerie/${p.cakeSlug}`} className="group block rounded-[18px]">
