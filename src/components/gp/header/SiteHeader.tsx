@@ -105,7 +105,9 @@ export default function SiteHeader({ categories, overlay = true, pill = "auto" }
         <div className="gp-container flex h-[var(--gp-header-h)] items-center justify-between gap-2 sm:gap-4 lg:gap-6">
           <Link href="/" className="flex shrink-0 items-center gap-2.5 rounded-full" aria-label={t("home_aria")}>
             <BrandBadge size={40} className="md:h-11 md:w-11" />
-            <span className="whitespace-nowrap font-display text-[1rem] font-semibold tracking-[-0.02em] max-[359px]:sr-only md:text-[1.1875rem] rtl:tracking-normal">
+            {/* 15px on phones: in Arabic the name is set in Readex Pro (wider), and the
+                row must keep the burger inside the 16px gutter at 390px. */}
+            <span className="whitespace-nowrap font-display text-[0.9375rem] font-semibold tracking-[-0.02em] max-[379px]:sr-only sm:text-[1rem] md:text-[1.1875rem] rtl:tracking-normal">
               Gateaux Patience
             </span>
           </Link>
@@ -127,7 +129,7 @@ export default function SiteHeader({ categories, overlay = true, pill = "auto" }
             )}
           </nav>
 
-          <div className="flex items-center gap-1 lg:gap-3">
+          <div className="flex items-center sm:gap-1 lg:gap-3">
             <LangSwitch />
             <a
               href={order()}
