@@ -1,7 +1,6 @@
 import { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import SiteFrame from "@/components/gp/SiteFrame";
 import GalleryClient from "@/components/gallery/GalleryClient";
 import { getAllPublishedCakes } from "@/lib/cakes-data";
 import { getCategories } from "@/lib/categories-data";
@@ -26,14 +25,18 @@ export async function generateMetadata({
   };
 }
 
-export default async function GalleriePage() {
+export default async function GalleriePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   noStore();
   const [cakes, categories] = await Promise.all([getAllPublishedCakes(), getCategories()]);
   return (
-    <main>
-      <Header />
+    <SiteFrame locale={locale}>
       <GalleryClient cakes={cakes} categories={categories} />
-      <Footer />
-    </main>
+    </SiteFrame>
   );
 }

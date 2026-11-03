@@ -468,7 +468,7 @@ function Shell({ children, isRTL }: { children: React.ReactNode; isRTL: boolean 
   return (
     <div
       dir={isRTL ? "rtl" : "ltr"}
-      className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-gradient-to-b from-[#FBF5EE] via-[#FAF1E8] to-[#F8E9DD]"
+      className="relative flex h-[calc(100dvh-var(--gp-header-h,0px)-env(safe-area-inset-top,0px))] w-full flex-col overflow-hidden bg-gradient-to-b from-[#FBF5EE] via-[#FAF1E8] to-[#F8E9DD]"
     >
       <div className="pointer-events-none absolute inset-0 pattern-dots opacity-20" aria-hidden="true" />
       <div

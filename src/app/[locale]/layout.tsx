@@ -1,36 +1,65 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter, Cairo, Great_Vibes } from "next/font/google";
+import {
+  Bricolage_Grotesque,
+  Geist,
+  Caveat,
+  Readex_Pro,
+  IBM_Plex_Sans_Arabic,
+  Aref_Ruqaa,
+} from "next/font/google";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { CONTACT, PHONE_E164, SITE_URL } from "@/lib/constants";
+import MotionProvider from "@/components/gp/MotionProvider";
 import "../globals.css";
 
-const playfair = Playfair_Display({
+// Three voices per script (gp-signature-ui tokens.md). Each locale applies
+// only its own three classes, all exposing --font-display/--font-text/--font-note.
+// Latin display + text are preloaded (default locale); the rest swap in.
+const latinDisplay = Bricolage_Grotesque({
   subsets: ["latin"],
-  variable: "--font-playfair",
+  axes: ["opsz"],
+  variable: "--font-display",
   display: "swap",
 });
-
-const inter = Inter({
+const latinText = Geist({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-text",
   display: "swap",
 });
-
-const cairo = Cairo({
+const latinNote = Caveat({
+  subsets: ["latin"],
+  variable: "--font-note",
+  display: "swap",
+  preload: false,
+});
+const arabicDisplay = Readex_Pro({
   subsets: ["arabic", "latin"],
-  variable: "--font-cairo",
+  variable: "--font-display",
   display: "swap",
+  preload: false,
+});
+const arabicText = IBM_Plex_Sans_Arabic({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-text",
+  display: "swap",
+  preload: false,
+});
+const arabicNote = Aref_Ruqaa({
+  subsets: ["arabic", "latin"],
+  weight: "700",
+  variable: "--font-note",
+  display: "swap",
+  preload: false,
 });
 
-const greatVibes = Great_Vibes({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-great-vibes",
-  display: "swap",
-});
+const FONT_VARS = {
+  latin: `${latinDisplay.variable} ${latinText.variable} ${latinNote.variable}`,
+  arabic: `${arabicDisplay.variable} ${arabicText.variable} ${arabicNote.variable}`,
+};
 
 // schema.org business entity. Same @id as the /contact page's JSON-LD so
 // Google merges them into one business. Only verified facts: add opening
@@ -107,7 +136,7 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       dir={isRTL ? "rtl" : "ltr"}
-      className={`${playfair.variable} ${inter.variable} ${cairo.variable} ${greatVibes.variable}`}
+      className={`gp-site ${isRTL ? FONT_VARS.arabic : FONT_VARS.latin}`}
     >
       <head>
         {/* Canonical URLs are set per page (metadata.alternates), not here:
@@ -117,11 +146,9 @@ export default async function LocaleLayout({
           dangerouslySetInnerHTML={{ __html: BUSINESS_JSON_LD }}
         />
       </head>
-      <body
-        className={`${isRTL ? "font-arabic" : "font-sans"} bg-background text-charcoal antialiased`}
-      >
+      <body className="bg-gp-cream font-text text-gp-ink antialiased">
         <NextIntlClientProvider messages={messages}>
-          {children}
+          <MotionProvider>{children}</MotionProvider>
         </NextIntlClientProvider>
       </body>
     </html>

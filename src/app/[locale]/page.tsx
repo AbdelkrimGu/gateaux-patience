@@ -1,7 +1,6 @@
 import { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import SiteFrame from "@/components/gp/SiteFrame";
 import HeroSection from "@/components/home/HeroSection";
 import FeaturedCakes from "@/components/home/FeaturedCakes";
 import CategoriesSection from "@/components/home/CategoriesSection";
@@ -41,7 +40,16 @@ export async function generateMetadata({
   };
 }
 
-export default async function HomePage() {
+// The current sections stay until the two line-ups (refine/creme-velours,
+// refine/soiree-royale) replace them; the new frame (header, curtain footer,
+// sticky pill) is already in place.
+export default async function HomePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   noStore();
   const [hero, featured, categories, floatingGroups] = await Promise.all([
     getHeroCakes(5),
@@ -50,15 +58,13 @@ export default async function HomePage() {
     getCategoryImageGroups(24, 4),
   ]);
   return (
-    <main>
-      <Header />
+    <SiteFrame locale={locale} footer="curtain">
       <HeroSection hero={hero} floatingGroups={floatingGroups} />
       <FeaturedCakes cakes={featured} />
       <CategoriesSection categories={categories} />
       <AboutSection />
       <HowToOrderSection />
       <SocialCTASection />
-      <Footer />
-    </main>
+    </SiteFrame>
   );
 }

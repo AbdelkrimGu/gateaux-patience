@@ -853,6 +853,7 @@ export default function HeroSection({ hero, floatingGroups }: Props) {
           className="flex flex-col gap-3 items-center"
         >
           <Link
+            data-hero-cta
             href={`${prefix}/galerie`}
             className="group relative inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-br from-rose to-[#B05161] text-white font-medium shadow-[0_15px_40px_-12px_rgba(201,114,122,0.65)] hover:shadow-[0_22px_55px_-12px_rgba(201,114,122,0.85)] active:scale-[0.98] transition-shadow overflow-hidden"
           >

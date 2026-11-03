@@ -7,6 +7,29 @@
     --font-playfair: "Playfair Display", Georgia, serif;
     --font-inter: "Inter", system-ui, sans-serif;
     --font-cairo: "Cairo", Arial, sans-serif;
+
+    /* ---- Signature UI tokens (gp-signature-ui/reference/tokens.md) ---- */
+    --gp-cream: 248 242 233;
+    --gp-ink: 36 22 24;
+    --gp-raspberry: 163 18 58;
+    --gp-champagne: 240 226 200;
+    --gp-gold: 196 151 84;
+    --gp-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+    --step-small: clamp(0.8125rem, 0.75rem + 0.25vw, 0.9375rem);
+    --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+    --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
+    --step-head: clamp(2rem, 1.2rem + 2.4vw, 3.25rem);
+    --step-display: clamp(2.8rem, 1.6rem + 5vw, 6rem);
+
+    /* Height of the public header bar (without the safe-area inset). */
+    --gp-header-h: 4rem;
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --gp-header-h: 5rem;
+    }
   }
 
   * {
@@ -167,5 +190,213 @@
   /* Text balance */
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+/* ==========================================================================
+   Public site — signature UI surfaces. Everything is scoped to `.gp-site`
+   (set on <html> by app/[locale]/layout.tsx) so the admin keeps its own look.
+   ========================================================================== */
+@layer base {
+  .gp-site {
+    /* Pages not yet migrated keep their utilities but speak the new voices. */
+    --font-playfair: var(--font-display);
+    --font-inter: var(--font-text);
+    --font-cairo: var(--font-text);
+    --font-great-vibes: var(--font-note);
+
+    accent-color: rgb(var(--gp-raspberry));
+    scrollbar-color: rgb(var(--gp-ink) / 0.2) transparent;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .gp-site body {
+    background-color: rgb(var(--gp-cream));
+    color: rgb(var(--gp-ink));
+    font-family: var(--font-text), system-ui, sans-serif;
+  }
+
+  .gp-site::-webkit-scrollbar-track,
+  .gp-site ::-webkit-scrollbar-track {
+    background: rgb(var(--gp-cream));
+  }
+  .gp-site::-webkit-scrollbar-thumb,
+  .gp-site ::-webkit-scrollbar-thumb {
+    background: rgb(var(--gp-ink) / 0.2);
+    border-radius: 9999px;
+  }
+  .gp-site::-webkit-scrollbar-thumb:hover,
+  .gp-site ::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--gp-ink) / 0.35);
+  }
+
+  .gp-site ::selection {
+    background: rgb(var(--gp-raspberry) / 0.15);
+    color: rgb(var(--gp-ink));
+  }
+
+  .gp-site :focus-visible {
+    outline: 2px solid rgb(var(--tone-ring));
+    outline-offset: 3px;
+  }
+
+  .gp-site a {
+    text-underline-offset: 0.25em;
+  }
+
+  /* ---- Section tones -------------------------------------------------------
+     Any element with data-tone (see components/gp/SectionTone.tsx) exposes the
+     same set of channels, read through the Tailwind `tone-*` colours:
+     bg-tone-bg, text-tone-fg, text-tone-accent, bg-tone-cta-bg, … */
+  .gp-site,
+  [data-tone="cream"] {
+    --tone-bg: var(--gp-cream);
+    --tone-fg: var(--gp-ink);
+    --tone-accent: var(--gp-raspberry);
+    --tone-cta-bg: var(--gp-raspberry);
+    --tone-cta-fg: var(--gp-cream);
+    --tone-ring: var(--gp-raspberry);
+    --tone-muted-a: 0.6;
+  }
+  [data-tone="champagne"] {
+    --tone-bg: var(--gp-champagne);
+    --tone-fg: var(--gp-ink);
+    --tone-accent: var(--gp-raspberry);
+    --tone-cta-bg: var(--gp-raspberry);
+    --tone-cta-fg: var(--gp-cream);
+    --tone-ring: var(--gp-raspberry);
+    --tone-muted-a: 0.62;
+  }
+  [data-tone="raspberry"] {
+    --tone-bg: var(--gp-raspberry);
+    --tone-fg: var(--gp-cream);
+    --tone-accent: var(--gp-cream);
+    --tone-cta-bg: var(--gp-cream);
+    --tone-cta-fg: var(--gp-raspberry);
+    --tone-ring: var(--gp-cream);
+    --tone-muted-a: 0.8;
+  }
+  [data-tone="ink"] {
+    --tone-bg: var(--gp-ink);
+    --tone-fg: var(--gp-cream);
+    /* raspberry on ink is too dark for text: accents go gold on ink */
+    --tone-accent: var(--gp-gold);
+    --tone-cta-bg: var(--gp-raspberry);
+    --tone-cta-fg: var(--gp-cream);
+    --tone-ring: var(--gp-champagne);
+    --tone-muted-a: 0.72;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gp-site {
+      scroll-behavior: auto;
+    }
+    .gp-site *,
+    .gp-site *::before,
+    .gp-site *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Container from tokens.md: max-w-[1320px] px-4 md:px-8. */
+  .gp-container {
+    @apply mx-auto w-full max-w-gp px-4 md:px-8;
+  }
+
+  /* Hand-drawn marks: paths carry pathLength="1"; `data-drawn` draws them. */
+  .gp-draw path {
+    stroke-dasharray: 1 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset var(--gp-draw-ms, 800ms) var(--gp-ease)
+      var(--gp-draw-delay, 0ms);
+  }
+  .gp-draw[data-drawn="true"] path {
+    stroke-dashoffset: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gp-draw path {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Dashed ring around the main CTA; the dashes crawl on hover. */
+  .gp-ring rect {
+    stroke-dasharray: 7 7;
+  }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .group:hover .gp-ring rect,
+    .group:focus-visible .gp-ring rect {
+      animation: gp-dash 1.2s linear infinite;
+    }
+  }
+
+  /* Print shadow + cream border for photo prints. */
+  .gp-print {
+    box-shadow: 0 18px 40px -18px rgb(var(--gp-ink) / 0.35);
+  }
+
+  /* Outlined numerals (01–04) on dark sections. */
+  .gp-outline-num {
+    color: transparent;
+    -webkit-text-stroke: 1.5px rgb(var(--gp-numeral, var(--gp-raspberry)));
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Header: transparent over the hero, frosted in the tone beneath once scrolled. */
+  .gp-header {
+    transition:
+      background-color 300ms var(--gp-ease),
+      color 300ms var(--gp-ease),
+      box-shadow 300ms var(--gp-ease);
+  }
+  .gp-header[data-solid="true"] {
+    background-color: rgb(var(--tone-bg) / 0.86);
+    box-shadow: 0 1px 0 rgb(var(--tone-fg) / 0.08);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    backdrop-filter: blur(14px) saturate(1.2);
+  }
+
+  /* Mobile drawer: curtain drops from the top, items follow in a short stagger. */
+  .gp-drawer {
+    clip-path: inset(0 0 100% 0);
+    visibility: hidden;
+    transition:
+      clip-path 450ms var(--gp-ease),
+      visibility 0s linear 450ms;
+  }
+  .gp-drawer[data-open="true"] {
+    clip-path: inset(0 0 0 0);
+    visibility: visible;
+    transition:
+      clip-path 500ms var(--gp-ease),
+      visibility 0s;
+  }
+  .gp-drawer [data-stagger] {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 250ms var(--gp-ease),
+      transform 250ms var(--gp-ease);
+  }
+  .gp-drawer[data-open="true"] [data-stagger] {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 500ms var(--gp-ease) calc(120ms + var(--i, 0) * 55ms),
+      transform 600ms var(--gp-ease) calc(120ms + var(--i, 0) * 55ms);
+  }
+}
+
+@keyframes gp-dash {
+  to {
+    stroke-dashoffset: -28;
   }
 }

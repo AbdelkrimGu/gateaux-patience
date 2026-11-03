@@ -155,5 +155,155 @@
     "home_desc": "Custom cakes and artisan pastries in Sidi Bel Abbès, Algeria. Birthdays, weddings, graduations. Order your custom cake since 2018.",
     "gallery_title": "Gallery | Gateaux Patience",
     "gallery_desc": "Discover our gallery of custom handcrafted cakes: birthdays, weddings, kids, graduations and more."
+  },
+  "frame": {
+    "skip": "Skip to content",
+    "home_aria": "Gateaux Patience, home",
+    "nav_aria": "Main navigation",
+    "home": "Home",
+    "gallery": "Gallery",
+    "gallery_all": "The whole gallery",
+    "gallery_menu": "Gallery categories",
+    "tiramisu": "Tiramisu",
+    "contact": "Contact",
+    "order": "Order",
+    "order_sub": "on WhatsApp",
+    "order_full": "Order on WhatsApp",
+    "opens_whatsapp": "opens WhatsApp",
+    "menu_open": "Open the menu",
+    "menu_close": "Close the menu",
+    "lang_aria": "Choose a language",
+    "lang_fr": "Français",
+    "lang_ar": "العربية",
+    "lang_en": "English",
+    "drawer_note": "Made by hand, with patience"
+  },
+  "footer_gp": {
+    "line1": "Made by hand,",
+    "line2": "just for you.",
+    "pitch": "Custom cakes, made by hand in Sidi Bel Abbès since 2018.",
+    "explore": "Explore",
+    "reach": "Get in touch",
+    "follow": "Follow us",
+    "whatsapp": "WhatsApp",
+    "call_aria": "Call {phone}",
+    "city": "Sidi Bel Abbès, Algeria",
+    "back_to_top": "Back to top",
+    "partner": "Partnered with",
+    "copyright": "© {year} Gateaux Patience. All rights reserved."
+  },
+  "order_wa": {
+    "hello": "Hello Gateaux Patience!",
+    "generic": "I'd like to order a cake.",
+    "occasion": "I'd like to order a cake. Occasion: {occasion}.",
+    "cake": "I'm interested in this cake: “{cake}”.",
+    "detail": "{label}: {value}"
+  },
+  "home": {
+    "hero": {
+      "badge": "Cake designer in Sidi Bel Abbès · since 2018",
+      "title_before": "Cakes made by",
+      "title_accent": "hand",
+      "title_after": "for your happiest days",
+      "note": "100% handmade",
+      "lead": "Birthdays, weddings, graduations: every cake is imagined with you and made by hand, in your colors.",
+      "cta": "Order on WhatsApp",
+      "cta_note": "Let's talk about your cake",
+      "cards_label": "Our categories"
+    },
+    "promise": {
+      "sentence": "Every cake is <u>made by hand</u>, <u>made to order</u>, in Sidi Bel Abbès since 2018: you choose, we talk it over on WhatsApp, and Patience makes it <u>for your day</u>.",
+      "coda": "With patience, of course.",
+      "t1_title": "Made by hand",
+      "t1_text": "Every cake is made by hand in our workshop.",
+      "t2_title": "Made to order",
+      "t2_text": "Your colors, your theme, your message.",
+      "t3_title": "Since 2018",
+      "t3_text": "Cakes for your celebrations, year after year.",
+      "t4_title": "Sidi Bel Abbès",
+      "t4_text": "Where every one of your cakes is made."
+    },
+    "menu": {
+      "eyebrow": "The menu",
+      "title": "Our cakes",
+      "count": "{count, plural, one {# cake} other {# cakes}}",
+      "custom_group": "To personalize",
+      "tiramisu_row": "Personalized tiramisu box",
+      "see_all": "See the whole gallery"
+    },
+    "occasions": {
+      "eyebrow": "For every occasion",
+      "title": "What are you celebrating?",
+      "cta": "Order this cake on WhatsApp",
+      "see": "See the cakes"
+    },
+    "house": {
+      "eyebrow": "From the workshop",
+      "title": "A note from the workshop",
+      "greeting": "Hello!",
+      "p1": "Since 2018, we have made every cake by hand in our workshop in Sidi Bel Abbès.",
+      "p2": "We start from your idea (a color, a theme, a name) and make a cake that feels like you.",
+      "p3": "Thank you for trusting us with your happiest days.",
+      "signoff": "With patience,"
+    },
+    "steps": {
+      "eyebrow": "How it works",
+      "title": "Your cake in four steps",
+      "s1_title": "Choose",
+      "s1_text": "Browse the gallery and pick the design you love, or bring your own idea.",
+      "s2_title": "Message us",
+      "s2_text": "Write to us on WhatsApp with the date and the occasion.",
+      "s3_title": "Personalize",
+      "s3_text": "Size, flavor, decoration, message: we settle every detail together.",
+      "s4_title": "Enjoy",
+      "s4_text": "Your cake, made by hand just for you, is ready for the party.",
+      "chip_size": "Size",
+      "chip_flavour": "Flavor",
+      "chip_decor": "Decoration",
+      "chip_message": "Message",
+      "sticker": "Bon appétit!",
+      "inspiration": "your inspiration"
+    },
+    "faq": {
+      "eyebrow": "Questions",
+      "title": "Your questions",
+      "q1": "How do I order?",
+      "a1": "Pick a design in the gallery, or bring your own idea, then message us on WhatsApp: together we settle the size, flavor and decoration.",
+      "q2": "What can I personalize?",
+      "a2": "The size, flavor, decoration, colors, theme and the message written on the cake.",
+      "q3": "Where are you?",
+      "a3": "Our workshop is in Sidi Bel Abbès, Algeria.",
+      "q4": "Can you write a message on the tiramisu?",
+      "a4": "Yes: on the Tiramisu page, you type your message and see the result live before ordering.",
+      "q5": "Where can I see more of your cakes?",
+      "a5": "The whole gallery is right here on the site, and our latest creations are on Instagram ({handle}).",
+      "q6": "How much does it cost?",
+      "a6": "The price depends on the size and decoration: ask for your quote on WhatsApp."
+    },
+    "follow": {
+      "eyebrow": "On Instagram",
+      "lead": "Our latest creations, fresh from the workshop.",
+      "cta": "Follow on Instagram"
+    },
+    "finale": {
+      "title": "Have a date in mind?",
+      "lead": "Tell us the occasion, the date and what you have in mind: let's talk on WhatsApp.",
+      "field_label": "Your message",
+      "placeholder": "Hello! I'd like a cake for…",
+      "send": "Send on WhatsApp",
+      "pills_label": "Or pick the occasion",
+      "for_you": "For you"
+    },
+    "ticket": {
+      "title": "Your message",
+      "lead": "What to tell us to get started: we'll draft the WhatsApp message for you.",
+      "occasion": "Occasion",
+      "date": "Date",
+      "parts": "Servings",
+      "flavour": "Flavor",
+      "decor": "Decoration",
+      "choose": "Choose…",
+      "submit": "Prepare my WhatsApp message"
+    }
   }
 }

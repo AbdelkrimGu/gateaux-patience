@@ -75,7 +75,7 @@ export default function SocialCTASection() {
   ];
 
   return (
-    <section className="section-padding bg-charcoal relative overflow-hidden">
+    <section data-tone="ink" data-final-cta className="section-padding bg-charcoal relative overflow-hidden">
       {/* Decorative */}
       <div
         className="absolute top-0 left-0 w-96 h-96 rounded-full opacity-10 blur-3xl"

@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
+import { setRequestLocale } from "next-intl/server";
+import SiteFrame from "@/components/gp/SiteFrame";
 import CakeDetailClient from "@/components/gallery/CakeDetailClient";
 import { getCakeBySlug, getSimilarCakes, type Locale } from "@/lib/cakes-data";
 
@@ -32,16 +32,15 @@ export default async function CakeDetailPage({
 }: {
   params: Promise<{ locale: string; slug: string }>;
 }) {
-  const { slug } = await params;
+  const { locale, slug } = await params;
+  setRequestLocale(locale);
   const cake = await getCakeBySlug(slug);
   if (!cake) notFound();
   const similar = await getSimilarCakes(cake);
 
   return (
-    <main>
-      <Header />
+    <SiteFrame locale={locale}>
       <CakeDetailClient cake={cake} similar={similar} />
-      <Footer />
-    </main>
+    </SiteFrame>
   );
 }

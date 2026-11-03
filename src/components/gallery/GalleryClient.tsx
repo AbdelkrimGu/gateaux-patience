@@ -56,7 +56,7 @@ function CakeCard({ cake, locale }: { cake: Cake; locale: string }) {
         </Link>
 
         {/* Category badge */}
-        <div className="absolute top-3 left-3 z-10 pointer-events-none">
+        <div className="absolute top-3 start-3 z-10 pointer-events-none">
           <span className="px-2.5 py-1 rounded-full bg-white/90 text-rose text-xs font-medium backdrop-blur-sm shadow-sm">
             {cake.categoryLabel[locale as Locale] ?? cake.categoryLabel.fr}
           </span>
@@ -64,7 +64,7 @@ function CakeCard({ cake, locale }: { cake: Cake; locale: string }) {
 
         {/* Multi-image indicator */}
         {cake.images.length > 1 && (
-          <div className="absolute top-3 right-3 z-10 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full pointer-events-none">
+          <div className="absolute top-3 end-3 z-10 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full pointer-events-none">
             +{cake.images.length}
           </div>
         )}
@@ -76,7 +76,7 @@ function CakeCard({ cake, locale }: { cake: Cake; locale: string }) {
           rel="noopener noreferrer"
           title={orderLabel}
           aria-label={orderLabel}
-          className="absolute bottom-3 right-3 z-10 flex items-center justify-center gap-1.5 w-11 h-11 md:w-auto md:h-auto md:px-4 md:py-2.5 rounded-full bg-[#25D366] text-white shadow-lg hover:bg-[#1ebd5c] hover:scale-105 active:scale-95 transition-all"
+          className="absolute bottom-3 end-3 z-10 flex items-center justify-center gap-1.5 w-11 h-11 md:w-auto md:h-auto md:px-4 md:py-2.5 rounded-full bg-[#25D366] text-white shadow-lg hover:bg-[#1ebd5c] hover:scale-105 active:scale-95 transition-all"
         >
           <MessageCircle size={16} />
           <span className="hidden md:inline text-xs font-semibold whitespace-nowrap">
@@ -109,7 +109,6 @@ export default function GalleryClient({
 }) {
   const locale = useLocale();
   const searchParams = useSearchParams();
-  const isRTL = locale === "ar";
   const initialCategory = (() => {
     const q = searchParams.get("category");
     if (q && categories.some((c) => c.slug === q)) return q;
@@ -130,7 +129,7 @@ export default function GalleryClient({
       {/* Page hero */}
       <div className="pt-28 pb-10 bg-gradient-to-br from-[#FFF8F3] via-[#FFF0E8] to-[#FDE8E8] border-b border-border">
         <div className="container-custom">
-          <div className={cn("flex flex-col gap-2", isRTL ? "items-end text-right" : "items-start")}>
+          <div className="flex flex-col items-start gap-2">
             <span className="section-badge">
               {locale === "ar" ? "معرضنا" : locale === "en" ? "Our Gallery" : "Notre Galerie"}
             </span>
@@ -149,9 +148,9 @@ export default function GalleryClient({
       </div>
 
       {/* Filter bar */}
-      <div className="sticky top-16 z-40 bg-white/95 backdrop-blur-md border-b border-border shadow-sm">
+      <div className="sticky top-[calc(var(--gp-header-h)+env(safe-area-inset-top,0px))] z-40 bg-white/95 backdrop-blur-md border-b border-border shadow-sm">
         <div className="container-custom py-3">
-          <div className={cn("flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1", isRTL && "flex-row-reverse")}>
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
             <SlidersHorizontal size={15} className="text-charcoal-light shrink-0" />
             <button
               key="all"
@@ -186,7 +185,7 @@ export default function GalleryClient({
       {/* Grid */}
       <section className="py-12 bg-white">
         <div className="container-custom">
-          <p className={cn("text-sm text-charcoal-light mb-6", isRTL && "text-right")}>
+          <p className="text-sm text-charcoal-light mb-6">
             {filtered.length} {locale === "ar" ? "نتيجة" : locale === "en" ? "results" : "résultats"}
           </p>
 
