@@ -1,0 +1,194 @@
+/* Line-up 1 "Crème & velours" — the few rules Tailwind can't express cleanly.
+   Motion here is transform / opacity / clip-path only, and every effect has a
+   static reduced-motion state (globals.css also freezes transitions). */
+
+/* ---- 1 · Bowl carousel ------------------------------------------------- */
+.gp-bowl {
+  --bowl-cw: clamp(132px, 12vw, 240px);
+  --bowl-ch: calc(var(--bowl-cw) * 1.82);
+  --bowl-h: calc(var(--bowl-ch) + 6px);
+  --gp-dir: 1;
+  cursor: grab;
+}
+[dir="rtl"] .gp-bowl {
+  --gp-dir: -1;
+}
+.gp-bowl[data-dragging="true"] {
+  cursor: grabbing;
+}
+/* Server / reduced-motion state: a flat, centred row (JS overrides transform). */
+.gp-bowl-card {
+  transform: translate3d(calc(var(--i) * (var(--bowl-cw) * 0.8 + 14px) * var(--gp-dir)), 0, 0) scale(0.8);
+}
+.gp-bowl[data-live="true"] .gp-bowl-card {
+  border-radius: 0;
+}
+/* Label: same visual size whatever the card's scale (--s, 0.8 in the static row). */
+.gp-bowl-card {
+  --s: 0.8;
+}
+.gp-bowl-label {
+  max-width: calc(92% * var(--s));
+  transform: scale(calc(1 / var(--s)));
+  transform-origin: var(--gp-origin-start, left) bottom;
+}
+[dir="rtl"] .gp-bowl-label {
+  --gp-origin-start: right;
+}
+
+/* ---- 2 · Scroll-ink sentence: --ink (words inked so far) is set on scroll. */
+.gp-ink-word {
+  /* 0.5 floor: un-inked words stay ≥ 3:1 on cream (large text, WCAG AA). */
+  opacity: clamp(0.5, calc(var(--ink, 999) - var(--w, 0)), 1);
+}
+
+/* ---- Reveal-on-view (RevealOnView sets data-reveal) -------------------- */
+/* idle (server) = final state; armed = waiting below the fold; in = played. */
+.gp-reveal[data-reveal="armed"] .gp-leader {
+  transform: scaleX(0);
+}
+.gp-reveal .gp-leader {
+  transform-origin: var(--gp-origin-start, left) center;
+}
+[dir="rtl"] .gp-reveal .gp-leader {
+  --gp-origin-start: right;
+}
+/* Entrances are animations with backwards fill only, so hover transforms
+   keep working once they have played. */
+.gp-reveal[data-reveal="in"] .gp-leader {
+  animation: gp-leader-draw 900ms var(--gp-ease) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms + 150ms);
+}
+.gp-reveal[data-reveal="armed"] .gp-thumb {
+  transform: scale(0.6);
+  opacity: 0;
+}
+.gp-reveal[data-reveal="in"] .gp-thumb {
+  animation: gp-thumb-pop 600ms var(--gp-ease) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms + 650ms);
+}
+@keyframes gp-leader-draw {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes gp-thumb-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+.gp-reveal[data-reveal="armed"] .gp-rise {
+  transform: translateY(105%);
+}
+.gp-reveal[data-reveal="in"] .gp-rise {
+  animation: gp-rise 950ms var(--gp-ease) backwards;
+  animation-delay: calc(var(--i, 0) * 120ms);
+}
+@keyframes gp-rise {
+  from {
+    transform: translateY(105%);
+  }
+}
+
+/* ---- 3 · Menu card: scalloped paper, top and bottom -------------------- */
+.gp-scallop {
+  -webkit-mask:
+    radial-gradient(circle at 12px 0, transparent 11px, #000 11.5px) center top / 24px 51% repeat-x,
+    radial-gradient(circle at 12px 100%, transparent 11px, #000 11.5px) center bottom / 24px 51% repeat-x;
+  mask:
+    radial-gradient(circle at 12px 0, transparent 11px, #000 11.5px) center top / 24px 51% repeat-x,
+    radial-gradient(circle at 12px 100%, transparent 11px, #000 11.5px) center bottom / 24px 51% repeat-x;
+}
+
+/* ---- 4 · Party folders --------------------------------------------------
+   Opaque blush (raspberry 12 % on cream): a folder must hide the one below. */
+.gp-blush {
+  background-color: color-mix(in srgb, rgb(var(--gp-raspberry)) 12%, rgb(var(--gp-cream)));
+}
+.gp-folder-tab {
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 100%, 0 100%);
+}
+[dir="rtl"] .gp-folder-tab {
+  clip-path: polygon(18px 0, 100% 0, 100% 100%, 0 100%);
+}
+/* The folder being covered settles back a little (scroll-driven, no JS;
+   browsers without scroll timelines simply skip it). */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .gp-folder[data-covered-by] .gp-folder-body {
+      animation: gp-folder-settle linear both;
+      animation-range: entry 0% entry 100%;
+      transform-origin: 50% 0;
+    }
+    .gp-folder[data-covered-by] .gp-folder-shade {
+      animation: gp-folder-shade linear both;
+      animation-range: entry 0% entry 100%;
+    }
+  }
+}
+@keyframes gp-folder-settle {
+  to {
+    transform: scale(0.965);
+  }
+}
+@keyframes gp-folder-shade {
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---- 8 · Instagram strip: reduced motion = swipeable rows -------------- */
+@media (prefers-reduced-motion: reduce) {
+  .gp-strip-row {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+  }
+  .gp-strip-row li {
+    scroll-snap-align: start;
+  }
+}
+
+/* ---- 7 · FAQ: the answer slides in when a question opens --------------- */
+.gp-faq[open] .gp-faq-answer {
+  animation: gp-faq-in 450ms var(--gp-ease);
+}
+@keyframes gp-faq-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+.gp-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+/* ---- 6 · Outlined numerals on ink: variable fonts have overlapping
+   contours, so paint the stroke first and cover its inner half with an
+   ink fill (no stray inner lines); a brighter raspberry reads on ink. */
+.gp-num-ink {
+  color: rgb(var(--gp-ink));
+  -webkit-text-stroke: 3px color-mix(in srgb, rgb(var(--gp-raspberry)) 80%, rgb(var(--gp-cream)));
+  paint-order: stroke fill;
+}
+/* ---- 6 · Phone screens: items stagger in when their screen is active ---- */
+.gp-screen[data-live] .gp-in,
+.gp-screen[data-live] .gp-pop {
+  opacity: 0;
+  transition:
+    opacity 450ms var(--gp-ease),
+    transform 500ms var(--gp-ease);
+}
+.gp-screen[data-live] .gp-in {
+  transform: translateY(14px);
+}
+.gp-screen[data-live] .gp-pop {
+  transform: scale(0.6);
+}
+.gp-screen[data-live][data-active="true"] .gp-in,
+.gp-screen[data-live][data-active="true"] .gp-pop {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(var(--d, 0) * 110ms + 120ms);
+}

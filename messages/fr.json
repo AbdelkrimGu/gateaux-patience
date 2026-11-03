@@ -221,7 +221,8 @@
       "t3_title": "Depuis 2018",
       "t3_text": "Des gâteaux pour vos fêtes, année après année.",
       "t4_title": "Sidi Bel Abbès",
-      "t4_text": "C'est ici que naît chacun de vos gâteaux."
+      "t4_text": "C'est ici que naît chacun de vos gâteaux.",
+      "aria": "Nos promesses"
     },
     "menu": {
       "eyebrow": "La carte",
@@ -234,7 +235,7 @@
     "occasions": {
       "eyebrow": "Pour chaque occasion",
       "title": "Que fêtez-vous ?",
-      "cta": "Commander ce gâteau sur WhatsApp",
+      "cta": "Commander pour l'occasion",
       "see": "Voir les gâteaux"
     },
     "house": {
@@ -244,7 +245,9 @@
       "p1": "Depuis 2018, nous faisons chaque gâteau à la main, dans notre atelier de Sidi Bel Abbès.",
       "p2": "Nous partons de votre idée (une couleur, un thème, un prénom) pour créer un gâteau qui vous ressemble.",
       "p3": "Merci de nous confier vos plus beaux jours.",
-      "signoff": "Avec patience,"
+      "signoff": "Avec patience,",
+      "lead": "Quelques mots de l'atelier, avant de parler de votre gâteau.",
+      "instagram": "Nos dernières créations sur Instagram"
     },
     "steps": {
       "eyebrow": "Comment ça marche",
@@ -262,23 +265,25 @@
       "chip_decor": "Décor",
       "chip_message": "Message",
       "sticker": "Bon appétit !",
-      "inspiration": "votre inspiration"
+      "inspiration": "votre inspiration",
+      "wa_label": "WhatsApp",
+      "wa_input": "Message"
     },
     "faq": {
       "eyebrow": "Questions",
       "title": "Vos questions",
       "q1": "Comment commander ?",
-      "a1": "Choisissez un modèle dans la galerie, ou venez avec votre idée, puis écrivez-nous sur WhatsApp : nous définissons ensemble la taille, la saveur et le décor.",
+      "a1": "Choisissez un modèle dans la galerie, ou venez avec votre idée, puis <wa>écrivez-nous sur WhatsApp</wa> : nous définissons ensemble la taille, la saveur et le décor.",
       "q2": "Que peut-on personnaliser ?",
       "a2": "La taille, la saveur, le décor, les couleurs, le thème et le message écrit sur le gâteau.",
       "q3": "Où êtes-vous ?",
       "a3": "Notre atelier est à Sidi Bel Abbès, en Algérie.",
       "q4": "Peut-on écrire un message sur le tiramisu ?",
-      "a4": "Oui : sur la page Tiramisu, vous écrivez votre message et voyez le résultat en direct avant de commander.",
+      "a4": "Oui : sur la page <tiramisu>Tiramisu</tiramisu>, vous écrivez votre message et voyez le résultat en direct avant de commander.",
       "q5": "Où voir plus de créations ?",
-      "a5": "Toute la galerie est ici, sur le site, et nos dernières créations sont sur Instagram ({handle}).",
+      "a5": "<gallery>Toute la galerie</gallery> est ici, sur le site, et nos dernières créations sont sur Instagram (<ig>{handle}</ig>).",
       "q6": "Combien ça coûte ?",
-      "a6": "Le prix dépend de la taille et du décor : demandez votre devis sur WhatsApp."
+      "a6": "Le prix dépend de la taille et du décor : <wa>demandez votre devis sur WhatsApp</wa>."
     },
     "follow": {
       "eyebrow": "Sur Instagram",
@@ -292,7 +297,9 @@
       "placeholder": "Bonjour ! Je voudrais un gâteau pour…",
       "send": "Envoyer sur WhatsApp",
       "pills_label": "Ou choisissez l'occasion",
-      "for_you": "Pour vous"
+      "for_you": "Pour vous",
+      "title_l1": "Une date",
+      "title_l2": "en tête ?"
     },
     "ticket": {
       "title": "Votre message",

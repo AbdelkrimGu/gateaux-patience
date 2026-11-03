@@ -256,7 +256,7 @@
     --tone-cta-bg: var(--gp-raspberry);
     --tone-cta-fg: var(--gp-cream);
     --tone-ring: var(--gp-raspberry);
-    --tone-muted-a: 0.6;
+    --tone-muted-a: 0.66; /* ≥ 4.5:1 on cream (0.6 measured 4.42) */
   }
   [data-tone="champagne"] {
     --tone-bg: var(--gp-champagne);
@@ -265,7 +265,7 @@
     --tone-cta-bg: var(--gp-raspberry);
     --tone-cta-fg: var(--gp-cream);
     --tone-ring: var(--gp-raspberry);
-    --tone-muted-a: 0.62;
+    --tone-muted-a: 0.68; /* ≥ 4.5:1 on champagne (0.62 measured 4.44) */
   }
   [data-tone="raspberry"] {
     --tone-bg: var(--gp-raspberry);

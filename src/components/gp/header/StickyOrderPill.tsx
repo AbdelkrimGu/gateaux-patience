@@ -17,17 +17,22 @@ export default function StickyOrderPill({ suppressed = false }: { suppressed?: b
   const order = useOrderHref();
   const [pastHero, setPastHero] = useState(false);
   const [finalVisible, setFinalVisible] = useState(false);
+  const [curtainOpen, setCurtainOpen] = useState(false);
 
   useEffect(() => {
     // A scroll read (not an IntersectionObserver): a jump from below the hero
     // CTA to far past it never "crosses" it, and IO would miss that.
     const hero = document.querySelector("[data-hero-cta]");
     let frame = 0;
+    const main = document.getElementById("main");
     const read = () => {
       frame = 0;
       setPastHero(
         hero ? hero.getBoundingClientRect().bottom < 0 : window.scrollY > window.innerHeight * 0.6
       );
+      // A curtain footer is fixed (always "intersecting"): it is on screen
+      // only once <main> has lifted off it.
+      setCurtainOpen(main ? main.getBoundingClientRect().bottom < window.innerHeight - 1 : false);
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(read);
@@ -38,7 +43,8 @@ export default function StickyOrderPill({ suppressed = false }: { suppressed?: b
     const visible = new Set<Element>();
     const finalIO = new IntersectionObserver((entries) => {
       for (const e of entries) {
-        if (e.isIntersecting) visible.add(e.target);
+        if (getComputedStyle(e.target).position === "fixed") visible.delete(e.target);
+        else if (e.isIntersecting) visible.add(e.target);
         else visible.delete(e.target);
       }
       setFinalVisible(visible.size > 0);
@@ -52,7 +58,7 @@ export default function StickyOrderPill({ suppressed = false }: { suppressed?: b
     };
   }, []);
 
-  const shown = pastHero && !finalVisible && !suppressed;
+  const shown = pastHero && !finalVisible && !curtainOpen && !suppressed;
 
   return (
     <div
