@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter, Cairo, Great_Vibes } from "next/font/google";
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { NextIntlClientProvider, hasLocale } from "next-intl";
+import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { CONTACT, PHONE_E164, SITE_URL } from "@/lib/constants";
@@ -93,9 +93,12 @@ export default async function LocaleLayout({
 }) {
   const { locale } = await params;
 
-  if (!routing.locales.includes(locale as "fr" | "ar" | "en")) {
+  if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
+
+  // Enables static rendering for pages under [locale] (next-intl v4).
+  setRequestLocale(locale);
 
   const messages = await getMessages();
   const isRTL = locale === "ar";

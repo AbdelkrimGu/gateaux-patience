@@ -377,12 +377,15 @@ export default function TiramisuScene3D({
       <ambientLight intensity={0.35} />
       <KeyLight animate={!reducedMotion} shadowSize={shadowSize} />
 
-      {/* Image-based lighting — built in-scene, no external HDRI fetch. */}
-      <Environment resolution={256} frames={1}>
+      {/* Image-based lighting — built in-scene, no external HDRI fetch.
+          drei 10 changed two defaults that brighten this rig: the cube camera
+          near plane (1 -> 0.1) and Lightformers now lookAt(target=[0,0,0]).
+          near={1} + target={false} keep the drei 9 look (visual parity). */}
+      <Environment resolution={256} frames={1} near={1}>
         <color attach="background" args={["#2a1c12"]} />
-        <Lightformer intensity={2.2} position={[0, 4, -3]} scale={[9, 5, 1]} color="#fff4e6" />
-        <Lightformer intensity={1.3} position={[-4, 2, 2]} scale={[4, 5, 1]} color="#ffe9d0" />
-        <Lightformer intensity={0.9} position={[4, 3, 3]} scale={[4, 4, 1]} color="#ffffff" />
+        <Lightformer intensity={2.2} position={[0, 4, -3]} scale={[9, 5, 1]} color="#fff4e6" target={false} />
+        <Lightformer intensity={1.3} position={[-4, 2, 2]} scale={[4, 5, 1]} color="#ffe9d0" target={false} />
+        <Lightformer intensity={0.9} position={[4, 3, 3]} scale={[4, 4, 1]} color="#ffffff" target={false} />
         <Lightformer
           intensity={1.4}
           position={[0, -3, 0]}

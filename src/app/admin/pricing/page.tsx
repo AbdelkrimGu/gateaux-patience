@@ -17,7 +17,7 @@ type SearchParams = { tab?: string | string[] };
 export default async function AdminPricingPage({
   searchParams,
 }: {
-  searchParams?: SearchParams | Promise<SearchParams>;
+  searchParams: Promise<SearchParams>;
 }) {
   const cookieStore = await cookies();
   if (!verifySessionToken(cookieStore.get(ADMIN_COOKIE)?.value)) {

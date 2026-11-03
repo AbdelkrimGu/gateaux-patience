@@ -8,12 +8,13 @@ import { ADMIN_COOKIE, verifySessionToken } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
-export default async function EditCakePage({ params }: { params: { id: string } }) {
+export default async function EditCakePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const cookieStore = await cookies();
   if (!verifySessionToken(cookieStore.get(ADMIN_COOKIE)?.value)) redirect("/admin/login");
 
   const [cake, categories] = await Promise.all([
-    getCakeById(params.id),
+    getCakeById(id),
     getCategories(),
   ]);
   if (!cake) notFound();

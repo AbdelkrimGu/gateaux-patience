@@ -8,7 +8,7 @@ import {
   AnimatePresence,
   useScroll,
   useTransform,
-} from "framer-motion";
+} from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowRight,
