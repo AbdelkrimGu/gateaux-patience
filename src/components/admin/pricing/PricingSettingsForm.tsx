@@ -92,8 +92,8 @@ export default function PricingSettingsForm({ settings, onSaved }: Props) {
         }}
       >
         <div>
-          <h2 className="font-semibold text-gray-800">Réglages du calcul</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h2 className="font-display text-[17px] font-semibold tracking-[-0.02em] text-gp-ink">Réglages du calcul</h2>
+          <p className="text-xs text-gp-ink/70 mt-0.5">
             Ils s&apos;appliquent à vos nouveaux calculs et à toutes vos fiches prix, recalculées aussitôt. Un
             devis enregistré garde ses réglages ; à l&apos;ouverture, vous pourrez lui appliquer les nouveaux.
           </p>
@@ -102,13 +102,13 @@ export default function PricingSettingsForm({ settings, onSaved }: Props) {
         <div>
           <label htmlFor="set-rate" className={LABEL_CLASS}>Taux horaire</label>
           <DecimalInput id="set-rate" value={rateRaw} onChange={setRateRaw} suffix="DA/h" placeholder="0" className="max-w-[12rem]" />
-          <p className="text-xs text-gray-400 mt-1">Ce que vous voulez gagner pour 1 heure de travail.</p>
+          <p className="text-xs text-gp-ink/65 mt-1">Ce que vous voulez gagner pour 1 heure de travail.</p>
         </div>
 
         <div>
           <label htmlFor="set-margin" className={LABEL_CLASS}>Marge</label>
           <DecimalInput id="set-margin" value={marginRaw} onChange={setMarginRaw} suffix="%" placeholder="0" className="max-w-[12rem]" />
-          <p className="text-xs text-gray-400 mt-1">Pourcentage ajouté au coût de revient (matières + main d&apos;œuvre).</p>
+          <p className="text-xs text-gp-ink/65 mt-1">Pourcentage ajouté au coût de revient (matières + main d&apos;œuvre).</p>
         </div>
 
         <div>
@@ -125,7 +125,7 @@ export default function PricingSettingsForm({ settings, onSaved }: Props) {
               </option>
             ))}
           </select>
-          <p className="text-xs text-gray-400 mt-1">Ex : avec 100 DA, 4 520 DA devient 4 600 DA.</p>
+          <p className="text-xs text-gp-ink/65 mt-1">Ex : avec 100 DA, 4 520 DA devient 4 600 DA.</p>
         </div>
 
         {error && <ApiErrorBox error={error} />}
@@ -141,13 +141,13 @@ export default function PricingSettingsForm({ settings, onSaved }: Props) {
             </span>
           )}
           {!saved && settings.updatedAt && (
-            <span className="text-xs text-gray-400">Modifiés le {formatDate(settings.updatedAt)}</span>
+            <span className="text-xs text-gp-ink/65">Modifiés le {formatDate(settings.updatedAt)}</span>
           )}
         </div>
       </form>
 
       <section className={cn(CARD_CLASS, "p-4")}>
-        <h2 className="font-semibold text-gray-800 mb-2">Comment le prix est calculé</h2>
+        <h2 className="font-display text-[17px] font-semibold tracking-[-0.02em] text-gp-ink mb-2">Comment le prix est calculé</h2>
         <FormulaSteps settings={settings} provisional />
       </section>
     </div>

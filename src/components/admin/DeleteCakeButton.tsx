@@ -1,6 +1,8 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ICON_BTN_BASE } from "./ui";
 
 export default function DeleteCakeButton({ id }: { id: string }) {
   return (
@@ -11,10 +13,11 @@ export default function DeleteCakeButton({ id }: { id: string }) {
         await fetch(`/api/admin/cakes/${id}`, { method: "DELETE" });
         window.location.reload();
       }}
-      className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
+      className={cn(ICON_BTN_BASE, "hover:text-red-700 hover:bg-red-50")}
       title="Supprimer"
+      aria-label="Supprimer"
     >
-      <Trash2 size={15} />
+      <Trash2 size={17} />
     </button>
   );
 }

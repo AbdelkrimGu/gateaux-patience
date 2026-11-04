@@ -1,20 +1,34 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Bricolage_Grotesque, Geist } from "next/font/google";
 import "../globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+// Same display + text voices as the public site (Latin only: the admin is French).
+const display = Bricolage_Grotesque({
+  subsets: ["latin"],
+  axes: ["opsz"],
+  variable: "--font-display",
+  display: "swap",
+});
+const text = Geist({
+  subsets: ["latin"],
+  variable: "--font-text",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "Admin | Gateaux Patience",
+  title: { absolute: "Admin | Gateaux Patience" },
   robots: { index: false, follow: false },
+};
+
+// The phone's browser chrome matches the ink top bar.
+export const viewport: Viewport = {
+  themeColor: "#241618",
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
-      <body className={`${inter.className} bg-gray-50 text-gray-900 antialiased`}>
-        {children}
-      </body>
+    <html lang="fr" className={`gp-admin ${display.variable} ${text.variable}`}>
+      <body className="bg-gp-cream font-text text-gp-ink antialiased">{children}</body>
     </html>
   );
 }

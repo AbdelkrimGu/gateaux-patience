@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
-import { CheckCircle2, Eye, Trash2, Phone, MessageSquare, Clock } from "lucide-react";
+import { CheckCircle2, Eye, Trash2, Phone, MessageSquare, Clock, Inbox, RotateCcw, Loader2 } from "lucide-react";
+import { BTN_SECONDARY, CARD, EmptyState, ICON_BTN_BASE, PageHeader, StatusPill } from "@/components/admin/ui";
+import { cn } from "@/lib/utils";
 
 interface Order {
   id: string;
@@ -16,11 +18,7 @@ interface Order {
 }
 
 const STATUS_LABELS = { new: "Nouveau", seen: "Vu", done: "Terminé" };
-const STATUS_COLORS = {
-  new: "bg-green-100 text-green-700",
-  seen: "bg-amber-100 text-amber-700",
-  done: "bg-gray-100 text-gray-500",
-};
+const STATUS_DOT = { new: "bg-emerald-500", seen: "bg-amber-500", done: "bg-gp-ink/30" };
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -83,27 +81,35 @@ export default function AdminOrdersPage() {
 
   return (
     <AdminShell>
-      <div className="max-w-5xl mx-auto space-y-5">
-        {/* Header */}
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">Commandes</h1>
-          <p className="text-sm text-gray-500">{orders.length} demande{orders.length !== 1 ? "s" : ""} au total</p>
-        </div>
-
+      <PageHeader
+        eyebrow="Atelier"
+        title="Commandes"
+        subtitle={`${orders.length} demande${orders.length !== 1 ? "s" : ""} au total`}
+      />
+      <div className="max-w-5xl mx-auto space-y-4">
         {/* Filter tabs */}
-        <div className="flex gap-2 flex-wrap">
+        <div role="tablist" aria-label="Filtrer les commandes" className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
           {(["all", "new", "seen", "done"] as const).map((f) => (
             <button
               key={f}
+              type="button"
+              role="tab"
+              aria-selected={filter === f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+              className={cn(
+                "inline-flex items-center justify-center gap-1 sm:gap-2 min-h-[44px] px-1 sm:pl-4 sm:pr-2.5 rounded-full text-[13px] sm:text-sm font-semibold whitespace-nowrap transition-colors duration-150",
                 filter === f
-                  ? "bg-rose-500 text-white"
-                  : "bg-white text-gray-500 border border-gray-200 hover:border-gray-300"
-              }`}
+                  ? "bg-gp-ink text-gp-cream"
+                  : "bg-gp-paper text-gp-ink/80 border border-gp-ink/20 hover:border-gp-ink/40"
+              )}
             >
               {f === "all" ? "Toutes" : STATUS_LABELS[f]}
-              <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${filter === f ? "bg-white/20" : "bg-gray-100"}`}>
+              <span
+                className={cn(
+                  "min-w-[1.25rem] text-center text-xs px-1 sm:px-1.5 py-0.5 rounded-full tabular-nums",
+                  filter === f ? "bg-gp-gold text-gp-ink" : "bg-gp-ink/[0.07] text-gp-ink/80"
+                )}
+              >
                 {counts[f]}
               </span>
             </button>
@@ -112,119 +118,112 @@ export default function AdminOrdersPage() {
 
         {/* Content */}
         {loading ? (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-rose-500 border-t-transparent rounded-full mx-auto" />
+          <div className={cn(CARD, "p-12 flex flex-col items-center gap-3 text-sm text-gp-ink/70")} role="status">
+            <Loader2 size={26} className="animate-spin text-gp-raspberry" />
+            Chargement des commandes…
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-            <div className="text-4xl mb-3">📭</div>
-            <h2 className="font-semibold text-gray-700 mb-1">Aucune commande</h2>
-            <p className="text-sm text-gray-400">
-              {filter === "all" ? "Vous n'avez pas encore reçu de demandes" : `Aucune commande avec le statut « ${STATUS_LABELS[filter]} »`}
-            </p>
-          </div>
+          <EmptyState icon={<Inbox size={22} />} title="Aucune commande">
+            {filter === "all" ? "Vous n'avez pas encore reçu de demandes" : `Aucune commande avec le statut « ${STATUS_LABELS[filter]} »`}
+          </EmptyState>
         ) : (
-          <div className="space-y-3">
+          <ul className="space-y-3">
             {filtered.map((order) => (
-              <div key={order.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <div className="flex items-start gap-4">
+              <li key={order.id} className={cn(CARD, "p-4 md:p-5")}>
+                <div className="flex items-start gap-3">
                   {/* Status dot */}
-                  <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${
-                    order.status === "new" ? "bg-green-400" :
-                    order.status === "seen" ? "bg-amber-400" : "bg-gray-300"
-                  }`} />
+                  <span aria-hidden className={cn("hidden sm:block w-2.5 h-2.5 rounded-full mt-2 shrink-0", STATUS_DOT[order.status])} />
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-3 flex-wrap">
-                      <div>
+                    <div className="flex items-start justify-between gap-x-3 gap-y-1 flex-wrap">
+                      <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-gray-800">{order.name || "Client anonyme"}</span>
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[order.status]}`}>
-                            {STATUS_LABELS[order.status]}
+                          <span className="font-display text-[17px] font-semibold tracking-[-0.01em] text-gp-ink">
+                            {order.name || "Client anonyme"}
                           </span>
+                          <StatusPill tone={order.status}>{STATUS_LABELS[order.status]}</StatusPill>
                         </div>
                         {order.cakeTitle && (
-                          <p className="text-sm text-rose-500 mt-0.5">Demande pour : {order.cakeTitle}</p>
+                          <p className="text-sm font-medium text-gp-raspberry mt-0.5">Demande pour : {order.cakeTitle}</p>
                         )}
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                        <Clock size={12} />
+                      <div className="flex items-center gap-1.5 text-xs text-gp-ink/70 pt-1 tabular-nums">
+                        <Clock size={13} />
                         {formatDate(order.createdAt)}
                       </div>
                     </div>
 
                     {/* Message */}
                     {order.message && (
-                      <p className="mt-2 text-sm text-gray-600 bg-gray-50 rounded-xl px-3 py-2 leading-relaxed">
+                      <p className="mt-3 text-sm text-gp-ink/90 bg-gp-cream border border-gp-ink/[0.06] rounded-xl px-3.5 py-2.5 leading-relaxed whitespace-pre-line">
                         {order.message}
                       </p>
                     )}
 
                     {/* Actions */}
-                    <div className="mt-3 flex items-center gap-2 flex-wrap">
+                    <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
                       {order.phone && (
-                        <>
-                          <a
-                            href={`tel:${order.phone}`}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-600 hover:border-gray-300 hover:text-gray-800 transition"
-                          >
-                            <Phone size={12} />
+                        <div className="flex gap-2">
+                          <a href={`tel:${order.phone}`} className={cn(BTN_SECONDARY, "flex-1 sm:flex-none px-4 tabular-nums whitespace-nowrap")}>
+                            <Phone size={15} />
                             {order.phone}
                           </a>
                           <a
                             href={`https://wa.me/${order.phone.replace(/\D/g, "")}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500 text-white text-xs font-medium hover:bg-green-600 transition"
+                            className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-full bg-emerald-700 text-white text-sm font-semibold hover:bg-emerald-800 transition-colors flex-1 sm:flex-none"
                           >
-                            <MessageSquare size={12} />
+                            <MessageSquare size={15} />
                             WhatsApp
                           </a>
-                        </>
+                        </div>
                       )}
 
-                      <div className="flex items-center gap-1.5 ml-auto">
+                      <div className="flex items-center gap-2 sm:ml-auto">
                         {order.status !== "seen" && (
                           <button
                             onClick={() => updateStatus(order.id, "seen")}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-amber-600 hover:bg-amber-50 border border-amber-200 transition"
+                            className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3.5 rounded-full text-sm font-medium text-amber-900 bg-amber-50 border border-amber-300 hover:bg-amber-100 transition-colors flex-1 sm:flex-none"
                           >
-                            <Eye size={12} />
+                            <Eye size={15} />
                             Marquer vu
                           </button>
                         )}
                         {order.status !== "done" && (
                           <button
                             onClick={() => updateStatus(order.id, "done")}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-green-600 hover:bg-green-50 border border-green-200 transition"
+                            className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3.5 rounded-full text-sm font-medium text-emerald-900 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 transition-colors flex-1 sm:flex-none"
                           >
-                            <CheckCircle2 size={12} />
+                            <CheckCircle2 size={15} />
                             Terminé
                           </button>
                         )}
                         {order.status === "done" && (
                           <button
                             onClick={() => updateStatus(order.id, "new")}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-gray-500 hover:bg-gray-50 border border-gray-200 transition"
+                            className={cn(BTN_SECONDARY, "px-3.5 flex-1 sm:flex-none")}
                           >
+                            <RotateCcw size={15} />
                             Réouvrir
                           </button>
                         )}
                         <button
                           onClick={() => deleteOrder(order.id)}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
+                          className={cn(ICON_BTN_BASE, "hover:text-red-700 hover:bg-red-50")}
                           title="Supprimer"
+                          aria-label="Supprimer cette commande"
                         >
-                          <Trash2 size={14} />
+                          <Trash2 size={17} />
                         </button>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </div>
     </AdminShell>

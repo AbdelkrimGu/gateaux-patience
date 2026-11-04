@@ -20,7 +20,8 @@ import PriceSheets from "./PriceSheets";
 import PricingSettingsForm from "./PricingSettingsForm";
 import SavedQuotes from "./SavedQuotes";
 import { brokenSheets, liveSizes, type CakeOption } from "./sheet-draft";
-import { ConfirmDialog, useBeforeUnload } from "./ui";
+import { CARD_CLASS, ConfirmDialog, useBeforeUnload } from "./ui";
+import { PageHeader } from "../ui";
 
 export type PricingTab = "calc" | "sheets" | "costs" | "quotes" | "settings";
 type Tab = PricingTab;
@@ -367,168 +368,171 @@ export default function PricingManager({
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-gray-800">Calcul des prix</h1>
-        <p className="text-sm text-gray-500">Le juste prix de chaque gâteau, à partir de vos coûts et de votre temps.</p>
-      </div>
+    <div>
+      <PageHeader
+        eyebrow="Atelier"
+        title="Calcul des prix"
+        subtitle="Le juste prix de chaque gâteau, à partir de vos coûts et de votre temps."
+      />
+      <div className="max-w-5xl mx-auto space-y-4">
 
-      <nav
-        role="tablist"
-        aria-label="Sections du calcul des prix"
-        className="grid grid-cols-5 gap-0.5 sm:gap-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-1"
-      >
-        {TABS.map((t) => {
-          const active = tab === t.id;
-          const count = t.id === "quotes" ? quotes.length : t.id === "sheets" ? templates.length : 0;
-          const alert = t.id === "sheets" && brokenCount > 0;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              aria-label={alert ? `${t.label} (${brokenCount} à corriger)` : undefined}
-              onClick={() => goTo(t.id)}
-              className={cn(
-                // 5 tabs on a 390px phone: ~66px each, so a slightly smaller label there.
-                "relative flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 min-h-[52px] sm:min-h-[44px] px-0.5 sm:px-1 rounded-xl text-[11px] leading-tight sm:text-sm font-medium transition",
-                active ? "bg-rose-500 text-white shadow-sm" : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-              )}
-            >
-              <t.icon size={17} />
-              <span className="whitespace-nowrap">
-                {t.label}
-                {count > 0 && (
-                  <span className={cn("ml-1 tabular-nums", active ? "text-white/80" : "text-gray-400")}>{count}</span>
+        <nav
+          role="tablist"
+          aria-label="Sections du calcul des prix"
+          className={cn(CARD_CLASS, "grid grid-cols-5 gap-0.5 sm:gap-1 p-1 rounded-[20px]")}
+        >
+          {TABS.map((t) => {
+            const active = tab === t.id;
+            const count = t.id === "quotes" ? quotes.length : t.id === "sheets" ? templates.length : 0;
+            const alert = t.id === "sheets" && brokenCount > 0;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                aria-label={alert ? `${t.label} (${brokenCount} à corriger)` : undefined}
+                onClick={() => goTo(t.id)}
+                className={cn(
+                  // 5 tabs on a 390px phone: ~66px each, so a slightly smaller label there.
+                  "relative flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 min-h-[54px] sm:min-h-[46px] px-0.5 sm:px-1 rounded-2xl text-[11px] leading-tight sm:text-sm font-semibold transition-colors duration-150",
+                  active ? "bg-gp-ink text-gp-cream shadow-[0_6px_14px_-8px_rgb(var(--gp-ink)/0.7)]" : "text-gp-ink/75 hover:bg-gp-ink/[0.05] hover:text-gp-ink"
                 )}
-              </span>
-              {alert && (
-                <span
-                  aria-hidden
-                  className="absolute top-1.5 right-2 w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-white"
-                />
-              )}
-            </button>
-          );
-        })}
-      </nav>
+              >
+                <t.icon size={18} className={active ? "text-gp-gold" : undefined} />
+                <span className="whitespace-nowrap">
+                  {t.label}
+                  {count > 0 && (
+                    <span className={cn("ml-1 tabular-nums", active ? "text-gp-gold" : "text-gp-ink/65")}>{count}</span>
+                  )}
+                </span>
+                {alert && (
+                  <span
+                    aria-hidden
+                    className="absolute top-1.5 right-2 w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-gp-paper"
+                  />
+                )}
+              </button>
+            );
+          })}
+        </nav>
 
-      {repricedNotice !== null && (
-        <div
-          role="status"
-          className="flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-100 pl-4 pr-1 py-1 text-sm text-emerald-800"
-        >
-          <Check size={15} className="shrink-0" />
-          <span className="flex-1">
-            {repricedNotice > 1 ? `${repricedNotice} fiches recalculées.` : "1 fiche recalculée."}
-          </span>
-          {tab !== "sheets" && (
+        {repricedNotice !== null && (
+          <div
+            role="status"
+            className="flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-100 pl-4 pr-1 py-1 text-sm text-emerald-800"
+          >
+            <Check size={15} className="shrink-0" />
+            <span className="flex-1">
+              {repricedNotice > 1 ? `${repricedNotice} fiches recalculées.` : "1 fiche recalculée."}
+            </span>
+            {tab !== "sheets" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setRepricedNotice(null);
+                  goTo("sheets");
+                }}
+                className="min-h-[44px] px-3 font-semibold underline underline-offset-2"
+              >
+                Voir
+              </button>
+            )}
             <button
               type="button"
-              onClick={() => {
-                setRepricedNotice(null);
-                goTo("sheets");
-              }}
-              className="min-h-[40px] px-3 font-semibold underline underline-offset-2"
+              onClick={() => setRepricedNotice(null)}
+              aria-label="Fermer"
+              className="inline-flex items-center justify-center w-11 h-11 rounded-full text-emerald-800 hover:bg-emerald-100"
             >
-              Voir
+              <X size={15} />
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setRepricedNotice(null)}
-            aria-label="Fermer"
-            className="inline-flex items-center justify-center w-10 h-10 rounded-lg text-emerald-700 hover:bg-emerald-100"
-          >
-            <X size={15} />
-          </button>
+          </div>
+        )}
+
+        {/* All tabs stay mounted so switching never loses what she was typing. */}
+        <div className={tab === "calc" ? "" : "hidden"}>
+          <PriceCalculator
+            items={items}
+            settings={settings}
+            quotes={quotes}
+            draft={draft}
+            setDraft={setDraft}
+            onQuoteSaved={handleQuoteSaved}
+            goTo={goTo}
+            saveRequest={saveRequest}
+          />
         </div>
-      )}
+        <div className={tab === "sheets" ? "" : "hidden"}>
+          <PriceSheets
+            templates={templates}
+            templatesRev={templatesRev}
+            live={live}
+            items={items}
+            settings={settings}
+            cakes={cakes}
+            onSaved={handleTemplateSaved}
+            onDeleted={handleTemplateDeleted}
+            onUseForQuote={(template, variant) =>
+              draft.dirty ? setPendingSheet({ template, variant }) : startQuoteFromSheet(template, variant)
+            }
+            onEditorDirtyChange={onEditorDirtyChange}
+            goTo={goTo}
+          />
+        </div>
+        <div className={tab === "costs" ? "" : "hidden"}>
+          <CostLibrary items={items} templates={templates} onSaved={handleItemSaved} onDeleted={handleItemDeleted} />
+        </div>
+        <div className={tab === "quotes" ? "" : "hidden"}>
+          <SavedQuotes
+            quotes={quotes}
+            activeQuoteId={draft.quoteId}
+            onOpen={(q) => (draft.dirty ? setPendingOpen(q) : openQuote(q))}
+            onDeleted={handleQuoteDeleted}
+            onGoToCalc={() => goTo("calc")}
+          />
+        </div>
+        <div className={tab === "settings" ? "" : "hidden"}>
+          <PricingSettingsForm settings={settings} onSaved={handleSettingsSaved} />
+        </div>
 
-      {/* All tabs stay mounted so switching never loses what she was typing. */}
-      <div className={tab === "calc" ? "" : "hidden"}>
-        <PriceCalculator
-          items={items}
-          settings={settings}
-          quotes={quotes}
-          draft={draft}
-          setDraft={setDraft}
-          onQuoteSaved={handleQuoteSaved}
-          goTo={goTo}
-          saveRequest={saveRequest}
-        />
-      </div>
-      <div className={tab === "sheets" ? "" : "hidden"}>
-        <PriceSheets
-          templates={templates}
-          templatesRev={templatesRev}
-          live={live}
-          items={items}
-          settings={settings}
-          cakes={cakes}
-          onSaved={handleTemplateSaved}
-          onDeleted={handleTemplateDeleted}
-          onUseForQuote={(template, variant) =>
-            draft.dirty ? setPendingSheet({ template, variant }) : startQuoteFromSheet(template, variant)
-          }
-          onEditorDirtyChange={onEditorDirtyChange}
-          goTo={goTo}
-        />
-      </div>
-      <div className={tab === "costs" ? "" : "hidden"}>
-        <CostLibrary items={items} templates={templates} onSaved={handleItemSaved} onDeleted={handleItemDeleted} />
-      </div>
-      <div className={tab === "quotes" ? "" : "hidden"}>
-        <SavedQuotes
-          quotes={quotes}
-          activeQuoteId={draft.quoteId}
-          onOpen={(q) => (draft.dirty ? setPendingOpen(q) : openQuote(q))}
-          onDeleted={handleQuoteDeleted}
-          onGoToCalc={() => goTo("calc")}
-        />
-      </div>
-      <div className={tab === "settings" ? "" : "hidden"}>
-        <PricingSettingsForm settings={settings} onSaved={handleSettingsSaved} />
-      </div>
+        {pendingOpen && (
+          <ConfirmDialog
+            title="Ouvrir ce devis ?"
+            confirmLabel="Ouvrir"
+            tone="primary"
+            onConfirm={() => openQuote(pendingOpen)}
+            onCancel={() => setPendingOpen(null)}
+          >
+            <p>Le calcul en cours n&apos;est pas enregistré. Il sera remplacé par {quoted(pendingOpen.name)}.</p>
+          </ConfirmDialog>
+        )}
 
-      {pendingOpen && (
-        <ConfirmDialog
-          title="Ouvrir ce devis ?"
-          confirmLabel="Ouvrir"
-          tone="primary"
-          onConfirm={() => openQuote(pendingOpen)}
-          onCancel={() => setPendingOpen(null)}
-        >
-          <p>Le calcul en cours n&apos;est pas enregistré. Il sera remplacé par {quoted(pendingOpen.name)}.</p>
-        </ConfirmDialog>
-      )}
-
-      {pendingSheet && (
-        <ConfirmDialog
-          title="Remplacer le calcul en cours ?"
-          confirmLabel="Remplacer"
-          tone="primary"
-          onConfirm={() => startQuoteFromSheet(pendingSheet.template, pendingSheet.variant)}
-          onCancel={() => setPendingSheet(null)}
-          extraAction={{
-            label: "Enregistrer d'abord",
-            onClick: () => {
-              setPendingSheet(null);
-              goTo("calc");
-              setSaveRequest((r) => r + 1);
-            },
-          }}
-        >
-          <p>
-            {calcSummary()} n&apos;est pas enregistré : il sera remplacé par{" "}
-            {quoted(`${pendingSheet.template.name} — ${pendingSheet.variant.label}`)}.
-          </p>
-          <p className="text-gray-500">
-            « Enregistrer d&apos;abord » le garde dans vos devis ; revenez ensuite à la fiche.
-          </p>
-        </ConfirmDialog>
-      )}
+        {pendingSheet && (
+          <ConfirmDialog
+            title="Remplacer le calcul en cours ?"
+            confirmLabel="Remplacer"
+            tone="primary"
+            onConfirm={() => startQuoteFromSheet(pendingSheet.template, pendingSheet.variant)}
+            onCancel={() => setPendingSheet(null)}
+            extraAction={{
+              label: "Enregistrer d'abord",
+              onClick: () => {
+                setPendingSheet(null);
+                goTo("calc");
+                setSaveRequest((r) => r + 1);
+              },
+            }}
+          >
+            <p>
+              {calcSummary()} n&apos;est pas enregistré : il sera remplacé par{" "}
+              {quoted(`${pendingSheet.template.name} — ${pendingSheet.variant.label}`)}.
+            </p>
+            <p className="text-gp-ink/70">
+              « Enregistrer d&apos;abord » le garde dans vos devis ; revenez ensuite à la fiche.
+            </p>
+          </ConfirmDialog>
+        )}
+      </div>
     </div>
   );
 }

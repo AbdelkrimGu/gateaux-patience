@@ -4,7 +4,7 @@ import { useState, useRef, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Sparkles, Upload, X, Loader2, Save, ChevronDown,
-  Globe, GripVertical, Check, Eye, ChevronLeft, ChevronRight
+  Globe, GripVertical, Check, Eye, ChevronLeft, ChevronRight, Star, Crown
 } from "lucide-react";
 import {
   DndContext,
@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import type { AdminCake } from "@/lib/admin-data";
 import type { Category } from "@/lib/db-types";
 import { compressImage } from "@/lib/image-compress";
+import { BTN_AI, BTN_PRIMARY, CARD, INPUT, LABEL, SECTION_TITLE, Switch } from "./ui";
 
 function SortableImage({
   id,
@@ -66,7 +67,7 @@ function SortableImage({
       onClick={() => {
         if (!isDragging) onPreview();
       }}
-      className="relative group aspect-square rounded-xl overflow-hidden bg-gray-100 touch-none"
+      className="relative group aspect-square rounded-xl overflow-hidden bg-gp-ink/[0.06] ring-1 ring-gp-ink/10 touch-none"
       {...attributes}
       {...listeners}
     >
@@ -74,20 +75,30 @@ function SortableImage({
       <img src={url} alt="" className="w-full h-full object-cover pointer-events-none" draggable={false} />
 
       {/* Hover hint — tells the user the tile is clickable. */}
-      <div className="absolute inset-0 bg-charcoal/0 group-hover:bg-charcoal/35 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
-        <div className="bg-white/95 rounded-full px-3 py-1.5 flex items-center gap-1.5 text-[11px] font-medium text-charcoal shadow">
+      <div className="absolute inset-0 bg-gp-ink/0 group-hover:bg-gp-ink/35 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
+        <div className="bg-gp-paper/95 rounded-full px-3 py-1.5 flex items-center gap-1.5 text-[11px] font-medium text-gp-ink shadow">
           <Eye size={12} />
           Aperçu
         </div>
       </div>
 
       {/* Position badge (always visible) — 01, 02, 03… */}
-      <div className="absolute top-1 left-1 bg-white/95 text-gray-700 text-[9px] px-1.5 py-0.5 rounded font-semibold tracking-wider shadow-sm pointer-events-none">
-        {index === 0 ? "PRINCIPALE" : String(index + 1).padStart(2, "0")}
+      <div className={cn(
+        "absolute top-1 left-1 text-[10px] px-1.5 py-0.5 rounded-md font-semibold tracking-wider shadow-sm pointer-events-none tabular-nums",
+        index === 0 ? "bg-gp-ink text-gp-gold" : "bg-gp-paper/95 text-gp-ink"
+      )}>
+        {index === 0 ? (
+          <span className="flex items-center gap-1">
+            <Crown size={11} strokeWidth={2.5} aria-hidden />
+            <span className="sr-only">Photo principale</span>
+          </span>
+        ) : (
+          String(index + 1).padStart(2, "0")
+        )}
       </div>
 
       {/* Drag handle — always visible (no hover required) */}
-      <div className="absolute top-1 right-1 bg-white/90 text-gray-500 p-1 rounded shadow-sm pointer-events-none">
+      <div className="absolute top-1 right-1 bg-gp-paper/90 text-gp-ink/75 p-1 rounded-md shadow-sm pointer-events-none">
         <GripVertical size={12} />
       </div>
 
@@ -103,11 +114,11 @@ function SortableImage({
           e.stopPropagation();
           onRemove();
         }}
-        className="absolute bottom-1 right-1 p-1.5 bg-white/95 rounded-lg text-red-500 hover:bg-red-50 shadow-sm"
+        className="absolute bottom-1 right-1 w-9 h-9 lg:w-7 lg:h-7 flex items-center justify-center bg-gp-paper/95 rounded-full text-red-700 hover:bg-red-50 shadow-sm"
         title="Supprimer"
         aria-label="Supprimer la photo"
       >
-        <X size={12} />
+        <X size={15} />
       </button>
     </div>
   );
@@ -145,7 +156,7 @@ function ImagePreviewModal({
 
   return (
     <div
-      className="fixed inset-0 z-[200] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 z-[200] bg-gp-ink/90 backdrop-blur-sm flex items-center justify-center p-4 motion-safe:animate-gpa-fade"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -156,13 +167,13 @@ function ImagePreviewModal({
           e.stopPropagation();
           onClose();
         }}
-        className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-sm"
+        className="absolute top-4 right-4 z-10 w-11 h-11 rounded-full bg-gp-cream/10 hover:bg-gp-cream/20 text-gp-cream flex items-center justify-center backdrop-blur-sm"
         aria-label="Fermer"
       >
         <X size={20} />
       </button>
 
-      <div className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-full bg-white/10 text-white text-sm backdrop-blur-sm pointer-events-none">
+      <div className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-full bg-gp-cream/10 text-gp-cream text-sm backdrop-blur-sm pointer-events-none">
         {index + 1} / {images.length}
       </div>
 
@@ -174,7 +185,7 @@ function ImagePreviewModal({
               e.stopPropagation();
               onNavigate((index - 1 + images.length) % images.length);
             }}
-            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-10 w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-sm"
+            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-10 w-11 h-11 md:w-12 md:h-12 rounded-full bg-gp-cream/10 hover:bg-gp-cream/20 text-gp-cream flex items-center justify-center backdrop-blur-sm"
             aria-label="Précédent"
           >
             <ChevronLeft size={22} />
@@ -185,7 +196,7 @@ function ImagePreviewModal({
               e.stopPropagation();
               onNavigate((index + 1) % images.length);
             }}
-            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-10 w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-sm"
+            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-10 w-11 h-11 md:w-12 md:h-12 rounded-full bg-gp-cream/10 hover:bg-gp-cream/20 text-gp-cream flex items-center justify-center backdrop-blur-sm"
             aria-label="Suivant"
           >
             <ChevronRight size={22} />
@@ -194,7 +205,7 @@ function ImagePreviewModal({
       )}
 
       <div
-        className="relative max-w-[92vw] max-h-[88vh] flex items-center justify-center animate-scale-in"
+        className="relative max-w-[92vw] max-h-[88vh] flex items-center justify-center motion-safe:animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -205,6 +216,15 @@ function ImagePreviewModal({
         />
       </div>
     </div>
+  );
+}
+
+function SaveHint({ text, onClick }: { text: string; onClick?: () => void }) {
+  if (!onClick) return <p className="text-xs font-medium text-amber-800">{text}</p>;
+  return (
+    <button type="button" onClick={onClick} className="min-h-[32px] text-left text-xs font-medium text-amber-800 underline underline-offset-2">
+      {text}
+    </button>
   );
 }
 
@@ -540,79 +560,96 @@ export default function CakeForm({ cake, mode, categories }: Props) {
   const uploading = uploadProgress !== null;
   const noCategories = categoryOptions.length === 0;
 
+  const saveDisabled = saving || !translations.fr.title || uploading || noCategories;
+  // Rendered twice (computer bar, phone bar): one is hidden, ids stay unique.
+  const publishSwitch = (where: string) => (
+    <div className="flex items-center gap-1">
+      <Switch checked={published} onChange={setPublished} label="Publier sur le site" tone="emerald" id={`cake-published-${where}`} />
+      <label htmlFor={`cake-published-${where}`} className="text-sm font-semibold text-gp-ink cursor-pointer select-none pr-1">
+        {published ? "Publié" : "Brouillon"}
+      </label>
+    </div>
+  );
+  const saveButton = (
+    <button onClick={handleSave} disabled={saveDisabled} className={cn(BTN_PRIMARY, "min-w-[150px]")}>
+      {saving ? <Loader2 size={16} className="animate-spin" /> : saved ? <Check size={16} /> : <Save size={16} />}
+      {saving ? "Enregistrement..." : saved ? "Enregistré !" : "Enregistrer"}
+    </button>
+  );
+  // Why « Enregistrer » is greyed out, in her words; touching it leads to the field.
+  function goToTitle() {
+    setActiveLang("fr");
+    setTimeout(() => {
+      const el = document.getElementById("cake-title");
+      el?.focus({ preventScroll: true });
+      el?.scrollIntoView({ block: "center", behavior: "smooth" });
+    }, 0);
+  }
+  const saveHint = noCategories
+    ? null
+    : !translations.fr.title.trim()
+      ? "Ajoutez un titre en français pour enregistrer."
+      : uploading
+        ? "Patientez, les photos se téléchargent…"
+        : null;
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">
-            {mode === "new" ? "Nouveau gâteau" : "Modifier le gâteau"}
-          </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {mode === "new" ? "Ajoutez une nouvelle création" : "Mettez à jour les informations"}
+    // Phones: -mb-10 cancels the page's bottom padding so the sticky save bar can reach the very bottom.
+    <div className="max-w-4xl mx-auto space-y-5 -mb-10 md:mb-0">
+      {/* Computer: publish + save at the top of the form */}
+      <div className={cn(CARD, "hidden md:flex items-center justify-between gap-4 px-4 py-2.5")}>
+        <div className="flex items-center gap-3 min-w-0">
+          {publishSwitch("top")}
+          <p className="text-xs text-gp-ink/70 truncate">
+            {published ? "Visible sur le site dès l'enregistrement." : "Gardé ici, pas encore visible sur le site."}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <span className="text-sm text-gray-600 font-medium">
-              {published ? "Publié" : "Brouillon"}
-            </span>
-            <div
-              onClick={() => setPublished(!published)}
-              className={cn(
-                "relative w-11 h-6 rounded-full transition-colors cursor-pointer",
-                published ? "bg-green-400" : "bg-gray-300"
-              )}
-            >
-              <div className={cn(
-                "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform",
-                published ? "translate-x-5" : "translate-x-0"
-              )} />
-            </div>
-          </label>
-
-          <button
-            onClick={handleSave}
-            disabled={saving || !translations.fr.title || uploading || noCategories}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-500 text-white text-sm font-semibold hover:bg-rose-600 disabled:opacity-50 transition shadow-sm"
-          >
-            {saving ? <Loader2 size={15} className="animate-spin" /> : saved ? <Check size={15} /> : <Save size={15} />}
-            {saving ? "Enregistrement..." : saved ? "Enregistré !" : "Enregistrer"}
-          </button>
+        <div className="flex items-center gap-3 shrink-0">
+          {saveHint && <SaveHint text={saveHint} onClick={!translations.fr.title.trim() ? goToTitle : undefined} />}
+          {saveButton}
         </div>
       </div>
 
       {noCategories && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-xl px-4 py-3">
+        <div className="bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded-2xl px-4 py-3">
           Aucune catégorie disponible. Créez-en au moins une dans{" "}
           <a href="/admin/categories" className="font-semibold underline">Catégories</a>{" "}avant d&apos;ajouter un gâteau.
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5">
         {/* Left col — images + category */}
         <div className="lg:col-span-1 space-y-4">
           {/* Images */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <h3 className="font-semibold text-gray-700 mb-3 text-sm">Photos</h3>
+          <section className={cn(CARD, "p-4")}>
+            <h3 className={SECTION_TITLE}>Photos</h3>
 
             <div
+              role="button"
+              tabIndex={0}
+              aria-label="Ajouter des photos"
               onClick={() => fileRef.current?.click()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  fileRef.current?.click();
+                }
+              }}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
-              className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-rose-300 hover:bg-rose-50/30 transition-colors mb-3"
+              className="border-2 border-dashed border-gp-ink/30 bg-gp-cream/60 rounded-xl px-4 py-5 text-center cursor-pointer hover:border-gp-raspberry/60 hover:bg-gp-raspberry/[0.04] transition-colors mb-3"
             >
               {uploading ? (
-                <Loader2 size={20} className="animate-spin text-rose-400 mx-auto mb-1" />
+                <Loader2 size={22} className="animate-spin text-gp-raspberry mx-auto mb-1.5" />
               ) : (
-                <Upload size={20} className="text-gray-400 mx-auto mb-1" />
+                <Upload size={22} className="text-gp-ink/70 mx-auto mb-1.5" />
               )}
-              <p className="text-xs text-gray-500">
+              <p className="text-sm font-medium text-gp-ink/85">
                 {uploading
                   ? uploadProgress!.phase === "preparing"
                     ? `Préparation des images...`
                     : `Téléchargement ${uploadProgress!.done}/${uploadProgress!.total}...`
-                  : "Cliquez ou glissez vos photos"}
+                  : "Ajoutez ou glissez vos photos"}
               </p>
               <input
                 ref={fileRef}
@@ -625,7 +662,9 @@ export default function CakeForm({ cake, mode, categories }: Props) {
             </div>
 
             {uploadError && (
-              <p className="text-xs text-red-500 mb-2">{uploadError}</p>
+              <p role="alert" className="text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2 mb-3">
+                {uploadError}
+              </p>
             )}
 
             {images.length > 0 && (
@@ -651,21 +690,22 @@ export default function CakeForm({ cake, mode, categories }: Props) {
               </DndContext>
             )}
             {images.length > 0 && (
-              <p className="text-[10px] text-gray-400 mt-2">
+              <p className="text-xs text-gp-ink/70 mt-2.5">
                 Glissez les photos pour les réorganiser. La 1ère sera la photo principale.
               </p>
             )}
-          </div>
+          </section>
 
           {/* Category */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <h3 className="font-semibold text-gray-700 mb-3 text-sm">Catégorie</h3>
+          <section className={cn(CARD, "p-4")}>
+            <label htmlFor="cake-category" className={SECTION_TITLE}>Catégorie</label>
             <div className="relative">
               <select
+                id="cake-category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 disabled={noCategories}
-                className="w-full px-3 py-2.5 pr-8 rounded-xl border border-gray-200 text-sm focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none appearance-none bg-white disabled:bg-gray-50 disabled:text-gray-400"
+                className={cn(INPUT, "pr-9 appearance-none")}
               >
                 {categoryOptions.map((c) => (
                   <option key={c.id} value={c.slug}>
@@ -673,16 +713,17 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                   </option>
                 ))}
               </select>
-              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gp-ink/65 pointer-events-none" />
             </div>
-            <p className="text-[10px] text-gray-400 mt-2">
-              Gérer la liste dans <a href="/admin/categories" className="text-rose-500 hover:underline">Catégories</a>.
+            <p className="text-xs text-gp-ink/70 mt-2">
+              Gérer la liste dans{" "}
+              <a href="/admin/categories" className="font-semibold text-gp-raspberry underline">Catégories</a>.
             </p>
-          </div>
+          </section>
 
           {/* Dimensions */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <h3 className="font-semibold text-gray-700 mb-3 text-sm">Dimensions & Portions</h3>
+          <section className={cn(CARD, "p-4")}>
+            <h3 className={SECTION_TITLE}>Dimensions & Portions</h3>
             <div className="grid grid-cols-3 gap-2 mb-3">
               {[
                 { key: "length", label: "Long. (cm)" },
@@ -690,13 +731,15 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                 { key: "height", label: "Haut. (cm)" },
               ].map(({ key, label }) => (
                 <div key={key}>
-                  <label className="block text-[10px] text-gray-400 mb-1">{label}</label>
+                  <label htmlFor={`cake-${key}`} className={LABEL}>{label}</label>
                   <input
+                    id={`cake-${key}`}
                     type="number"
                     min="0"
+                    inputMode="decimal"
                     value={dims[key as keyof typeof dims]}
                     onChange={(e) => setDims((d) => ({ ...d, [key]: e.target.value }))}
-                    className="w-full px-2 py-2 rounded-lg border border-gray-200 text-sm focus:border-rose-400 focus:ring-1 focus:ring-rose-100 outline-none text-center"
+                    className={cn(INPUT, "px-2 text-center tabular-nums")}
                     placeholder="—"
                   />
                 </div>
@@ -708,103 +751,85 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                 { key: "persons", label: "Personnes" },
               ].map(({ key, label }) => (
                 <div key={key}>
-                  <label className="block text-[10px] text-gray-400 mb-1">{label}</label>
+                  <label htmlFor={`cake-${key}`} className={LABEL}>{label}</label>
                   <input
+                    id={`cake-${key}`}
                     type="number"
                     min="0"
+                    inputMode="numeric"
                     value={dims[key as keyof typeof dims]}
                     onChange={(e) => setDims((d) => ({ ...d, [key]: e.target.value }))}
-                    className="w-full px-2 py-2 rounded-lg border border-gray-200 text-sm focus:border-rose-400 focus:ring-1 focus:ring-rose-100 outline-none text-center"
+                    className={cn(INPUT, "px-2 text-center tabular-nums")}
                     placeholder="—"
                   />
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
-          {/* Featured */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <label className="flex items-center justify-between cursor-pointer">
-              <div>
-                <p className="font-semibold text-gray-700 text-sm">Gâteau à la une</p>
-                <p className="text-xs text-gray-400">Affiché en premier sur la page d&apos;accueil</p>
-              </div>
-              <div
-                onClick={() => setFeatured(!featured)}
-                className={cn(
-                  "relative w-11 h-6 rounded-full transition-colors cursor-pointer",
-                  featured ? "bg-rose-400" : "bg-gray-300"
-                )}
-              >
-                <div className={cn(
-                  "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform",
-                  featured ? "translate-x-5" : "translate-x-0"
-                )} />
-              </div>
-            </label>
-          </div>
-
-          {/* Hero showcase */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <label className="flex items-center justify-between cursor-pointer">
-              <div>
-                <p className="font-semibold text-gray-700 text-sm flex items-center gap-1.5">
-                  <Sparkles size={12} className="text-amber-500" />
+          {/* Featured + hero showcase */}
+          <section className={cn(CARD, "divide-y divide-gp-ink/10")}>
+            <div className="flex items-center justify-between gap-3 pl-4 pr-2 py-2.5">
+              <label htmlFor="cake-featured" className="min-w-0 cursor-pointer">
+                <span className="flex items-center gap-1.5 font-semibold text-gp-ink text-sm">
+                  <Star size={14} className="text-gp-raspberry" />
+                  Gâteau à la une
+                </span>
+                <span className="block text-xs text-gp-ink/70 mt-0.5">Affiché en premier sur la page d&apos;accueil</span>
+              </label>
+              <Switch checked={featured} onChange={setFeatured} label="Gâteau à la une" id="cake-featured" />
+            </div>
+            <div className="flex items-center justify-between gap-3 pl-4 pr-2 py-2.5">
+              <label htmlFor="cake-hero" className="min-w-0 cursor-pointer">
+                <span className="flex items-center gap-1.5 font-semibold text-gp-ink text-sm">
+                  <Sparkles size={14} className="text-gp-raspberry" />
                   Vitrine d&apos;accueil
-                </p>
-                <p className="text-xs text-gray-400">Apparait dans le carrousel cinéma en haut du site</p>
-              </div>
-              <div
-                onClick={() => setHero(!hero)}
-                className={cn(
-                  "relative w-11 h-6 rounded-full transition-colors cursor-pointer",
-                  hero ? "bg-amber-400" : "bg-gray-300"
-                )}
-              >
-                <div className={cn(
-                  "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform",
-                  hero ? "translate-x-5" : "translate-x-0"
-                )} />
-              </div>
-            </label>
-          </div>
+                </span>
+                <span className="block text-xs text-gp-ink/70 mt-0.5">Apparaît dans le carrousel en haut du site</span>
+              </label>
+              <Switch checked={hero} onChange={setHero} label="Vitrine d'accueil" id="cake-hero" />
+            </div>
+          </section>
         </div>
 
         {/* Right col — titles + descriptions */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <div className="flex items-center gap-2 mb-4">
-              <Globe size={15} className="text-gray-400" />
-              <span className="text-sm font-semibold text-gray-700">Titres & Descriptions</span>
+          <section className={cn(CARD, "p-4")}>
+            <div className="flex items-center gap-2 mb-3">
+              <Globe size={16} className="text-gp-ink/65" />
+              <h3 className={cn(SECTION_TITLE, "mb-0")}>Titres & Descriptions</h3>
             </div>
 
-            <div className="flex gap-1 mb-4 bg-gray-100 p-1 rounded-xl">
+            <div role="tablist" aria-label="Langue" className="flex gap-1 mb-4 bg-gp-ink/[0.06] p-1 rounded-full">
               {LANGS.map((l) => (
                 <button
                   key={l.code}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeLang === l.code}
                   onClick={() => setActiveLang(l.code)}
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-all",
+                    "flex-1 flex items-center justify-center gap-1.5 min-h-[44px] rounded-full text-sm font-semibold transition-colors duration-150",
                     activeLang === l.code
-                      ? "bg-white text-gray-800 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "bg-gp-paper text-gp-ink shadow-[0_2px_8px_-2px_rgb(var(--gp-ink)/0.25)]"
+                      : "text-gp-ink/70 hover:text-gp-ink"
                   )}
                 >
-                  <span>{l.flag}</span>
-                  <span className="hidden sm:inline">{l.label}</span>
+                  <span lang={l.code}>{l.label}</span>
                   {translations[l.code].title && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-label="titre rempli" />
                   )}
                 </button>
               ))}
             </div>
 
-            <div className="space-y-3" dir={LANGS.find((l) => l.code === activeLang)?.dir}>
+            <div className="space-y-4" dir={LANGS.find((l) => l.code === activeLang)?.dir}>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">
+                <label htmlFor="cake-title" className={LABEL}>
                   Titre {activeLang === "fr" ? "(requis)" : "(rempli par l'IA ou copié du FR)"}
                 </label>
                 <input
+                  id="cake-title"
                   type="text"
                   value={cur.title}
                   onChange={(e) =>
@@ -814,30 +839,32 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                     }))
                   }
                   placeholder={activeLang === "fr" ? "Ex: Gâteau Princesse" : activeLang === "ar" ? "عنوان الكعكة" : "Cake title"}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm transition"
+                  className={INPUT}
                 />
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-gray-500">Description</label>
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <label htmlFor="cake-description" className={cn(LABEL, "mb-0")}>Description</label>
                   {activeLang === "fr" && (
                     <button
+                      type="button"
                       onClick={handleGenerate}
                       disabled={generating || !translations.fr.title}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-500 text-white text-xs font-medium hover:bg-violet-600 disabled:opacity-50 transition"
+                      className={BTN_AI}
                     >
                       {generating ? (
-                        <Loader2 size={12} className="animate-spin" />
+                        <Loader2 size={14} className="animate-spin" />
                       ) : (
-                        <Sparkles size={12} />
+                        <Sparkles size={14} />
                       )}
                       {generating ? "Génération IA..." : "Traduire & générer (IA)"}
                     </button>
                   )}
                 </div>
                 <textarea
-                  rows={5}
+                  id="cake-description"
+                  rows={6}
                   value={cur.description}
                   onChange={(e) =>
                     setTranslations((t) => ({
@@ -847,57 +874,66 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                   }
                   placeholder={
                     activeLang === "fr"
-                      ? "Description du gâteau... ou cliquez sur 'Traduire & générer'"
+                      ? "Description du gâteau... ou touchez « Traduire & générer »"
                       : activeLang === "ar"
                       ? "وصف الكعكة..."
                       : "Cake description..."
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm transition resize-none"
+                  className={cn(INPUT, "resize-y leading-relaxed")}
                 />
                 {aiError && (
-                  <p className="text-xs text-red-500 mt-1">{aiError}</p>
+                  <p role="alert" className="text-sm font-medium text-red-700 mt-1.5">{aiError}</p>
                 )}
                 {activeLang === "fr" && !aiError && (
-                  <p className="text-[10px] text-gray-400 mt-1">
-                    💡 L&apos;IA traduit le titre FR vers AR/EN et génère les 3 descriptions en une fois.
+                  <p className="text-xs text-gp-ink/70 mt-1.5">
+                    L&apos;IA traduit le titre FR vers AR/EN et génère les 3 descriptions en une fois.
                     Ajoutez des photos avant de générer pour un meilleur résultat.
                   </p>
                 )}
               </div>
             </div>
-          </div>
+          </section>
 
           {/* Preview card */}
           {(images[0] || translations.fr.title) && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Aperçu</h3>
+            <section className={cn(CARD, "p-4")}>
+              <h3 className={SECTION_TITLE}>Aperçu</h3>
               <div className="flex gap-4 items-start">
                 {images[0] && (
-                  <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-gray-100">
+                  <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-gp-ink/[0.06] ring-1 ring-gp-ink/10">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={images[0]} alt="" className="w-full h-full object-cover" />
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="font-semibold text-gray-800 text-sm">
+                  <p className="font-display font-semibold text-gp-ink text-[17px] leading-tight tracking-[-0.02em]">
                     {translations.fr.title || "—"}
                   </p>
-                  <p className="text-xs text-rose-500 mt-0.5">
+                  <p className="text-xs font-semibold text-gp-raspberry mt-1">
                     {categoryOptions.find((c) => c.slug === category)?.labels.fr || "—"}
                   </p>
                   {translations.fr.description && (
-                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                    <p className="text-sm text-gp-ink/75 mt-1 line-clamp-2">
                       {translations.fr.description}
                     </p>
                   )}
-                  <div className="flex gap-3 mt-2 text-xs text-gray-400">
-                    {dims.persons && <span>👥 {dims.persons} pers.</span>}
-                    {dims.pieces && <span>🍰 {dims.pieces} portions</span>}
+                  <div className="flex gap-3 mt-2 text-xs text-gp-ink/70">
+                    {dims.persons && <span>{dims.persons} pers.</span>}
+                    {dims.pieces && <span>{dims.pieces} portions</span>}
                   </div>
                 </div>
               </div>
-            </div>
+            </section>
           )}
+        </div>
+      </div>
+
+      {/* Phone: publish + save always within thumb reach */}
+      <div className="md:hidden sticky bottom-0 z-20 -mx-4 px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-gp-paper/95 backdrop-blur border-t border-gp-ink/10 shadow-[0_-10px_24px_-18px_rgb(var(--gp-ink)/0.5)]">
+        {saveHint && <SaveHint text={saveHint} onClick={!translations.fr.title.trim() ? goToTitle : undefined} />}
+        <div className="flex items-center justify-between gap-2">
+          {publishSwitch("bar")}
+          {saveButton}
         </div>
       </div>
 

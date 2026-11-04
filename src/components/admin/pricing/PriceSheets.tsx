@@ -17,7 +17,7 @@ import {
   brokenSheets, liveKey, parseStoredSheetDraft, SHEET_DRAFT_KEY, sizeTitle, unfinishedText, type CakeOption,
   type LiveSize, type StoredSheetDraft,
 } from "./sheet-draft";
-import { Banner, CARD_CLASS, ConfirmDialog, ErrorBox, INPUT_CLASS, PRIMARY_BTN, SECONDARY_BTN, Sheet } from "./ui";
+import { Banner, CARD_CLASS, ConfirmDialog, ErrorBox, INPUT_CLASS, PRIMARY_BTN, SECONDARY_BTN, Sheet, EMPTY_ICON, EMPTY_TITLE } from "./ui";
 
 interface Props {
   templates: PriceTemplate[];
@@ -217,7 +217,7 @@ export default function PriceSheets({
       {templates.length > 2 && (
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gp-ink/65" />
             <input
               type="search"
               value={query}
@@ -270,7 +270,7 @@ export default function PriceSheets({
         <Banner tone="amber" icon={<Settings2 size={16} />}>
           <p className="font-medium">Votre taux horaire n&apos;est pas défini</p>
           <p className="text-xs mt-0.5">Les prix des fiches ne comptent pas encore votre temps de travail.</p>
-          <button type="button" onClick={() => goTo("settings")} className="mt-2 text-sm font-semibold underline underline-offset-2 min-h-[40px]">
+          <button type="button" onClick={() => goTo("settings")} className="mt-2 text-sm font-semibold underline underline-offset-2 min-h-[44px]">
             Aller aux réglages
           </button>
         </Banner>
@@ -278,13 +278,15 @@ export default function PriceSheets({
 
       {templates.length === 0 ? (
         <div className={cn(CARD_CLASS, "text-center py-10 px-5")}>
-          <ClipboardList size={28} className="mx-auto text-gray-300 mb-2" />
-          <p className="font-semibold text-gray-700">Aucune fiche prix pour l&apos;instant</p>
-          <p className="text-sm text-gray-500 mt-2 max-w-md mx-auto">
+          <span className={EMPTY_ICON}>
+            <ClipboardList size={22} />
+          </span>
+          <p className={EMPTY_TITLE}>Aucune fiche prix pour l&apos;instant</p>
+          <p className="text-sm text-gp-ink/70 mt-2 max-w-md mx-auto">
             Une fiche, c&apos;est le calcul d&apos;un gâteau que vous faites souvent, en plusieurs tailles
             (10 parts, 15 parts…).
           </p>
-          <p className="text-sm text-gray-500 mt-2 max-w-md mx-auto">
+          <p className="text-sm text-gp-ink/70 mt-2 max-w-md mx-auto">
             Son prix se met à jour tout seul quand vos coûts ou vos réglages changent. Quand une cliente
             demande « combien pour 15 parts ? », la réponse est prête : un geste pour la copier.
           </p>
@@ -292,9 +294,9 @@ export default function PriceSheets({
             <Plus size={15} /> Créer ma première fiche
           </button>
           {items.length === 0 && (
-            <p className="text-xs text-gray-400 mt-3">
+            <p className="text-xs text-gp-ink/65 mt-3">
               Conseil : ajoutez d&apos;abord vos coûts dans{" "}
-              <button type="button" onClick={() => goTo("costs")} className="text-rose-600 font-medium underline underline-offset-2">
+              <button type="button" onClick={() => goTo("costs")} className="text-gp-raspberry font-medium underline underline-offset-2">
                 Mes coûts
               </button>
               .
@@ -319,12 +321,12 @@ export default function PriceSheets({
           {copyFailed && (
             <ErrorBox>
               <p>La copie automatique n&apos;a pas marché. Appuyez longuement sur le texte pour le copier :</p>
-              <p className="mt-2 select-all rounded-lg bg-white px-3 py-2 text-gray-800">{copyFailed}</p>
+              <p className="mt-2 select-all rounded-xl bg-gp-paper px-3 py-2 text-gp-ink">{copyFailed}</p>
             </ErrorBox>
           )}
 
           {list.length === 0 ? (
-            <p className="text-center text-sm text-gray-400 py-6">Aucune fiche ne correspond à {quoted(query)}.</p>
+            <p className="text-center text-sm text-gp-ink/65 py-6">Aucune fiche ne correspond à {quoted(query)}.</p>
           ) : (
             <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
               {list.map((t) => {
@@ -338,22 +340,22 @@ export default function PriceSheets({
                     <div className="flex items-center gap-3 pl-4 pr-2 pt-3 pb-2">
                       <CakeThumb image={cake?.image ?? t.cakeImage} />
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-800 truncate">{t.name}</h3>
+                        <h3 className="font-display text-[17px] font-semibold tracking-[-0.02em] text-gp-ink truncate">{t.name}</h3>
                         {(cake?.title ?? t.cakeTitle) && (
-                          <p className="text-xs text-gray-400 truncate">{cake?.title ?? t.cakeTitle}</p>
+                          <p className="text-xs text-gp-ink/65 truncate">{cake?.title ?? t.cakeTitle}</p>
                         )}
                       </div>
                       <button
                         type="button"
                         onClick={() => openEditor({ template: t })}
-                        className="inline-flex items-center gap-1.5 min-h-[40px] px-3 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 transition shrink-0"
+                        className="inline-flex items-center gap-1.5 min-h-[44px] px-3 rounded-full text-sm font-medium text-gp-ink/80 hover:bg-gp-ink/[0.07] transition shrink-0"
                       >
                         <Pencil size={14} className="shrink-0" /> Modifier
                       </button>
                     </div>
-                    {t.note && <p className="px-4 pb-1 text-xs text-gray-500 italic">{t.note}</p>}
+                    {t.note && <p className="px-4 pb-1 text-xs text-gp-ink/70 italic">{t.note}</p>}
 
-                    <ul className="divide-y divide-gray-100 border-t border-gray-100">
+                    <ul className="divide-y divide-gp-ink/10 border-t border-gp-ink/10">
                       {t.variants.map((v) => (
                         <SizeRow
                           key={v.id}
@@ -369,11 +371,11 @@ export default function PriceSheets({
                       ))}
                     </ul>
 
-                    <div className="border-t border-gray-100 px-2 py-1">
+                    <div className="border-t border-gp-ink/10 px-2 py-1">
                       <button
                         type="button"
                         onClick={() => openHistory(t.id)}
-                        className="inline-flex items-center gap-1.5 min-h-[40px] px-2 text-sm font-medium text-gray-500 hover:text-rose-600"
+                        className="inline-flex items-center gap-1.5 min-h-[44px] px-2 text-sm font-medium text-gp-ink/70 hover:text-gp-raspberry"
                       >
                         <History size={14} /> Historique des prix
                       </button>
@@ -487,11 +489,11 @@ function SizeRow({
     return (
       <li className="flex items-center gap-2 pl-4 pr-2 py-1.5 min-h-[56px]">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-800 truncate">
+          <p className="text-sm font-medium text-gp-ink truncate">
             {v.label}
             {parts}
           </p>
-          <p className={cn("text-xs truncate", brokenState ? "text-amber-700" : "text-gray-400")}>
+          <p className={cn("text-xs truncate", brokenState ? "text-amber-700" : "text-gp-ink/65")}>
             {brokenState ? `À corriger : ${brokenState.culprits.join(", ")}` : `À compléter : ${unfinishedText(v)}`}
           </p>
         </div>
@@ -499,8 +501,8 @@ function SizeRow({
           type="button"
           onClick={() => onFix(!!brokenState)}
           className={cn(
-            "inline-flex items-center gap-1.5 min-h-[40px] px-3 rounded-xl text-sm font-medium transition shrink-0",
-            brokenState ? "bg-amber-500 text-white hover:bg-amber-600" : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+            "inline-flex items-center gap-1.5 min-h-[44px] px-3 rounded-full text-sm font-medium transition shrink-0",
+            brokenState ? "bg-amber-700 text-gp-cream hover:bg-amber-800" : "border border-gp-ink/15 text-gp-ink/80 hover:bg-gp-ink/[0.04]"
           )}
         >
           {brokenState ? <Wrench size={14} className="shrink-0" /> : <Pencil size={14} className="shrink-0" />}
@@ -513,7 +515,7 @@ function SizeRow({
   return (
     <li className="flex items-center gap-1 pl-4 pr-1 py-1.5 min-h-[56px]">
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-800 truncate">
+        <p className="text-sm font-medium text-gp-ink truncate">
           {v.label}
           {parts}
         </p>
@@ -532,9 +534,9 @@ function SizeRow({
         </div>
       </div>
       <div className="text-right shrink-0 pr-1">
-        <p className="text-lg font-bold text-rose-600 tabular-nums leading-tight">{formatDA(b.finalPrice)}</p>
+        <p className="font-display text-lg font-semibold tracking-[-0.01em] text-gp-raspberry tabular-nums leading-tight">{formatDA(b.finalPrice)}</p>
         {b.pricePerPortion !== null && (
-          <p className="text-[11px] text-gray-400 tabular-nums">{formatDA(b.pricePerPortion)} / part</p>
+          <p className="text-[11px] text-gp-ink/65 tabular-nums">{formatDA(b.pricePerPortion)} / part</p>
         )}
       </div>
       <button
@@ -543,7 +545,7 @@ function SizeRow({
         aria-label={copied ? "Prix copié" : `Copier le prix : ${v.label}`}
         className={cn(
           "inline-flex items-center justify-center w-10 h-10 rounded-xl transition shrink-0",
-          copied ? "bg-emerald-500 text-white" : "bg-rose-50 text-rose-600 hover:bg-rose-100"
+          copied ? "bg-emerald-700 text-white" : "bg-gp-raspberry/[0.06] text-gp-raspberry hover:bg-gp-raspberry/10"
         )}
       >
         {copied ? <Check size={17} /> : <Copy size={17} />}
@@ -552,7 +554,7 @@ function SizeRow({
         type="button"
         onClick={onMore}
         aria-label={`Plus d'actions : ${v.label}`}
-        className="inline-flex items-center justify-center w-10 h-10 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition shrink-0"
+        className="inline-flex items-center justify-center w-10 h-10 rounded-xl text-gp-ink/65 hover:bg-gp-ink/[0.07] hover:text-gp-ink transition shrink-0"
       >
         <MoreHorizontal size={18} />
       </button>
@@ -585,26 +587,26 @@ function SizeActions({
   onClose: () => void;
 }) {
   const b = size?.state.kind === "ok" ? size.priced.breakdown : null;
-  const action = "w-full flex items-center gap-3 px-5 min-h-[52px] text-left text-sm font-medium text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition";
+  const action = "w-full flex items-center gap-3 px-5 min-h-[52px] text-left text-sm font-medium text-gp-ink/90 hover:bg-gp-ink/[0.04] active:bg-gp-ink/[0.08] transition";
   return (
     <Sheet title={`${template.name} — ${sizeTitle(v)}`} onClose={onClose}>
       {b && (
         <div className="px-5 pt-4 pb-2">
-          <p className="text-2xl font-bold text-rose-600 tabular-nums">{formatDA(b.finalPrice)}</p>
-          <p className="text-xs text-gray-500">
+          <p className="font-display text-2xl font-semibold tracking-[-0.01em] text-gp-raspberry tabular-nums">{formatDA(b.finalPrice)}</p>
+          <p className="text-xs text-gp-ink/70">
             {b.pricePerPortion !== null && `${formatDA(b.pricePerPortion)} / part`}
             {size?.state.kind === "ok" && size.state.noHours && (
               <span className="text-amber-700"> · 0 h de travail ?</span>
             )}
           </p>
-          {change && <p className="text-xs text-gray-400 mt-0.5">{changeSentence(change)}</p>}
+          {change && <p className="text-xs text-gp-ink/65 mt-0.5">{changeSentence(change)}</p>}
         </div>
       )}
       <ul className="py-2">
         {b && (
           <li>
             <button type="button" onClick={() => onCopy(b.finalPrice)} className={action}>
-              {copied ? <Check size={17} className="text-emerald-600 shrink-0" /> : <Copy size={17} className="text-rose-500 shrink-0" />}
+              {copied ? <Check size={17} className="text-emerald-700 shrink-0" /> : <Copy size={17} className="text-gp-raspberry shrink-0" />}
               {copied ? "Copié ✓" : "Copier le prix"}
             </button>
           </li>
@@ -612,18 +614,18 @@ function SizeActions({
         {b && (
           <li>
             <button type="button" onClick={onQuote} className={action}>
-              <FilePlus2 size={17} className="text-gray-400 shrink-0" /> Faire un devis
+              <FilePlus2 size={17} className="text-gp-ink/65 shrink-0" /> Faire un devis
             </button>
           </li>
         )}
         <li>
           <button type="button" onClick={onHistory} className={action}>
-            <History size={17} className="text-gray-400 shrink-0" /> Historique des prix
+            <History size={17} className="text-gp-ink/65 shrink-0" /> Historique des prix
           </button>
         </li>
         <li>
           <button type="button" onClick={onEdit} className={action}>
-            <Pencil size={17} className="text-gray-400 shrink-0" /> Modifier cette taille
+            <Pencil size={17} className="text-gp-ink/65 shrink-0" /> Modifier cette taille
           </button>
         </li>
       </ul>

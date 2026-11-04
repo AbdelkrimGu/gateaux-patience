@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import AdminShell from "@/components/admin/AdminShell";
 import CakeForm from "@/components/admin/CakeForm";
+import { BackLink, PageHeader } from "@/components/admin/ui";
 import { getCategories } from "@/lib/categories-data";
 import { ADMIN_COOKIE, verifySessionToken } from "@/lib/admin-auth";
 
@@ -15,11 +16,13 @@ export default async function NewCakePage() {
 
   return (
     <AdminShell>
+      <PageHeader
+        width="4xl"
+        eyebrow={<BackLink href="/admin/cakes">Gâteaux</BackLink>}
+        title="Nouveau gâteau"
+        subtitle="Remplissez les informations ci-dessous pour ajouter un gâteau"
+      />
       <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-gray-800">Nouveau gâteau</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Remplissez les informations ci-dessous pour ajouter un gâteau</p>
-        </div>
         <CakeForm mode="new" categories={categories} />
       </div>
     </AdminShell>

@@ -7,6 +7,10 @@ import {
 } from "lucide-react";
 import type { Category } from "@/lib/db-types";
 import { compressImage } from "@/lib/image-compress";
+import { cn } from "@/lib/utils";
+import {
+  BTN_AI, BTN_DANGER, BTN_GHOST, BTN_GOLD, BTN_PRIMARY, CARD, EmptyState, ICON_BTN_BASE, INPUT, PageHeader,
+} from "./ui";
 
 interface Props {
   initial: Category[];
@@ -229,162 +233,154 @@ export default function CategoriesManager({ initial }: Props) {
   const editorId = editing.mode === "new" ? editing.tempId : editing.mode === "edit" ? editing.id : "";
 
   return (
-    <div className="max-w-4xl mx-auto space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">Catégories</h1>
-          <p className="text-sm text-gray-500">
-            {categories.length} catégorie{categories.length !== 1 ? "s" : ""} ·
-            libellés et image modifiables
-          </p>
-        </div>
-        <button
-          onClick={startNew}
-          disabled={editing.mode !== "none"}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500 text-white text-sm font-medium hover:bg-rose-600 disabled:opacity-50 transition shadow-sm"
-        >
-          <Plus size={15} />
-          Nouvelle catégorie
-        </button>
-      </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
-          {error}
-        </div>
-      )}
-
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {editing.mode === "new" && (
-          <EditorRow
-            id={editorId}
-            data={editing.data}
-            saving={saving}
-            onChangeLabel={updateField}
-            onImageUploaded={setImage}
-            onRemoveImage={removeImageInEditor}
-            onSave={saveEdit}
-            onCancel={cancelEdit}
-          />
+    <div>
+      <PageHeader
+        width="4xl"
+        eyebrow="Catalogue"
+        title="Catégories"
+        subtitle={`${categories.length} catégorie${categories.length !== 1 ? "s" : ""} · libellés et image modifiables`}
+        actions={
+          <button onClick={startNew} disabled={editing.mode !== "none"} className={BTN_GOLD}>
+            <Plus size={16} />
+            Nouvelle catégorie
+          </button>
+        }
+      />
+      <div className="max-w-4xl mx-auto space-y-4">
+        {error && (
+          <div role="alert" className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-800 text-sm font-medium rounded-2xl px-4 py-3">
+            <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+            {error}
+          </div>
         )}
 
         {categories.length === 0 && editing.mode !== "new" ? (
-          <div className="text-center py-12 px-4">
-            <Tag size={28} className="mx-auto text-gray-300 mb-2" />
-            <p className="font-semibold text-gray-700">Aucune catégorie</p>
-            <p className="text-sm text-gray-400 mt-1">
-              Ajoutez votre première catégorie pour commencer à classer vos gâteaux.
-            </p>
-          </div>
+          <EmptyState icon={<Tag size={22} />} title="Aucune catégorie">
+            Ajoutez votre première catégorie pour commencer à classer vos gâteaux.
+          </EmptyState>
         ) : (
-          <ul className="divide-y divide-gray-100">
-            {categories.map((cat) =>
-              editing.mode === "edit" && editing.id === cat.id ? (
-                <li key={cat.id}>
-                  <EditorRow
-                    id={editorId}
-                    data={editing.data}
-                    saving={saving}
-                    onChangeLabel={updateField}
-                    onImageUploaded={setImage}
-                    onRemoveImage={removeImageInEditor}
-                    onSave={saveEdit}
-                    onCancel={cancelEdit}
-                  />
-                </li>
-              ) : (
-                <li key={cat.id} className="px-4 py-3 hover:bg-gray-50/60 transition flex items-center gap-3">
-                  {/* Image thumbnail */}
-                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center">
-                    {cat.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={cat.image} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <Tag size={16} className="text-gray-300" />
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-3 gap-1 md:gap-4">
-                    <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wide text-gray-400">🇫🇷 FR</p>
-                      <p className="font-medium text-gray-800 truncate">{cat.labels.fr}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wide text-gray-400">🇩🇿 AR</p>
-                      <p className="text-gray-700 truncate" dir="rtl">{cat.labels.ar}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wide text-gray-400">🇬🇧 EN</p>
-                      <p className="text-gray-700 truncate">{cat.labels.en}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => startEdit(cat)}
-                      disabled={editing.mode !== "none"}
-                      className="p-2 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 disabled:opacity-40 transition"
-                      title="Modifier"
-                    >
-                      <Pencil size={14} />
-                    </button>
-                    <button
-                      onClick={() => openDelete(cat)}
-                      disabled={editing.mode !== "none"}
-                      className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 disabled:opacity-40 transition"
-                      title="Supprimer"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </li>
-              )
+          <div className={cn(CARD, "overflow-hidden")}>
+            {editing.mode === "new" && (
+              <EditorRow
+                id={editorId}
+                data={editing.data}
+                saving={saving}
+                onChangeLabel={updateField}
+                onImageUploaded={setImage}
+                onRemoveImage={removeImageInEditor}
+                onSave={saveEdit}
+                onCancel={cancelEdit}
+              />
             )}
-          </ul>
+            <ul className="divide-y divide-gp-ink/10">
+              {categories.map((cat) =>
+                editing.mode === "edit" && editing.id === cat.id ? (
+                  <li key={cat.id}>
+                    <EditorRow
+                      id={editorId}
+                      data={editing.data}
+                      saving={saving}
+                      onChangeLabel={updateField}
+                      onImageUploaded={setImage}
+                      onRemoveImage={removeImageInEditor}
+                      onSave={saveEdit}
+                      onCancel={cancelEdit}
+                    />
+                  </li>
+                ) : (
+                  <li key={cat.id} className="pl-3 pr-1.5 md:px-4 py-3 hover:bg-gp-ink/[0.025] transition-colors flex items-center gap-3">
+                    {/* Image thumbnail */}
+                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl overflow-hidden bg-gp-ink/[0.06] ring-1 ring-gp-ink/10 shrink-0 flex items-center justify-center">
+                      {cat.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={cat.image} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <Tag size={18} className="text-gp-ink/40" />
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-3 gap-0.5 md:gap-4">
+                      <div className="min-w-0 flex items-baseline gap-2 md:block">
+                        <LangTag>FR</LangTag>
+                        <p className="font-semibold text-gp-ink leading-snug md:truncate">{cat.labels.fr}</p>
+                      </div>
+                      <div className="min-w-0 flex items-baseline gap-2 md:block">
+                        <LangTag>AR</LangTag>
+                        <p className="text-sm md:text-base text-gp-ink/85 truncate md:text-left" dir="rtl" lang="ar">{cat.labels.ar}</p>
+                      </div>
+                      <div className="min-w-0 flex items-baseline gap-2 md:block">
+                        <LangTag>EN</LangTag>
+                        <p className="text-sm md:text-base text-gp-ink/85 truncate" lang="en">{cat.labels.en}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center shrink-0">
+                      <button
+                        onClick={() => startEdit(cat)}
+                        disabled={editing.mode !== "none"}
+                        className={cn(ICON_BTN_BASE, "hover:text-gp-raspberry hover:bg-gp-raspberry/[0.06]")}
+                        title="Modifier"
+                        aria-label={`Modifier ${cat.labels.fr}`}
+                      >
+                        <Pencil size={17} />
+                      </button>
+                      <button
+                        onClick={() => openDelete(cat)}
+                        disabled={editing.mode !== "none"}
+                        className={cn(ICON_BTN_BASE, "hover:text-red-700 hover:bg-red-50")}
+                        title="Supprimer"
+                        aria-label={`Supprimer ${cat.labels.fr}`}
+                      >
+                        <Trash2 size={17} />
+                      </button>
+                    </div>
+                  </li>
+                )
+              )}
+            </ul>
+          </div>
         )}
       </div>
 
       {/* Delete confirm dialog */}
       {deleteState && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gp-ink/60 p-4 motion-safe:animate-gpa-fade">
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-label="Supprimer la catégorie ?"
+            className="bg-gp-paper text-gp-ink rounded-[24px] shadow-[0_24px_60px_-20px_rgb(var(--gp-ink)/0.6)] max-w-sm w-full p-6"
+          >
             <div className="flex items-start gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-full bg-red-50 text-red-700 ring-1 ring-red-200 flex items-center justify-center shrink-0">
                 <AlertTriangle size={20} />
               </div>
               <div>
-                <h2 className="font-semibold text-gray-800">Supprimer la catégorie ?</h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <h2 className="font-display text-lg font-semibold leading-tight tracking-[-0.02em]">Supprimer la catégorie ?</h2>
+                <p className="text-sm text-gp-ink/75 mt-1.5">
                   « {deleteState.label} » sera supprimée définitivement (image incluse).
                 </p>
               </div>
             </div>
             {deleteState.loading ? (
-              <p className="text-sm text-gray-400 flex items-center gap-2 mb-4">
+              <p className="text-sm text-gp-ink/70 flex items-center gap-2 mb-4" role="status">
                 <Loader2 size={14} className="animate-spin" /> Vérification...
               </p>
             ) : deleteState.cakesAffected && deleteState.cakesAffected > 0 ? (
-              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
+              <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-2.5 mb-4">
                 {deleteState.cakesAffected} gâteau{deleteState.cakesAffected > 1 ? "x" : ""} utilise{deleteState.cakesAffected > 1 ? "nt" : ""} cette catégorie.
                 Ils resteront visibles mais leur catégorie ne pourra plus être modifiée vers celle-ci.
               </p>
             ) : (
-              <p className="text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2 mb-4">
+              <p className="text-sm text-gp-ink/75 bg-gp-cream rounded-xl px-3.5 py-2.5 mb-4">
                 Aucun gâteau n&apos;utilise cette catégorie.
               </p>
             )}
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => setDeleteState(null)}
-                disabled={deleteState.loading}
-                className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 transition"
-              >
+            <div className="flex flex-wrap gap-2 justify-end">
+              <button onClick={() => setDeleteState(null)} disabled={deleteState.loading} className={BTN_GHOST}>
                 Annuler
               </button>
-              <button
-                onClick={confirmDelete}
-                disabled={deleteState.loading}
-                className="px-4 py-2 rounded-xl text-sm font-medium bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition"
-              >
+              <button onClick={confirmDelete} disabled={deleteState.loading} className={BTN_DANGER}>
+                <Trash2 size={15} />
                 Supprimer
               </button>
             </div>
@@ -395,6 +391,13 @@ export default function CategoriesManager({ initial }: Props) {
   );
 }
 
+function LangTag({ children }: { children: string }) {
+  return (
+    <span className="shrink-0 w-6 md:w-auto text-[11px] font-semibold uppercase tracking-[0.12em] text-gp-ink/65 md:block md:mb-0.5">
+      {children}
+    </span>
+  );
+}
 function EditorRow({
   id,
   data,
@@ -496,19 +499,30 @@ function EditorRow({
   }
 
   return (
-    <div className="px-4 py-3 bg-rose-50/40 border-b border-rose-100">
+    <div className="relative px-4 py-4 bg-gp-champagne/40 border-b border-gp-gold/30">
+      {/* Gold edge: this row is being edited. */}
+      <span aria-hidden className="absolute left-0 top-0 bottom-0 w-1 bg-gp-gold" />
       <div className="flex flex-col md:flex-row gap-3 mb-3">
         {/* Image upload tile */}
-        <div className="md:w-28 shrink-0">
+        <div className="w-28 shrink-0">
           <div
+            role={data.image ? undefined : "button"}
+            tabIndex={data.image ? undefined : 0}
+            aria-label={data.image ? undefined : "Ajouter une image"}
+            onKeyDown={(e) => {
+              if (!data.image && !uploading && (e.key === "Enter" || e.key === " ")) {
+                e.preventDefault();
+                fileRef.current?.click();
+              }
+            }}
             onClick={() => !uploading && !data.image && fileRef.current?.click()}
             onDragOver={(e) => { e.preventDefault(); }}
             onDrop={(e) => {
               e.preventDefault();
               if (!data.image && !uploading) handleFile(e.dataTransfer.files?.[0] || null);
             }}
-            className={`relative w-full aspect-square rounded-xl overflow-hidden bg-white border-2 border-dashed transition ${
-              data.image ? "border-transparent" : "border-gray-200 hover:border-rose-300 cursor-pointer"
+            className={`relative w-full aspect-square rounded-xl overflow-hidden bg-gp-paper border-2 border-dashed transition ${
+              data.image ? "border-transparent" : "border-gp-ink/30 hover:border-gp-raspberry/60 cursor-pointer"
             }`}
           >
             {data.image ? (
@@ -521,21 +535,22 @@ function EditorRow({
                     e.stopPropagation();
                     onRemoveImage();
                   }}
-                  className="absolute top-1 right-1 p-1 bg-white/90 rounded-lg text-red-500 hover:bg-white shadow-sm"
+                  className="absolute top-1 right-1 w-9 h-9 flex items-center justify-center bg-gp-paper/95 rounded-full text-red-700 hover:bg-gp-paper shadow-sm"
                   title="Retirer l'image"
+                  aria-label="Retirer l'image"
                 >
-                  <X size={12} />
+                  <X size={15} />
                 </button>
               </>
             ) : uploading ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-gp-ink/65">
                 <Loader2 size={18} className="animate-spin mb-1" />
-                <span className="text-[10px]">Téléchargement…</span>
+                <span className="text-xs font-medium">Téléchargement…</span>
               </div>
             ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-gp-ink/65">
                 <ImagePlus size={18} className="mb-1" />
-                <span className="text-[10px] px-2 text-center">Image (optionnelle)</span>
+                <span className="text-xs font-medium px-2 text-center">Image (optionnelle)</span>
               </div>
             )}
             <input
@@ -546,82 +561,80 @@ function EditorRow({
               onChange={(e) => handleFile(e.target.files?.[0] || null)}
             />
           </div>
-          {uploadError && <p className="text-[10px] text-red-500 mt-1">{uploadError}</p>}
+          {uploadError && <p role="alert" className="text-xs font-medium text-red-700 mt-1">{uploadError}</p>}
         </div>
 
         {/* Label inputs */}
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-[10px] uppercase tracking-wide text-gray-500">🇫🇷 FR (requis)</label>
+            <div className="flex items-end justify-between gap-2 mb-1.5">
+              <label htmlFor={`cat-fr-${id}`} className="block text-[13px] font-medium text-gp-ink/80">
+                Français (requis)
+              </label>
               <button
                 type="button"
                 onClick={handleTranslate}
                 disabled={translating || !data.labels.fr.trim()}
                 title="Traduire en arabe + anglais avec l'IA"
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-violet-500 text-white hover:bg-violet-600 disabled:opacity-50 transition"
+                className={cn(BTN_AI, "px-3 -my-2 text-xs")}
               >
                 {translating ? (
-                  <Loader2 size={10} className="animate-spin" />
+                  <Loader2 size={13} className="animate-spin" />
                 ) : (
-                  <Sparkles size={10} />
+                  <Sparkles size={13} />
                 )}
-                {translating ? "..." : "Traduire IA"}
+                {translating ? "Traduction…" : "Traduire IA"}
               </button>
             </div>
             <input
+              id={`cat-fr-${id}`}
               type="text"
               value={data.labels.fr}
               onChange={(e) => onChangeLabel("fr", e.target.value)}
               placeholder="Ex: Mariage & Fiançailles"
               autoFocus
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm"
+              className={INPUT}
             />
             {translateError && (
-              <p className="text-[10px] text-red-500 mt-1">{translateError}</p>
+              <p role="alert" className="text-xs font-medium text-red-700 mt-1">{translateError}</p>
             )}
           </div>
           <div>
-            <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">🇩🇿 AR (optionnel)</label>
+            <label htmlFor={`cat-ar-${id}`} className="block text-[13px] font-medium text-gp-ink/80 mb-1.5">Arabe (optionnel)</label>
             <input
+              id={`cat-ar-${id}`}
               type="text"
               value={data.labels.ar}
               onChange={(e) => onChangeLabel("ar", e.target.value)}
               placeholder="مثل: زفاف وخطوبة"
               dir="rtl"
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm"
+              lang="ar"
+              className={INPUT}
             />
           </div>
           <div>
-            <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">🇬🇧 EN (optionnel)</label>
+            <label htmlFor={`cat-en-${id}`} className="block text-[13px] font-medium text-gp-ink/80 mb-1.5">Anglais (optionnel)</label>
             <input
+              id={`cat-en-${id}`}
               type="text"
               value={data.labels.en}
               onChange={(e) => onChangeLabel("en", e.target.value)}
               placeholder="Ex: Wedding & Engagement"
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm"
+              lang="en"
+              className={INPUT}
             />
           </div>
         </div>
       </div>
 
       <div className="flex items-center justify-end gap-2">
-        <button
-          onClick={onCancel}
-          disabled={saving || uploading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition"
-        >
-          <X size={13} /> Annuler
+        <button onClick={onCancel} disabled={saving || uploading} className={BTN_GHOST}>
+          <X size={16} /> Annuler
         </button>
-        <button
-          onClick={onSave}
-          disabled={saving || uploading || !data.labels.fr.trim()}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-50 transition"
-        >
-          {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+        <button onClick={onSave} disabled={saving || uploading || !data.labels.fr.trim()} className={BTN_PRIMARY}>
+          {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
           Enregistrer
         </button>
       </div>
-    </div>
-  );
+    </div>  );
 }

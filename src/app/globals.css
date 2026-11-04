@@ -14,6 +14,8 @@
     --gp-raspberry: 163 18 58;
     --gp-champagne: 240 226 200;
     --gp-gold: 196 151 84;
+    /* Admin work surface: cream lifted toward white, for long data entry. */
+    --gp-paper: 255 252 247;
     --gp-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
     --step-small: clamp(0.8125rem, 0.75rem + 0.25vw, 0.9375rem);
@@ -405,5 +407,111 @@
 @layer components {
   [data-tone="ink"] .gp-ring {
     color: rgb(var(--gp-gold));
+  }
+}
+
+/* ==========================================================================
+   Admin — "Soirée royale" in a working register. Scoped to `.gp-admin` (set on
+   <html> by app/admin/layout.tsx). Ink shell (nav, mastheads, login), cream
+   paper for everything she types into. Selectors are wrapped in :where() so
+   any utility class on an element still wins.
+   ========================================================================== */
+@layer base {
+  :where(.gp-admin) {
+    accent-color: rgb(var(--gp-raspberry));
+    scrollbar-color: rgb(var(--gp-ink) / 0.25) transparent;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :where(.gp-admin) ::selection {
+    background: rgb(var(--gp-raspberry) / 0.15);
+    color: rgb(var(--gp-ink));
+  }
+
+  /* Raspberry ring on paper; champagne on the ink shell, where raspberry is too dark. */
+  :where(.gp-admin) :focus-visible {
+    outline: 2px solid rgb(var(--gp-raspberry));
+    outline-offset: 2px;
+  }
+  :where(.gp-admin [data-surface="ink"]) :focus-visible {
+    outline-color: rgb(var(--gp-champagne));
+  }
+  :where(.gp-admin [data-surface="ink"] [data-surface="paper"]) :focus-visible {
+    outline-color: rgb(var(--gp-raspberry));
+  }
+
+  :where(.gp-admin) a {
+    text-underline-offset: 0.25em;
+  }
+
+  :where(.gp-admin) ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  :where(.gp-admin) ::-webkit-scrollbar-thumb {
+    background: rgb(var(--gp-ink) / 0.22);
+    border-radius: 9999px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gp-admin *,
+    .gp-admin *::before,
+    .gp-admin *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* The one brand moment: the crowned badge stamps the login card. */
+  .gpa-stamp {
+    transform: rotate(-8deg);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .gpa-stamp {
+      animation: gpa-stamp 560ms var(--gp-ease) 120ms both;
+    }
+    .gpa-stamp-ring {
+      animation: gpa-ring 700ms var(--gp-ease) 420ms both;
+    }
+  }
+  .gpa-stamp-ring {
+    opacity: 0;
+  }
+
+  /* Ticket perforation (gold dots) above the final price. */
+  .gpa-perf {
+    background-image: radial-gradient(circle, rgb(var(--gp-gold) / 0.9) 1.25px, transparent 1.6px);
+    background-size: 9px 4px;
+    background-repeat: repeat-x;
+    background-position: center;
+    height: 4px;
+  }
+}
+
+@keyframes gpa-stamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.35) rotate(-22deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.96) rotate(-7deg);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-8deg);
+  }
+}
+@keyframes gpa-ring {
+  0% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
   }
 }

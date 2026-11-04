@@ -20,7 +20,7 @@ import {
 export function CakeThumb({ image, size = "md" }: { image?: string; size?: "sm" | "md" }) {
   const box = size === "sm" ? "w-10 h-10" : "w-12 h-12";
   return (
-    <span className={cn(box, "rounded-xl overflow-hidden shrink-0 bg-rose-50 text-rose-300 flex items-center justify-center")}>
+    <span className={cn(box, "rounded-xl overflow-hidden shrink-0 bg-gp-raspberry/[0.06] text-gp-raspberry/70 flex items-center justify-center")}>
       {image ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={image} alt="" loading="lazy" className="w-full h-full object-cover" />
@@ -48,16 +48,16 @@ export function CakePicker({
 
   const row = (selected: boolean) =>
     cn(
-      "w-full flex items-center gap-3 px-5 py-2 min-h-[56px] text-left hover:bg-rose-50 active:bg-rose-100 transition",
-      selected && "bg-rose-50/70"
+      "w-full flex items-center gap-3 px-5 py-2 min-h-[56px] text-left hover:bg-gp-raspberry/[0.06] active:bg-gp-raspberry/10 transition",
+      selected && "bg-gp-raspberry/[0.04]"
     );
 
   return (
     <Sheet title="Gâteau du catalogue" onClose={onClose}>
       {cakes.length > 6 && (
-        <div className="sticky top-0 bg-white px-4 pt-3 pb-2 z-10">
+        <div className="sticky top-0 bg-gp-paper px-4 pt-3 pb-2 z-10">
           <div className="relative">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gp-ink/65" />
             <input
               type="search"
               value={query}
@@ -73,14 +73,14 @@ export function CakePicker({
         {!q && (
           <li>
             <button type="button" onClick={() => onPick(null)} className={row(selectedId === null)}>
-              <span className="w-10 h-10 rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center shrink-0">
+              <span className="w-10 h-10 rounded-xl bg-gp-ink/[0.06] text-gp-ink/65 flex items-center justify-center shrink-0">
                 <X size={17} />
               </span>
               <span className="flex-1 min-w-0">
-                <span className="block text-sm font-medium text-gray-800">Aucun gâteau</span>
-                <span className="block text-xs text-gray-400">Fiche sans lien avec le catalogue</span>
+                <span className="block text-sm font-medium text-gp-ink">Aucun gâteau</span>
+                <span className="block text-xs text-gp-ink/65">Fiche sans lien avec le catalogue</span>
               </span>
-              {selectedId === null && <Check size={16} className="text-rose-500 shrink-0" />}
+              {selectedId === null && <Check size={16} className="text-gp-raspberry shrink-0" />}
             </button>
           </li>
         )}
@@ -89,18 +89,18 @@ export function CakePicker({
             <button type="button" onClick={() => onPick(c)} className={row(c.id === selectedId)}>
               <CakeThumb image={c.image} size="sm" />
               <span className="flex-1 min-w-0">
-                <span className="block text-sm font-medium text-gray-800 truncate">{c.title}</span>
-                {!c.published && <span className="block text-xs text-gray-400">non publié</span>}
+                <span className="block text-sm font-medium text-gp-ink truncate">{c.title}</span>
+                {!c.published && <span className="block text-xs text-gp-ink/65">non publié</span>}
               </span>
-              {c.id === selectedId && <Check size={16} className="text-rose-500 shrink-0" />}
+              {c.id === selectedId && <Check size={16} className="text-gp-raspberry shrink-0" />}
             </button>
           </li>
         ))}
         {q && list.length === 0 && (
-          <li className="px-5 py-8 text-center text-sm text-gray-400">Aucun gâteau ne correspond à {quoted(query)}.</li>
+          <li className="px-5 py-8 text-center text-sm text-gp-ink/65">Aucun gâteau ne correspond à {quoted(query)}.</li>
         )}
         {cakes.length === 0 && (
-          <li className="px-5 py-6 text-center text-sm text-gray-400">Votre catalogue ne contient encore aucun gâteau.</li>
+          <li className="px-5 py-6 text-center text-sm text-gp-ink/65">Votre catalogue ne contient encore aucun gâteau.</li>
         )}
       </ul>
     </Sheet>
@@ -115,14 +115,14 @@ function HoursCheckbox({ checked, onChange, source }: { checked: boolean; onChan
       role="checkbox"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className="flex items-start gap-3 w-full text-left min-h-[44px] py-2 px-1 rounded-lg hover:bg-gray-50"
+      className="flex items-start gap-3 w-full text-left min-h-[44px] py-2 px-1 rounded-lg hover:bg-gp-ink/[0.04]"
     >
       <span className="mt-0.5">
         <CheckMark checked={checked} />
       </span>
       <span>
-        <span className="block text-sm font-medium text-gray-800">Ajuster aussi les heures de travail</span>
-        <span className="block text-xs text-gray-500">
+        <span className="block text-sm font-medium text-gp-ink">Ajuster aussi les heures de travail</span>
+        <span className="block text-xs text-gp-ink/70">
           {hours
             ? "Comme les quantités (au quart d'heure près). Décochez pour garder les mêmes heures."
             : "Aucune heure saisie pour l'instant."}
@@ -152,7 +152,7 @@ function SizesPreview({
   currentId?: string;
 }) {
   return (
-    <ul className="rounded-xl bg-gray-50 divide-y divide-gray-100" aria-live="polite">
+    <ul className="rounded-xl bg-gp-cream divide-y divide-gp-ink/10" aria-live="polite">
       {sizes.map((v) => {
         const priced = priceDraft(v, items, settings);
         const problem = variantProblem(v, priced);
@@ -161,8 +161,8 @@ function SizesPreview({
         return (
           <li key={v.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
             <span className="min-w-0">
-              <span className="block text-sm text-gray-800 truncate">{v.label}</span>
-              <span className="block text-xs text-gray-400">
+              <span className="block text-sm text-gp-ink truncate">{v.label}</span>
+              <span className="block text-xs text-gp-ink/65">
                 {v.id === currentId ? "taille actuelle" : parts ? `${parts} parts` : ""}
                 {draftHours(v) > 0 ? ` · ${formatHours(draftHours(v))}` : " · 0 h"}
               </span>
@@ -171,9 +171,9 @@ function SizesPreview({
               <span className="text-xs font-medium text-amber-700 text-right">à compléter</span>
             ) : (
               <span className="text-right shrink-0">
-                <span className="block text-sm font-bold text-rose-600 tabular-nums">{formatDA(b.finalPrice)}</span>
+                <span className="block font-display text-sm font-semibold tracking-[-0.01em] text-gp-raspberry tabular-nums">{formatDA(b.finalPrice)}</span>
                 {b.pricePerPortion !== null && (
-                  <span className="block text-xs text-gray-400 tabular-nums">{formatDA(b.pricePerPortion)} / part</span>
+                  <span className="block text-xs text-gp-ink/65 tabular-nums">{formatDA(b.pricePerPortion)} / part</span>
                 )}
               </span>
             )}
@@ -333,9 +333,9 @@ export function SizeDialog({
         )}
 
         {copy && source && (
-          <div className="rounded-xl bg-gray-50 px-4 py-3 space-y-2">
+          <div className="rounded-xl bg-gp-cream px-4 py-3 space-y-2">
             <div className="flex items-center gap-3">
-              <label htmlFor="size-factor" className="text-sm text-gray-700 flex-1">
+              <label htmlFor="size-factor" className="text-sm text-gp-ink/90 flex-1">
                 Multiplier les quantités par
               </label>
               <DecimalInput
@@ -349,13 +349,13 @@ export function SizeDialog({
                 inputClassName="text-center"
               />
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gp-ink/70">
               {sourcePortions
                 ? `${quoted(source.label)} = ${sourcePortions} parts. Ex : pour 15 parts, × 1,5.`
                 : "Ex : × 1,5 pour une taille une fois et demie plus grande."}
             </p>
             <HoursCheckbox checked={scaleHours} onChange={setScaleHours} source={source} />
-            <p className="text-xs text-gray-500">{SAME_EXTRAS}</p>
+            <p className="text-xs text-gp-ink/70">{SAME_EXTRAS}</p>
           </div>
         )}
 
@@ -406,14 +406,14 @@ export function StandardSizesDialog({
         </div>
       }
     >
-      <div className="p-5 space-y-4 text-sm text-gray-600">
+      <div className="p-5 space-y-4 text-sm text-gp-ink/80">
         <p>
           Les autres tailles reprennent le contenu de {quoted(source.label || "cette taille")}
           {base ? ", quantités ajustées selon le nombre de parts." : " (indiquez ensuite les quantités de chaque taille)."}
         </p>
         <HoursCheckbox checked={scaleHours} onChange={setScaleHours} source={source} />
         <SizesPreview sizes={result} items={items} settings={settings} currentId={source.id} />
-        <p className="text-xs text-gray-500">{SAME_EXTRAS} Vous pourrez ensuite modifier chaque taille.</p>
+        <p className="text-xs text-gp-ink/70">{SAME_EXTRAS} Vous pourrez ensuite modifier chaque taille.</p>
       </div>
     </Sheet>
   );

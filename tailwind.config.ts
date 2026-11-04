@@ -37,6 +37,8 @@ const config: Config = {
           raspberry: "rgb(var(--gp-raspberry) / <alpha-value>)",
           champagne: "rgb(var(--gp-champagne) / <alpha-value>)",
           gold: "rgb(var(--gp-gold) / <alpha-value>)",
+          // Admin cards/inputs only (a lighter cream, not a fifth tone).
+          paper: "rgb(var(--gp-paper) / <alpha-value>)",
         },
         // Colours of the nearest [data-tone] ancestor (see SectionTone).
         tone: {
@@ -86,6 +88,10 @@ const config: Config = {
         "float": "float 3s ease-in-out infinite",
         "shimmer": "shimmer 2s linear infinite",
         "scale-in": "scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+        // Admin: short UI transitions only (<= 200ms).
+        "gpa-fade": "fadeIn 160ms ease-out",
+        "gpa-drawer": "gpaDrawer 200ms cubic-bezier(.22,1,.36,1)",
+        "gpa-rise": "gpaRise 200ms cubic-bezier(.22,1,.36,1)",
       },
       keyframes: {
         fadeIn: {
@@ -103,6 +109,14 @@ const config: Config = {
         shimmer: {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
+        },
+        gpaDrawer: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(0)" },
+        },
+        gpaRise: {
+          "0%": { transform: "translateY(16px)", opacity: "0" },
+          "100%": { transform: "translateY(0)", opacity: "1" },
         },
         scaleIn: {
           "0%": { transform: "scale(0.92)", opacity: "0" },

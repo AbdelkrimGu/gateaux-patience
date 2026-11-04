@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect, notFound } from "next/navigation";
 import AdminShell from "@/components/admin/AdminShell";
 import CakeForm from "@/components/admin/CakeForm";
+import { BackLink, PageHeader } from "@/components/admin/ui";
 import { getCakeById } from "@/lib/admin-data";
 import { getCategories } from "@/lib/categories-data";
 import { ADMIN_COOKIE, verifySessionToken } from "@/lib/admin-auth";
@@ -21,13 +22,13 @@ export default async function EditCakePage({ params }: { params: Promise<{ id: s
 
   return (
     <AdminShell>
+      <PageHeader
+        width="4xl"
+        eyebrow={<BackLink href="/admin/cakes">Gâteaux</BackLink>}
+        title="Modifier le gâteau"
+        subtitle={<span className="block truncate max-w-md">{cake.translations.fr.title || "Sans titre"}</span>}
+      />
       <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-gray-800">Modifier le gâteau</h1>
-          <p className="text-sm text-gray-500 mt-0.5 truncate max-w-md">
-            {cake.translations.fr.title || "Sans titre"}
-          </p>
-        </div>
         <CakeForm mode="edit" cake={cake} categories={categories} />
       </div>
     </AdminShell>

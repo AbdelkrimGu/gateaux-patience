@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Lock, Eye, EyeOff, Loader2, AlertTriangle } from "lucide-react";
+import { BrandBadge, BrandWordmark } from "@/components/gp/Brand";
+import { BTN_PRIMARY, EYEBROW, INPUT, LABEL } from "@/components/admin/ui";
+import { cn } from "@/lib/utils";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -34,75 +36,83 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 to-pink-50 p-4">
+    <div
+      data-surface="ink"
+      className="min-h-[100dvh] flex items-center justify-center bg-gp-ink text-gp-cream px-4 py-10"
+    >
       <div className="w-full max-w-sm">
-        {/* Logo */}
-        <div className="flex flex-col items-center gap-3 mb-8">
-          <div className="w-20 h-20 rounded-full overflow-hidden ring-4 ring-white shadow-lg">
-            <Image
-              src="/Logo/Logo-Photoroom.png"
-              alt="Gateaux Patience"
-              width={80}
-              height={80}
-              className="w-full h-full object-cover"
-            />
+        {/* The crowned badge stamps in; the gold wordmark signs. */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="relative mb-5">
+            <span aria-hidden className="gpa-stamp-ring absolute inset-0 rounded-full ring-2 ring-gp-gold" />
+            <span className="gpa-stamp block rounded-full shadow-[0_18px_34px_-14px_rgb(0_0_0/0.7)]">
+              <BrandBadge size={96} className="ring-2 ring-gp-gold" />
+            </span>
           </div>
-          <div className="text-center">
-            <h1 className="text-xl font-bold text-gray-800">Gateaux Patience</h1>
-            <p className="text-sm text-gray-500">Espace Administration</p>
-          </div>
+          <h1>
+            <BrandWordmark className="w-[230px] text-gp-gold" label="Gateaux Patience" />
+          </h1>
+          <p className={cn(EYEBROW, "mt-3 text-gp-cream/70")}>Espace administration</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-          <div className="flex items-center gap-2 mb-6">
-            <Lock size={18} className="text-rose-500" />
-            <h2 className="font-semibold text-gray-700">Connexion</h2>
+        <div data-surface="paper" className="bg-gp-paper text-gp-ink rounded-[28px] p-6 sm:p-8 shadow-[0_30px_60px_-30px_rgb(0_0_0/0.8)]">
+          <div className="flex items-center gap-2.5 mb-5">
+            <span className="w-9 h-9 rounded-full bg-gp-champagne ring-1 ring-gp-gold/60 flex items-center justify-center">
+              <Lock size={16} className="text-gp-ink" />
+            </span>
+            <h2 className="font-display text-xl font-semibold tracking-[-0.02em]">Connexion</h2>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1.5">
+              <label htmlFor="admin-password" className={LABEL}>
                 Mot de passe
               </label>
               <div className="relative">
                 <input
+                  id="admin-password"
                   type={show ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 pr-11 rounded-xl border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none transition text-sm"
+                  autoComplete="current-password"
+                  aria-invalid={error ? true : undefined}
+                  aria-describedby={error ? "admin-login-error" : undefined}
+                  className={cn(INPUT, "pr-12", error && "border-red-600")}
                   required
                   autoFocus
                 />
                 <button
                   type="button"
                   onClick={() => setShow(!show)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  aria-label={show ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                  className="absolute right-0.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center text-gp-ink/65 hover:text-gp-ink"
                 >
-                  {show ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {show ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
 
             {error && (
-              <div className="text-sm text-red-500 bg-red-50 border border-red-100 px-3 py-2 rounded-lg">
+              <div
+                id="admin-login-error"
+                role="alert"
+                className="flex items-start gap-2 text-sm font-medium text-red-800 bg-red-50 border border-red-200 px-3.5 py-2.5 rounded-xl"
+              >
+                <AlertTriangle size={16} className="mt-0.5 shrink-0" />
                 {error}
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading || !password}
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              {loading ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}
+            <button type="submit" disabled={loading || !password} className={cn(BTN_PRIMARY, "w-full min-h-[48px] text-[15px]")}>
+              {loading ? <Loader2 size={17} className="animate-spin" /> : <Lock size={16} />}
               {loading ? "Connexion..." : "Se connecter"}
             </button>
           </form>
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-4">
+        <p className="text-center text-xs text-gp-cream/60 mt-6">
           Gateaux Patience © {new Date().getFullYear()}
         </p>
       </div>

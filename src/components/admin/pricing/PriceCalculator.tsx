@@ -21,7 +21,7 @@ import { formatDate, formatDateTime, priceChangeLabel, priceLabel, quoted, setti
 import { AddLineButton, ExtraLineRow, FixedLineRow, HoursField, VariableLineRow } from "./lines";
 import PriceBreakdown from "./PriceBreakdown";
 import {
-  ApiErrorBox, Banner, CARD_CLASS, ConfirmDialog, DecimalInput, EmptyHint, INPUT_CLASS,
+  AMBER_BTN, ApiErrorBox, Banner, CARD_CLASS, ConfirmDialog, DecimalInput, EmptyHint, INPUT_CLASS,
   LABEL_CLASS, PRIMARY_BTN, SECONDARY_BTN, SectionHeader, Sheet,
 } from "./ui";
 import VariablePicker from "./VariablePicker";
@@ -267,7 +267,7 @@ export default function PriceCalculator({
           <Banner tone="amber" icon={<Settings2 size={16} />}>
             <p className="font-medium">Définissez votre taux horaire</p>
             <p className="text-xs mt-0.5">Sans lui, votre temps de travail n&apos;est pas compté dans le prix.</p>
-            <button type="button" onClick={() => goTo("settings")} className="mt-2 text-sm font-semibold underline underline-offset-2 min-h-[40px]">
+            <button type="button" onClick={() => goTo("settings")} className="mt-1 text-sm font-semibold underline underline-offset-2 min-h-[44px]">
               Aller aux réglages
             </button>
           </Banner>
@@ -278,7 +278,7 @@ export default function PriceCalculator({
             <p className="text-xs mt-0.5">
               Boîte, support, amandes, chocolat… Une fois enregistrés, il suffira de les cocher ici.
             </p>
-            <button type="button" onClick={() => goTo("costs")} className="mt-2 text-sm font-semibold underline underline-offset-2 min-h-[40px]">
+            <button type="button" onClick={() => goTo("costs")} className="mt-1 text-sm font-semibold underline underline-offset-2 min-h-[44px]">
               Ajouter mes coûts
             </button>
           </Banner>
@@ -288,7 +288,7 @@ export default function PriceCalculator({
             <p>
               Devis ouvert : <span className="font-semibold">{quoted(loadedQuote?.name ?? draft.name)}</span>
               {loadedQuote && (
-                <span className="text-gray-500"> · enregistré le {formatDate(loadedQuote.updatedAt)}</span>
+                <span className="text-gp-ink/70"> · enregistré le {formatDate(loadedQuote.updatedAt)}</span>
               )}
             </p>
             {draft.dirty && <p className="text-xs text-amber-700 mt-0.5">Modifications non enregistrées</p>}
@@ -304,7 +304,7 @@ export default function PriceCalculator({
             <button
               type="button"
               onClick={() => setConfirmLoadSaved(true)}
-              className="mt-2 inline-flex items-center gap-1.5 min-h-[40px] px-3 rounded-lg bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 transition"
+              className={AMBER_BTN}
             >
               <FolderOpen size={14} /> Charger la version enregistrée
             </button>
@@ -330,7 +330,7 @@ export default function PriceCalculator({
             <button
               type="button"
               onClick={() => update((d) => ({ ...d, settings: pickSettings(settings) }))}
-              className="mt-2 inline-flex items-center gap-1.5 min-h-[40px] px-3 rounded-lg bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 transition"
+              className={AMBER_BTN}
             >
               <Settings2 size={14} /> Appliquer les réglages actuels
             </button>
@@ -353,7 +353,7 @@ export default function PriceCalculator({
             <button
               type="button"
               onClick={applyStale}
-              className="mt-2 inline-flex items-center gap-1.5 min-h-[40px] px-3 py-1.5 rounded-lg bg-amber-500 text-white text-sm font-medium text-left hover:bg-amber-600 transition"
+              className={cn(AMBER_BTN, "py-1.5 text-left")}
             >
               <RefreshCw size={14} className="shrink-0" />
               {refreshedPrice !== null
@@ -367,7 +367,7 @@ export default function PriceCalculator({
             <span className="flex items-center gap-2">
               <Check size={15} /> Prix mis à jour.
             </span>
-            <button type="button" onClick={undoStale} className="inline-flex items-center gap-1.5 min-h-[40px] px-2 font-semibold underline underline-offset-2">
+            <button type="button" onClick={undoStale} className="inline-flex items-center gap-1.5 min-h-[44px] px-2 font-semibold underline underline-offset-2">
               <Undo2 size={14} /> Annuler
             </button>
           </div>
@@ -390,7 +390,7 @@ export default function PriceCalculator({
           <div className="grid grid-cols-2 gap-3">
             <HoursField id="calc-hours" value={draft.hoursRaw} onChange={(v) => update((d) => ({ ...d, hoursRaw: v }))} />
             <div>
-              <label htmlFor="calc-parts" className={LABEL_CLASS}>Nombre de parts (optionnel)</label>
+              <label htmlFor="calc-parts" className={LABEL_CLASS}>Parts (optionnel)</label>
               <DecimalInput
                 id="calc-parts"
                 value={draft.portionsRaw}
@@ -414,12 +414,12 @@ export default function PriceCalculator({
           {fixedLines.length === 0 ? (
             <EmptyHint>
               Aucun coût fixe pour l&apos;instant.{" "}
-              <button type="button" onClick={() => goTo("costs")} className="text-rose-600 font-medium underline underline-offset-2">
+              <button type="button" onClick={() => goTo("costs")} className="text-gp-raspberry font-medium underline underline-offset-2">
                 En ajouter dans Mes coûts
               </button>
             </EmptyHint>
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-gp-ink/10">
               {fixedLines.map((l) => {
                 const newPrice = staleNewPrice.get(l.key);
                 return (
@@ -427,7 +427,7 @@ export default function PriceCalculator({
                     key={l.key}
                     line={l}
                     cost={l.included ? costByKey.get(l.key)?.cost ?? 0 : lineCost(toQuoteLine(l)).cost}
-                    flag={isDeleted(l) && <span className="text-amber-600"> · (supprimé de la liste)</span>}
+                    flag={isDeleted(l) && <span className="text-amber-700"> · (supprimé de la liste)</span>}
                     hint={newPrice && <p className="pl-10 text-xs text-amber-700">nouveau prix : {priceLabel(newPrice)}</p>}
                     onToggle={() => updateLine(l.key, { included: !l.included })}
                     onQtyChange={(v) => updateLine(l.key, { qtyRaw: v })}
@@ -448,7 +448,7 @@ export default function PriceCalculator({
           {variableLines.length === 0 ? (
             <EmptyHint>Ajoutez ce que vous utilisez pour ce gâteau : amandes, chocolat, ruban…</EmptyHint>
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-gp-ink/10">
               {variableLines.map((l) => {
                 const lc = costByKey.get(l.key);
                 const newPrice = staleNewPrice.get(l.key);
@@ -458,7 +458,7 @@ export default function PriceCalculator({
                     line={l}
                     cost={lc?.cost ?? 0}
                     error={lc?.error}
-                    flag={isDeleted(l) && <span className="text-xs font-normal text-amber-600"> (supprimé de la liste)</span>}
+                    flag={isDeleted(l) && <span className="text-xs font-normal text-amber-700"> (supprimé de la liste)</span>}
                     hint={newPrice && <p className="text-xs text-amber-700">nouveau prix : {priceLabel(newPrice)}</p>}
                     onQtyChange={(v) => updateLine(l.key, { qtyRaw: v })}
                     onUnitChange={(u) => updateLine(l.key, { qtyUnit: u })}
@@ -468,7 +468,7 @@ export default function PriceCalculator({
               })}
             </ul>
           )}
-          <div className="p-3 border-t border-gray-100">
+          <div className="p-3 border-t border-gp-ink/10">
             <AddLineButton tone="rose" onClick={() => setPickerOpen(true)}>Ajouter un coût variable</AddLineButton>
           </div>
         </section>
@@ -481,7 +481,7 @@ export default function PriceCalculator({
             total={breakdown.extrasTotal}
           />
           {extraLines.length > 0 && (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-gp-ink/10">
               {extraLines.map((l) => (
                 <ExtraLineRow
                   key={l.key}
@@ -493,7 +493,7 @@ export default function PriceCalculator({
               ))}
             </ul>
           )}
-          <div className={cn("p-3", extraLines.length > 0 && "border-t border-gray-100")}>
+          <div className={cn("p-3", extraLines.length > 0 && "border-t border-gp-ink/10")}>
             <AddLineButton onClick={addExtra}>Ajouter un extra</AddLineButton>
           </div>
         </section>
@@ -522,7 +522,7 @@ export default function PriceCalculator({
           {saveMsg && (
             <p role="status" className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 rounded-xl px-4 py-3">
               <Check size={15} /> {saveMsg}{" "}
-              <button type="button" onClick={() => goTo("quotes")} className="underline underline-offset-2 font-medium min-h-[32px]">
+              <button type="button" onClick={() => goTo("quotes")} className="underline underline-offset-2 font-semibold min-h-[44px]">
                 Voir mes devis
               </button>
             </p>
@@ -558,20 +558,20 @@ export default function PriceCalculator({
 
         {/* ---------- Phone: sticky result bar (one slim line while typing) ---------- */}
         <div className="lg:hidden sticky bottom-0 z-20 pt-1">
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] overflow-hidden">
+          <div className="rounded-[22px] overflow-hidden shadow-[0_-10px_30px_-12px_rgb(var(--gp-ink)/0.55)] ring-1 ring-gp-ink/20">
             {typing ? (
-              <div className="flex items-center justify-between gap-3 px-4 py-2 text-sm">
-                <span className="text-gray-500">Prix de vente</span>
+              <div data-surface="ink" className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm bg-gp-ink text-gp-cream">
+                <span className="text-gp-cream/80">Prix de vente</span>
                 {incomplete ? (
-                  <span className="font-semibold text-amber-700">Prix incomplet</span>
+                  <span className="font-semibold text-amber-300">Prix incomplet</span>
                 ) : (
-                  <span className="font-bold text-rose-600 tabular-nums">{formatDA(breakdown.finalPrice)}</span>
+                  <span className="font-display text-lg font-semibold text-gp-gold tabular-nums">{formatDA(breakdown.finalPrice)}</span>
                 )}
               </div>
             ) : (
               <>
                 {barOpen && (
-                  <div className="max-h-[55vh] overflow-y-auto overscroll-contain px-4 pt-3 border-b border-gray-100">
+                  <div className="max-h-[55vh] overflow-y-auto overscroll-contain px-4 pt-3 bg-gp-paper text-gp-ink">
                     <PriceBreakdown
                       breakdown={breakdown}
                       settings={draft.settings}
@@ -587,20 +587,21 @@ export default function PriceCalculator({
                   type="button"
                   onClick={() => setBarOpen((o) => !o)}
                   aria-expanded={barOpen}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left"
+                  data-surface="ink"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left bg-gp-ink text-gp-cream"
                 >
                   <span className="flex-1 min-w-0">
-                    <span className="block text-xs text-gray-500">
+                    <span className="block text-xs text-gp-cream/80">
                       Prix de vente
                       {!incomplete && breakdown.pricePerPortion !== null && ` · ${formatDA(breakdown.pricePerPortion)} / part`}
                     </span>
                     {incomplete ? (
                       <>
-                        <span className="block text-xl font-bold text-amber-700 leading-tight">Prix incomplet</span>
-                        <span className="block text-xs text-amber-700 first-letter:uppercase">{incomplete}</span>
+                        <span className="block font-display text-xl font-semibold text-amber-300 leading-tight">Prix incomplet</span>
+                        <span className="block text-xs text-amber-200 first-letter:uppercase">{incomplete}</span>
                       </>
                     ) : (
-                      <span className="block text-2xl font-bold text-rose-600 tabular-nums leading-tight">
+                      <span className="block font-display text-[28px] font-semibold tracking-[-0.02em] text-gp-gold tabular-nums leading-tight">
                         {formatDA(breakdown.finalPrice)}
                       </span>
                     )}
@@ -609,7 +610,7 @@ export default function PriceCalculator({
                         {barExtras.map((x) => (
                           <span
                             key={x.text}
-                            className={cn(x.tone === "gray" ? "text-gray-400" : x.tone === "amber" ? "text-amber-700" : "text-red-600")}
+                            className={cn(x.tone === "gray" ? "text-gp-cream/75" : x.tone === "amber" ? "text-amber-200" : "text-red-300")}
                           >
                             {x.text}
                           </span>
@@ -617,7 +618,7 @@ export default function PriceCalculator({
                       </span>
                     )}
                   </span>
-                  <span className="flex items-center gap-1 text-sm font-medium text-gray-600 shrink-0 min-h-[40px]">
+                  <span className="flex items-center gap-1 text-sm font-semibold text-gp-cream shrink-0 min-h-[44px] pl-3 border-l border-gp-cream/15">
                     {barOpen ? <>Masquer <ChevronDown size={16} /></> : <>Détail <ChevronUp size={16} /></>}
                   </span>
                 </button>
@@ -630,7 +631,7 @@ export default function PriceCalculator({
       {/* ---------- Desktop: result column ---------- */}
       <aside className="hidden lg:block lg:sticky lg:top-0">
         <div className={cn(CARD_CLASS, "p-4")}>
-          <h2 className="font-semibold text-gray-800 mb-2">Résultat</h2>
+          <h2 className="font-display text-[17px] font-semibold tracking-[-0.02em] text-gp-ink mb-2">Résultat</h2>
           <PriceBreakdown
             breakdown={breakdown}
             settings={draft.settings}
@@ -722,7 +723,7 @@ export default function PriceCalculator({
               maxLength={100}
               className={INPUT_CLASS}
             />
-            <p className="text-xs text-gray-400 mt-1">Pour le retrouver dans l&apos;onglet Devis.</p>
+            <p className="text-xs text-gp-ink/65 mt-1">Pour le retrouver dans l&apos;onglet Devis.</p>
           </form>
         </Sheet>
       )}

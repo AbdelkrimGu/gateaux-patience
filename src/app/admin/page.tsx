@@ -2,8 +2,10 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getCakes, getOrders } from "@/lib/admin-data";
 import AdminShell from "@/components/admin/AdminShell";
-import { CakeSlice, ShoppingBag, Star, Eye } from "lucide-react";
+import { BTN_GOLD, BTN_PRIMARY, CARD, PageHeader, StatusPill } from "@/components/admin/ui";
+import { CakeSlice, ShoppingBag, Star, Eye, Plus, ArrowRight, ImageOff } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { ADMIN_COOKIE, verifySessionToken } from "@/lib/admin-auth";
 
 export default async function AdminDashboard() {
@@ -16,111 +18,141 @@ export default async function AdminDashboard() {
   const newOrders = orders.filter((o) => o.status === "new");
 
   const stats = [
-    { label: "Gâteaux publiés", value: cakes.filter((c) => c.published).length, icon: CakeSlice, color: "bg-rose-50 text-rose-500" },
-    { label: "Total gâteaux", value: cakes.length, icon: Eye, color: "bg-blue-50 text-blue-500" },
-    { label: "Nouvelles commandes", value: newOrders.length, icon: ShoppingBag, color: "bg-amber-50 text-amber-500" },
-    { label: "Gâteaux à la une", value: cakes.filter((c) => c.featured).length, icon: Star, color: "bg-purple-50 text-purple-500" },
+    { label: "Nouvelles commandes", value: newOrders.length, icon: ShoppingBag, href: "/admin/orders", alert: newOrders.length > 0 },
+    { label: "Gâteaux publiés", value: cakes.filter((c) => c.published).length, icon: CakeSlice, href: "/admin/cakes", alert: false },
+    { label: "Total gâteaux", value: cakes.length, icon: Eye, href: "/admin/cakes", alert: false },
+    { label: "Gâteaux à la une", value: cakes.filter((c) => c.featured).length, icon: Star, href: "/admin/cakes", alert: false },
   ];
 
   return (
     <AdminShell>
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">Bonjour 👋</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Voici un aperçu de votre activité</p>
-        </div>
-
+      <PageHeader
+        eyebrow="Votre atelier"
+        title="Bonjour"
+        subtitle="Voici un aperçu de votre activité"
+        actions={
+          // Computers already have it at the top of the sidebar.
+          <Link href="/admin/cakes/new" className={cn(BTN_GOLD, "md:hidden")}>
+            <Plus size={16} />
+            Nouveau gâteau
+          </Link>
+        }
+      />
+      <div className="max-w-5xl mx-auto space-y-5 md:space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {stats.map((s) => (
-            <div key={s.label} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${s.color}`}>
-                <s.icon size={18} />
+            <Link
+              key={s.label}
+              href={s.href}
+              className={cn(CARD, "group relative p-4 md:p-5 hover:border-gp-ink/25 transition-colors")}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="w-10 h-10 rounded-full bg-gp-champagne/70 ring-1 ring-gp-gold/50 text-gp-ink flex items-center justify-center">
+                  <s.icon size={17} />
+                </span>
+                {s.alert && <span className="w-2.5 h-2.5 rounded-full bg-gp-raspberry" aria-hidden />}
               </div>
-              <div className="text-2xl font-bold text-gray-800">{s.value}</div>
-              <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
-            </div>
+              <div className="font-display text-[32px] leading-none font-semibold tracking-[-0.03em] tabular-nums text-gp-ink">
+                {s.value}
+              </div>
+              <div className="text-[13px] text-gp-ink/75 mt-1.5">{s.label}</div>
+            </Link>
           ))}
         </div>
 
-        {/* Quick actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-gray-700">Dernières commandes</h2>
-              <Link href="/admin/orders" className="text-xs text-rose-500 hover:text-rose-600 font-medium">
-                Voir tout →
+          {/* Latest orders */}
+          <section className={cn(CARD, "p-4 md:p-5")}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-display text-lg font-semibold tracking-[-0.02em]">Dernières commandes</h2>
+              <Link
+                href="/admin/orders"
+                className="inline-flex items-center gap-1 min-h-[44px] px-2 -mr-2 text-sm font-semibold text-gp-raspberry hover:underline"
+              >
+                Voir tout <ArrowRight size={14} />
               </Link>
             </div>
             {orders.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-6">Aucune commande pour l&apos;instant</p>
+              <p className="text-sm text-gp-ink/65 text-center py-8">Aucune commande pour l&apos;instant</p>
             ) : (
-              <div className="space-y-3">
+              <ul className="space-y-2">
                 {orders.slice(0, 4).map((o) => (
-                  <div key={o.id} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50">
-                    <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${o.status === "new" ? "bg-green-400" : o.status === "seen" ? "bg-amber-400" : "bg-gray-300"}`} />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-700 truncate">{o.name || "Client"}</p>
-                      <p className="text-xs text-gray-400 truncate">{o.cakeTitle || o.message}</p>
-                    </div>
-                    <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${
-                      o.status === "new" ? "bg-green-100 text-green-600" :
-                      o.status === "seen" ? "bg-amber-100 text-amber-600" :
-                      "bg-gray-100 text-gray-500"
-                    }`}>
-                      {o.status === "new" ? "Nouveau" : o.status === "seen" ? "Vu" : "Terminé"}
-                    </span>
-                  </div>
+                  <li key={o.id}>
+                    <Link
+                      href="/admin/orders"
+                      className="flex items-center gap-3 min-h-[56px] px-3 py-2.5 rounded-xl bg-gp-cream hover:bg-gp-champagne/50 transition-colors"
+                    >
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "w-2 h-2 rounded-full shrink-0",
+                          o.status === "new" ? "bg-emerald-500" : o.status === "seen" ? "bg-amber-500" : "bg-gp-ink/30"
+                        )}
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold text-gp-ink truncate">{o.name || "Client"}</span>
+                        <span className="block text-xs text-gp-ink/70 truncate">{o.cakeTitle || o.message}</span>
+                      </span>
+                      <StatusPill tone={o.status}>
+                        {o.status === "new" ? "Nouveau" : o.status === "seen" ? "Vu" : "Terminé"}
+                      </StatusPill>
+                    </Link>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
-          </div>
+          </section>
 
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-gray-700">Derniers gâteaux</h2>
-              <Link href="/admin/cakes" className="text-xs text-rose-500 hover:text-rose-600 font-medium">
-                Voir tout →
+          {/* Latest cakes */}
+          <section className={cn(CARD, "p-4 md:p-5")}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-display text-lg font-semibold tracking-[-0.02em]">Derniers gâteaux</h2>
+              <Link
+                href="/admin/cakes"
+                className="inline-flex items-center gap-1 min-h-[44px] px-2 -mr-2 text-sm font-semibold text-gp-raspberry hover:underline"
+              >
+                Voir tout <ArrowRight size={14} />
               </Link>
             </div>
             {cakes.length === 0 ? (
               <div className="text-center py-6">
-                <p className="text-sm text-gray-400 mb-3">Aucun gâteau ajouté</p>
-                <Link
-                  href="/admin/cakes/new"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-500 text-white text-sm font-medium hover:bg-rose-600 transition"
-                >
-                  + Ajouter mon premier gâteau
+                <p className="text-sm text-gp-ink/65 mb-4">Aucun gâteau ajouté</p>
+                <Link href="/admin/cakes/new" className={BTN_PRIMARY}>
+                  <Plus size={16} /> Ajouter mon premier gâteau
                 </Link>
               </div>
             ) : (
-              <div className="space-y-2">
+              <ul className="space-y-1">
                 {cakes.slice(0, 4).map((c) => (
-                  <Link
-                    key={c.id}
-                    href={`/admin/cakes/${c.id}`}
-                    className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition group"
-                  >
-                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                      {c.images[0] && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={c.images[0]} alt="" className="w-full h-full object-cover" />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-700 truncate group-hover:text-rose-500 transition">
-                        {c.translations.fr.title || "Sans titre"}
-                      </p>
-                      <p className="text-xs text-gray-400">{c.categoryLabel.fr}</p>
-                    </div>
-                    <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${c.published ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-500"}`}>
-                      {c.published ? "Publié" : "Brouillon"}
-                    </span>
-                  </Link>
+                  <li key={c.id}>
+                    <Link
+                      href={`/admin/cakes/${c.id}`}
+                      className="flex items-center gap-3 min-h-[56px] p-2 rounded-xl hover:bg-gp-ink/[0.04] transition-colors group"
+                    >
+                      <span className="w-11 h-11 rounded-lg overflow-hidden bg-gp-ink/[0.06] shrink-0 ring-1 ring-gp-ink/10 flex items-center justify-center">
+                        {c.images[0] ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={c.images[0]} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <ImageOff size={16} className="text-gp-ink/40" />
+                        )}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold text-gp-ink truncate group-hover:text-gp-raspberry transition-colors">
+                          {c.translations.fr.title || "Sans titre"}
+                        </span>
+                        <span className="block text-xs text-gp-ink/70">{c.categoryLabel.fr}</span>
+                      </span>
+                      <StatusPill tone={c.published ? "published" : "draft"}>
+                        {c.published ? "Publié" : "Brouillon"}
+                      </StatusPill>
+                    </Link>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
-          </div>
+          </section>
         </div>
       </div>
     </AdminShell>
