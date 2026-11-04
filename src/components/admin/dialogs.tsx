@@ -26,12 +26,16 @@ export function useTopLayer(): () => boolean {
 // "back" closes the topmost one (asking first when dirty) instead of leaving
 // the page. One global listener, so stacked dialogs don't all react.
 const backStack: Array<() => void> = [];
-let ignorePops = 0; // our own history.back() calls when a dialog closes another way
+// Our own history.back() calls when a dialog closes another way, with the URL
+// that was showing then: the step back lands on the entry from before the
+// dialog, whose URL can be stale (e.g. ?tab= changed while it was open).
+const ownBacks: string[] = [];
 let popListening = false;
 
 function onPopState() {
-  if (ignorePops > 0) {
-    ignorePops--;
+  const url = ownBacks.shift();
+  if (url !== undefined) {
+    if (url !== window.location.href) window.history.replaceState(window.history.state, "", url);
     return;
   }
   backStack[backStack.length - 1]?.();
@@ -69,8 +73,11 @@ export function useBackButton(onBack: () => void) {
       const i = backStack.lastIndexOf(handler);
       if (i >= 0) backStack.splice(i, 1);
       if (pushed) {
-        ignorePops++;
-        window.history.back();
+        // Next tick: effects of the same update (a tab switch writing ?tab=) run first.
+        setTimeout(() => {
+          ownBacks.push(window.location.href);
+          window.history.back();
+        }, 0);
       }
     };
   }, []);
