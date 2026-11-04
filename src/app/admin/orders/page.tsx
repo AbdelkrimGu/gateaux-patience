@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
-import { CheckCircle2, Eye, Trash2, Phone, MessageSquare, Clock } from "lucide-react";
+import { CheckCircle2, Eye, Trash2, Phone, MessageSquare, Clock, Inbox, RotateCcw } from "lucide-react";
+import { ConfirmDialog } from "@/components/admin/pricing/ui";
+import { BTN_SECONDARY, CARD, EmptyState, ICON_BUTTON_DANGER, PageHeader, StatusChip, type ChipTone } from "@/components/admin/ui";
+import { cn } from "@/lib/utils";
 
 interface Order {
   id: string;
@@ -16,16 +19,25 @@ interface Order {
 }
 
 const STATUS_LABELS = { new: "Nouveau", seen: "Vu", done: "Terminé" };
-const STATUS_COLORS = {
-  new: "bg-green-100 text-green-700",
-  seen: "bg-amber-100 text-amber-700",
-  done: "bg-gray-100 text-gray-500",
+const STATUS_TONES: Record<Order["status"], ChipTone> = {
+  new: "accent",
+  seen: "warning",
+  done: "neutral",
 };
+const STATUS_DOTS = {
+  new: "bg-gp-raspberry",
+  seen: "bg-amber-500",
+  done: "bg-gp-ink/30",
+};
+
+// Small action buttons of an order card: 44px tall, quiet until hovered.
+const ACTION_BTN = cn(BTN_SECONDARY, "px-3.5 text-[13px] font-medium");
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "new" | "seen" | "done">("all");
+  const [pendingDelete, setPendingDelete] = useState<Order | null>(null);
 
   // Session expired: back to the login page instead of an empty list.
   function checkSession(res: Response) {
@@ -56,8 +68,8 @@ export default function AdminOrdersPage() {
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
   }
 
+  // Called once she confirmed in the dialog.
   async function deleteOrder(id: string) {
-    if (!confirm("Supprimer cette commande ?")) return;
     const res = await fetch(`/api/admin/orders/${id}`, { method: "DELETE" });
     if (!checkSession(res)) return;
     setOrders((prev) => prev.filter((o) => o.id !== id));
@@ -84,26 +96,39 @@ export default function AdminOrdersPage() {
   return (
     <AdminShell>
       <div className="max-w-5xl mx-auto space-y-5">
-        {/* Header */}
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">Commandes</h1>
-          <p className="text-sm text-gray-500">{orders.length} demande{orders.length !== 1 ? "s" : ""} au total</p>
-        </div>
+        <PageHeader
+          title="Commandes"
+          subtitle={`${orders.length} demande${orders.length !== 1 ? "s" : ""} au total`}
+        />
 
         {/* Filter tabs */}
-        <div className="flex gap-2 flex-wrap">
+        <div role="tablist" aria-label="Filtrer les commandes" className="flex gap-1.5 sm:gap-2 overflow-x-auto -mx-4 px-4 pb-1 md:mx-0 md:px-0">
           {(["all", "new", "seen", "done"] as const).map((f) => (
             <button
               key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+              type="button"
+              role="tab"
+              aria-selected={filter === f}
+              onClick={(e) => {
+                setFilter(f);
+                // The row scrolls sideways on small phones: keep the chosen tab fully visible.
+                e.currentTarget.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+              }}
+              className={cn(
+                // Compact on phones so all four fit on a 390px screen.
+                "inline-flex items-center gap-1.5 sm:gap-2 min-h-11 px-3 sm:px-4 rounded-full text-[13px] sm:text-sm font-medium transition whitespace-nowrap shrink-0",
                 filter === f
-                  ? "bg-rose-500 text-white"
-                  : "bg-white text-gray-500 border border-gray-200 hover:border-gray-300"
-              }`}
+                  ? "bg-gp-ink text-gp-cream"
+                  : "bg-white text-gp-ink/80 border border-gp-ink/15 hover:border-gp-ink/30"
+              )}
             >
               {f === "all" ? "Toutes" : STATUS_LABELS[f]}
-              <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${filter === f ? "bg-white/20" : "bg-gray-100"}`}>
+              <span
+                className={cn(
+                  "min-w-[1.25rem] text-[11px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded-full tabular-nums",
+                  filter === f ? "bg-gp-cream/20" : "bg-gp-ink/5"
+                )}
+              >
                 {counts[f]}
               </span>
             </button>
@@ -112,121 +137,126 @@ export default function AdminOrdersPage() {
 
         {/* Content */}
         {loading ? (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-rose-500 border-t-transparent rounded-full mx-auto" />
+          <div className={cn(CARD, "p-12 text-center")} role="status" aria-label="Chargement">
+            <span className="ga-spinner" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-            <div className="text-4xl mb-3">📭</div>
-            <h2 className="font-semibold text-gray-700 mb-1">Aucune commande</h2>
-            <p className="text-sm text-gray-400">
-              {filter === "all" ? "Vous n'avez pas encore reçu de demandes" : `Aucune commande avec le statut « ${STATUS_LABELS[filter]} »`}
-            </p>
-          </div>
+          <EmptyState
+            icon={<Inbox size={24} />}
+            title="Aucune commande"
+            text={filter === "all" ? "Vous n'avez pas encore reçu de demandes" : `Aucune commande avec le statut « ${STATUS_LABELS[filter]} »`}
+          />
         ) : (
-          <div className="space-y-3">
+          <ul className="space-y-3">
             {filtered.map((order) => (
-              <div key={order.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <div className="flex items-start gap-4">
-                  {/* Status dot */}
-                  <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${
-                    order.status === "new" ? "bg-green-400" :
-                    order.status === "seen" ? "bg-amber-400" : "bg-gray-300"
-                  }`} />
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-3 flex-wrap">
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-gray-800">{order.name || "Client anonyme"}</span>
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[order.status]}`}>
-                            {STATUS_LABELS[order.status]}
-                          </span>
-                        </div>
-                        {order.cakeTitle && (
-                          <p className="text-sm text-rose-500 mt-0.5">Demande pour : {order.cakeTitle}</p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                        <Clock size={12} />
-                        {formatDate(order.createdAt)}
-                      </div>
+              <li
+                key={order.id}
+                className={cn(CARD, "p-4 md:p-5", order.status === "new" && "border-l-4 border-l-gp-raspberry")}
+              >
+                <div className="flex items-start justify-between gap-x-3 gap-y-1 flex-wrap">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span aria-hidden className={cn("w-2 h-2 rounded-full shrink-0", STATUS_DOTS[order.status])} />
+                      <span className="font-display text-lg font-semibold tracking-[-0.01em] text-gp-ink">
+                        {order.name || "Client anonyme"}
+                      </span>
+                      <StatusChip tone={STATUS_TONES[order.status]}>{STATUS_LABELS[order.status]}</StatusChip>
                     </div>
-
-                    {/* Message */}
-                    {order.message && (
-                      <p className="mt-2 text-sm text-gray-600 bg-gray-50 rounded-xl px-3 py-2 leading-relaxed">
-                        {order.message}
-                      </p>
+                    {order.cakeTitle && (
+                      <p className="text-sm font-medium text-gp-raspberry mt-0.5">Demande pour : {order.cakeTitle}</p>
                     )}
-
-                    {/* Actions */}
-                    <div className="mt-3 flex items-center gap-2 flex-wrap">
-                      {order.phone && (
-                        <>
-                          <a
-                            href={`tel:${order.phone}`}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-600 hover:border-gray-300 hover:text-gray-800 transition"
-                          >
-                            <Phone size={12} />
-                            {order.phone}
-                          </a>
-                          <a
-                            href={`https://wa.me/${order.phone.replace(/\D/g, "")}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500 text-white text-xs font-medium hover:bg-green-600 transition"
-                          >
-                            <MessageSquare size={12} />
-                            WhatsApp
-                          </a>
-                        </>
-                      )}
-
-                      <div className="flex items-center gap-1.5 ml-auto">
-                        {order.status !== "seen" && (
-                          <button
-                            onClick={() => updateStatus(order.id, "seen")}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-amber-600 hover:bg-amber-50 border border-amber-200 transition"
-                          >
-                            <Eye size={12} />
-                            Marquer vu
-                          </button>
-                        )}
-                        {order.status !== "done" && (
-                          <button
-                            onClick={() => updateStatus(order.id, "done")}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-green-600 hover:bg-green-50 border border-green-200 transition"
-                          >
-                            <CheckCircle2 size={12} />
-                            Terminé
-                          </button>
-                        )}
-                        {order.status === "done" && (
-                          <button
-                            onClick={() => updateStatus(order.id, "new")}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-gray-500 hover:bg-gray-50 border border-gray-200 transition"
-                          >
-                            Réouvrir
-                          </button>
-                        )}
-                        <button
-                          onClick={() => deleteOrder(order.id)}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
-                          title="Supprimer"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-gp-ink/65 tabular-nums pt-1">
+                    <Clock size={12} />
+                    {formatDate(order.createdAt)}
                   </div>
                 </div>
-              </div>
+
+                {/* Message */}
+                {order.message && (
+                  <p className="mt-3 text-sm text-gp-ink/85 bg-gp-cream border border-gp-gold/20 rounded-xl px-3.5 py-2.5 leading-relaxed whitespace-pre-line">
+                    {order.message}
+                  </p>
+                )}
+
+                {/* Actions */}
+                <div className="mt-3 flex items-center gap-2 flex-wrap">
+                  {order.phone && (
+                    <>
+                      <a href={`tel:${order.phone}`} className={cn(ACTION_BTN, "tabular-nums")}>
+                        <Phone size={15} />
+                        {order.phone}
+                      </a>
+                      <a
+                        href={`https://wa.me/${order.phone.replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(ACTION_BTN, "border-transparent bg-emerald-700 text-white font-semibold hover:bg-emerald-800 hover:border-transparent")}
+                      >
+                        <MessageSquare size={15} />
+                        WhatsApp
+                      </a>
+                    </>
+                  )}
+
+                  <div className="flex items-center gap-2 ml-auto flex-wrap">
+                    {order.status !== "seen" && (
+                      <button
+                        type="button"
+                        onClick={() => updateStatus(order.id, "seen")}
+                        className={cn(ACTION_BTN, "text-amber-800 border-amber-200 hover:bg-amber-50 hover:border-amber-300")}
+                      >
+                        <Eye size={15} />
+                        Marquer vu
+                      </button>
+                    )}
+                    {order.status !== "done" && (
+                      <button
+                        type="button"
+                        onClick={() => updateStatus(order.id, "done")}
+                        className={cn(ACTION_BTN, "text-emerald-800 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300")}
+                      >
+                        <CheckCircle2 size={15} />
+                        Terminé
+                      </button>
+                    )}
+                    {order.status === "done" && (
+                      <button type="button" onClick={() => updateStatus(order.id, "new")} className={ACTION_BTN}>
+                        <RotateCcw size={15} />
+                        Réouvrir
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setPendingDelete(order)}
+                      className={ICON_BUTTON_DANGER}
+                      title="Supprimer"
+                      aria-label="Supprimer cette commande"
+                    >
+                      <Trash2 size={17} />
+                    </button>
+                  </div>
+                </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </div>
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title="Supprimer cette commande ?"
+          confirmLabel="Supprimer"
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={() => {
+            const id = pendingDelete.id;
+            setPendingDelete(null);
+            void deleteOrder(id);
+          }}
+        >
+          <p>La demande de {pendingDelete.name || "ce client"} sera supprimée de la liste.</p>
+        </ConfirmDialog>
+      )}
     </AdminShell>
   );
 }

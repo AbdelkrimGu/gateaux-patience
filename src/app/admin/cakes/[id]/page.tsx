@@ -21,15 +21,8 @@ export default async function EditCakePage({ params }: { params: Promise<{ id: s
 
   return (
     <AdminShell>
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-gray-800">Modifier le gâteau</h1>
-          <p className="text-sm text-gray-500 mt-0.5 truncate max-w-md">
-            {cake.translations.fr.title || "Sans titre"}
-          </p>
-        </div>
-        <CakeForm mode="edit" cake={cake} categories={categories} />
-      </div>
+      {/* CakeForm prints the page title next to its Save button. */}
+      <CakeForm mode="edit" cake={cake} categories={categories} />
     </AdminShell>
   );
 }

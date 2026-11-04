@@ -21,6 +21,7 @@ import PricingSettingsForm from "./PricingSettingsForm";
 import SavedQuotes from "./SavedQuotes";
 import { brokenSheets, liveSizes, type CakeOption } from "./sheet-draft";
 import { ConfirmDialog, useBeforeUnload } from "./ui";
+import { PageHeader } from "../ui";
 
 export type PricingTab = "calc" | "sheets" | "costs" | "quotes" | "settings";
 type Tab = PricingTab;
@@ -368,15 +369,15 @@ export default function PricingManager({
 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-gray-800">Calcul des prix</h1>
-        <p className="text-sm text-gray-500">Le juste prix de chaque gâteau, à partir de vos coûts et de votre temps.</p>
-      </div>
+      <PageHeader
+        title="Calcul des prix"
+        subtitle="Le juste prix de chaque gâteau, à partir de vos coûts et de votre temps."
+      />
 
       <nav
         role="tablist"
         aria-label="Sections du calcul des prix"
-        className="grid grid-cols-5 gap-0.5 sm:gap-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-1"
+        className="grid grid-cols-5 gap-0.5 sm:gap-1 bg-white rounded-2xl border border-gp-gold/30 shadow-gp-card p-1"
       >
         {TABS.map((t) => {
           const active = tab === t.id;
@@ -393,14 +394,14 @@ export default function PricingManager({
               className={cn(
                 // 5 tabs on a 390px phone: ~66px each, so a slightly smaller label there.
                 "relative flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 min-h-[52px] sm:min-h-[44px] px-0.5 sm:px-1 rounded-xl text-[11px] leading-tight sm:text-sm font-medium transition",
-                active ? "bg-rose-500 text-white shadow-sm" : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                active ? "bg-gp-raspberry text-gp-cream font-semibold shadow-gp-chip" : "text-gp-ink/75 hover:bg-gp-cream hover:text-gp-ink"
               )}
             >
               <t.icon size={17} />
               <span className="whitespace-nowrap">
                 {t.label}
                 {count > 0 && (
-                  <span className={cn("ml-1 tabular-nums", active ? "text-white/80" : "text-gray-400")}>{count}</span>
+                  <span className={cn("ml-1 tabular-nums", active ? "text-white/80" : "text-gp-ink/65")}>{count}</span>
                 )}
               </span>
               {alert && (
@@ -430,7 +431,7 @@ export default function PricingManager({
                 setRepricedNotice(null);
                 goTo("sheets");
               }}
-              className="min-h-[40px] px-3 font-semibold underline underline-offset-2"
+              className="min-h-11 px-3 font-semibold underline underline-offset-2"
             >
               Voir
             </button>
@@ -439,7 +440,7 @@ export default function PricingManager({
             type="button"
             onClick={() => setRepricedNotice(null)}
             aria-label="Fermer"
-            className="inline-flex items-center justify-center w-10 h-10 rounded-lg text-emerald-700 hover:bg-emerald-100"
+            className="inline-flex items-center justify-center w-11 h-11 rounded-lg text-emerald-700 hover:bg-emerald-100"
           >
             <X size={15} />
           </button>
@@ -524,7 +525,7 @@ export default function PricingManager({
             {calcSummary()} n&apos;est pas enregistré : il sera remplacé par{" "}
             {quoted(`${pendingSheet.template.name} — ${pendingSheet.variant.label}`)}.
           </p>
-          <p className="text-gray-500">
+          <p className="text-gp-ink/70">
             « Enregistrer d&apos;abord » le garde dans vos devis ; revenez ensuite à la fiche.
           </p>
         </ConfirmDialog>

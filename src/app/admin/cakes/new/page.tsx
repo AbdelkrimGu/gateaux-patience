@@ -15,13 +15,8 @@ export default async function NewCakePage() {
 
   return (
     <AdminShell>
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-gray-800">Nouveau gâteau</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Remplissez les informations ci-dessous pour ajouter un gâteau</p>
-        </div>
-        <CakeForm mode="new" categories={categories} />
-      </div>
+      {/* CakeForm prints the page title next to its Save button. */}
+      <CakeForm mode="new" categories={categories} />
     </AdminShell>
   );
 }

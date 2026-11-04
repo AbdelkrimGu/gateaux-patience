@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import type { Category } from "@/lib/db-types";
 import { compressImage } from "@/lib/image-compress";
+import { cn } from "@/lib/utils";
+import { BTN_DANGER, BTN_GHOST, BTN_INK, BTN_PRIMARY, BTN_SECONDARY, CARD, FIELD, ICON_BUTTON, ICON_BUTTON_DANGER, PageHeader } from "./ui";
 
 interface Props {
   initial: Category[];
@@ -230,31 +232,24 @@ export default function CategoriesManager({ initial }: Props) {
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">Catégories</h1>
-          <p className="text-sm text-gray-500">
-            {categories.length} catégorie{categories.length !== 1 ? "s" : ""} ·
-            libellés et image modifiables
-          </p>
-        </div>
-        <button
-          onClick={startNew}
-          disabled={editing.mode !== "none"}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500 text-white text-sm font-medium hover:bg-rose-600 disabled:opacity-50 transition shadow-sm"
-        >
-          <Plus size={15} />
-          Nouvelle catégorie
-        </button>
-      </div>
+      <PageHeader
+        title="Catégories"
+        subtitle={`${categories.length} catégorie${categories.length !== 1 ? "s" : ""} · libellés et image modifiables`}
+        actions={
+          <button type="button" onClick={startNew} disabled={editing.mode !== "none"} className={BTN_PRIMARY}>
+            <Plus size={16} />
+            Nouvelle catégorie
+          </button>
+        }
+      />
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
           {error}
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className={cn(CARD, "overflow-hidden")}>
         {editing.mode === "new" && (
           <EditorRow
             id={editorId}
@@ -270,14 +265,16 @@ export default function CategoriesManager({ initial }: Props) {
 
         {categories.length === 0 && editing.mode !== "new" ? (
           <div className="text-center py-12 px-4">
-            <Tag size={28} className="mx-auto text-gray-300 mb-2" />
-            <p className="font-semibold text-gray-700">Aucune catégorie</p>
-            <p className="text-sm text-gray-400 mt-1">
+            <span className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gp-champagne/70 text-gp-raspberry ring-1 ring-gp-gold/40">
+              <Tag size={22} />
+            </span>
+            <p className="font-display text-lg font-semibold text-gp-ink">Aucune catégorie</p>
+            <p className="text-sm text-gp-ink/70 mt-1">
               Ajoutez votre première catégorie pour commencer à classer vos gâteaux.
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-gp-gold/20">
             {categories.map((cat) =>
               editing.mode === "edit" && editing.id === cat.id ? (
                 <li key={cat.id}>
@@ -293,47 +290,51 @@ export default function CategoriesManager({ initial }: Props) {
                   />
                 </li>
               ) : (
-                <li key={cat.id} className="px-4 py-3 hover:bg-gray-50/60 transition flex items-center gap-3">
+                <li key={cat.id} className="pl-3 pr-1.5 md:px-4 py-3 hover:bg-gp-cream/70 transition flex items-center gap-3">
                   {/* Image thumbnail */}
-                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-gp-champagne/50 ring-1 ring-gp-gold/25 shrink-0 flex items-center justify-center">
                     {cat.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={cat.image} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <Tag size={16} className="text-gray-300" />
+                      <Tag size={18} className="text-gp-raspberry/60" />
                     )}
                   </div>
 
-                  <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-3 gap-1 md:gap-4">
+                  <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-3 gap-0.5 md:gap-4">
                     <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wide text-gray-400">🇫🇷 FR</p>
-                      <p className="font-medium text-gray-800 truncate">{cat.labels.fr}</p>
+                      <p className="hidden md:block text-[11px] font-medium uppercase tracking-[0.12em] text-gp-ink/65">FR</p>
+                      <p className="font-semibold text-gp-ink truncate">{cat.labels.fr}</p>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wide text-gray-400">🇩🇿 AR</p>
-                      <p className="text-gray-700 truncate" dir="rtl">{cat.labels.ar}</p>
+                    <div className="min-w-0 flex items-baseline gap-2 md:block">
+                      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-gp-ink/65 shrink-0">AR</p>
+                      <p className="text-sm md:text-base text-gp-ink/85 truncate" dir="rtl">{cat.labels.ar || "—"}</p>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wide text-gray-400">🇬🇧 EN</p>
-                      <p className="text-gray-700 truncate">{cat.labels.en}</p>
+                    <div className="min-w-0 flex items-baseline gap-2 md:block">
+                      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-gp-ink/65 shrink-0">EN</p>
+                      <p className="text-sm md:text-base text-gp-ink/85 truncate">{cat.labels.en || "—"}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center shrink-0">
                     <button
+                      type="button"
                       onClick={() => startEdit(cat)}
                       disabled={editing.mode !== "none"}
-                      className="p-2 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 disabled:opacity-40 transition"
+                      className={cn(ICON_BUTTON, "hover:text-gp-raspberry hover:bg-gp-raspberry/5")}
                       title="Modifier"
+                      aria-label={`Modifier « ${cat.labels.fr} »`}
                     >
-                      <Pencil size={14} />
+                      <Pencil size={17} />
                     </button>
                     <button
+                      type="button"
                       onClick={() => openDelete(cat)}
                       disabled={editing.mode !== "none"}
-                      className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 disabled:opacity-40 transition"
+                      className={ICON_BUTTON_DANGER}
                       title="Supprimer"
+                      aria-label={`Supprimer « ${cat.labels.fr} »`}
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={17} />
                     </button>
                   </div>
                 </li>
@@ -345,46 +346,49 @@ export default function CategoriesManager({ initial }: Props) {
 
       {/* Delete confirm dialog */}
       {deleteState && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6">
+        <div className="fixed inset-0 !m-0 z-50 flex items-end sm:items-center justify-center bg-gp-ink/50 sm:p-4">
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-category-title"
+            className="bg-gp-cream rounded-t-3xl sm:rounded-3xl shadow-gp-lifted w-full sm:max-w-sm p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6"
+          >
             <div className="flex items-start gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-full bg-red-50 text-red-700 ring-1 ring-red-200 flex items-center justify-center shrink-0">
                 <AlertTriangle size={20} />
               </div>
               <div>
-                <h2 className="font-semibold text-gray-800">Supprimer la catégorie ?</h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <h2 id="delete-category-title" className="text-lg font-semibold text-gp-ink leading-tight">Supprimer la catégorie ?</h2>
+                <p className="text-sm text-gp-ink/75 mt-1">
                   « {deleteState.label} » sera supprimée définitivement (image incluse).
                 </p>
               </div>
             </div>
             {deleteState.loading ? (
-              <p className="text-sm text-gray-400 flex items-center gap-2 mb-4">
+              <p className="text-sm text-gp-ink/70 flex items-center gap-2 mb-4">
                 <Loader2 size={14} className="animate-spin" /> Vérification...
               </p>
             ) : deleteState.cakesAffected && deleteState.cakesAffected > 0 ? (
-              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-4">
                 {deleteState.cakesAffected} gâteau{deleteState.cakesAffected > 1 ? "x" : ""} utilise{deleteState.cakesAffected > 1 ? "nt" : ""} cette catégorie.
                 Ils resteront visibles mais leur catégorie ne pourra plus être modifiée vers celle-ci.
               </p>
             ) : (
-              <p className="text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2 mb-4">
+              <p className="text-sm text-gp-ink/75 bg-white border border-gp-gold/25 rounded-xl px-3 py-2 mb-4">
                 Aucun gâteau n&apos;utilise cette catégorie.
               </p>
             )}
-            <div className="flex gap-2 justify-end">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
               <button
+                type="button"
                 onClick={() => setDeleteState(null)}
                 disabled={deleteState.loading}
-                className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 transition"
+                className={BTN_SECONDARY}
               >
                 Annuler
               </button>
-              <button
-                onClick={confirmDelete}
-                disabled={deleteState.loading}
-                className="px-4 py-2 rounded-xl text-sm font-medium bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition"
-              >
+              <button type="button" onClick={confirmDelete} disabled={deleteState.loading} className={BTN_DANGER}>
+                <Trash2 size={16} />
                 Supprimer
               </button>
             </div>
@@ -495,21 +499,33 @@ function EditorRow({
     }
   }
 
+  const pickable = !data.image && !uploading;
+
   return (
-    <div className="px-4 py-3 bg-rose-50/40 border-b border-rose-100">
-      <div className="flex flex-col md:flex-row gap-3 mb-3">
+    <div className="px-4 py-4 bg-gp-champagne/30 border-b border-gp-gold/30">
+      <div className="flex flex-col md:flex-row gap-4 mb-4">
         {/* Image upload tile */}
-        <div className="md:w-28 shrink-0">
+        <div className="w-28 shrink-0">
           <div
+            role={pickable ? "button" : undefined}
+            tabIndex={pickable ? 0 : undefined}
+            aria-label={pickable ? "Choisir une image (optionnelle)" : undefined}
             onClick={() => !uploading && !data.image && fileRef.current?.click()}
+            onKeyDown={(e) => {
+              if (pickable && (e.key === "Enter" || e.key === " ")) {
+                e.preventDefault();
+                fileRef.current?.click();
+              }
+            }}
             onDragOver={(e) => { e.preventDefault(); }}
             onDrop={(e) => {
               e.preventDefault();
               if (!data.image && !uploading) handleFile(e.dataTransfer.files?.[0] || null);
             }}
-            className={`relative w-full aspect-square rounded-xl overflow-hidden bg-white border-2 border-dashed transition ${
-              data.image ? "border-transparent" : "border-gray-200 hover:border-rose-300 cursor-pointer"
-            }`}
+            className={cn(
+              "relative w-full aspect-square rounded-xl overflow-hidden bg-white border-2 border-dashed transition",
+              data.image ? "border-transparent ring-1 ring-gp-gold/30" : "border-gp-gold/50 hover:border-gp-raspberry/40 cursor-pointer"
+            )}
           >
             {data.image ? (
               <>
@@ -521,21 +537,22 @@ function EditorRow({
                     e.stopPropagation();
                     onRemoveImage();
                   }}
-                  className="absolute top-1 right-1 p-1 bg-white/90 rounded-lg text-red-500 hover:bg-white shadow-sm"
+                  className="absolute top-1 right-1 w-8 h-8 flex items-center justify-center bg-white/95 rounded-full text-red-700 hover:bg-red-50 shadow-gp-chip after:absolute after:-inset-1.5 after:content-['']"
                   title="Retirer l'image"
+                  aria-label="Retirer l'image"
                 >
-                  <X size={12} />
+                  <X size={14} />
                 </button>
               </>
             ) : uploading ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
-                <Loader2 size={18} className="animate-spin mb-1" />
-                <span className="text-[10px]">Téléchargement…</span>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-gp-ink/70">
+                <Loader2 size={20} className="animate-spin mb-1 text-gp-raspberry" />
+                <span className="text-xs">Téléchargement…</span>
               </div>
             ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
-                <ImagePlus size={18} className="mb-1" />
-                <span className="text-[10px] px-2 text-center">Image (optionnelle)</span>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-gp-ink/70">
+                <ImagePlus size={20} className="mb-1 text-gp-raspberry" />
+                <span className="text-xs px-2 text-center leading-tight">Image (optionnelle)</span>
               </div>
             )}
             <input
@@ -546,79 +563,79 @@ function EditorRow({
               onChange={(e) => handleFile(e.target.files?.[0] || null)}
             />
           </div>
-          {uploadError && <p className="text-[10px] text-red-500 mt-1">{uploadError}</p>}
+          {uploadError && <p role="alert" className="text-xs text-red-700 mt-1">{uploadError}</p>}
         </div>
 
         {/* Label inputs */}
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-[10px] uppercase tracking-wide text-gray-500">🇫🇷 FR (requis)</label>
+            <div className="flex items-end justify-between gap-2 mb-1.5">
+              <label htmlFor={`cat-${id}-fr`} className="block text-[13px] font-medium text-gp-ink/80">FR (requis)</label>
               <button
                 type="button"
                 onClick={handleTranslate}
                 disabled={translating || !data.labels.fr.trim()}
                 title="Traduire en arabe + anglais avec l'IA"
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-violet-500 text-white hover:bg-violet-600 disabled:opacity-50 transition"
+                className={cn(BTN_INK, "min-h-9 px-3 text-xs gap-1.5 after:absolute after:-inset-y-1 relative after:inset-x-0 after:content-['']")}
               >
                 {translating ? (
-                  <Loader2 size={10} className="animate-spin" />
+                  <Loader2 size={12} className="animate-spin" />
                 ) : (
-                  <Sparkles size={10} />
+                  <Sparkles size={12} />
                 )}
                 {translating ? "..." : "Traduire IA"}
               </button>
             </div>
             <input
+              id={`cat-${id}-fr`}
               type="text"
               value={data.labels.fr}
               onChange={(e) => onChangeLabel("fr", e.target.value)}
               placeholder="Ex: Mariage & Fiançailles"
               autoFocus
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm"
+              className={FIELD}
             />
             {translateError && (
-              <p className="text-[10px] text-red-500 mt-1">{translateError}</p>
+              <p role="alert" className="text-xs text-red-700 mt-1">{translateError}</p>
             )}
           </div>
           <div>
-            <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">🇩🇿 AR (optionnel)</label>
+            <label htmlFor={`cat-${id}-ar`} className="flex items-end md:min-h-9 text-[13px] font-medium text-gp-ink/80 mb-1.5">AR (optionnel)</label>
             <input
+              id={`cat-${id}-ar`}
               type="text"
               value={data.labels.ar}
               onChange={(e) => onChangeLabel("ar", e.target.value)}
               placeholder="مثل: زفاف وخطوبة"
               dir="rtl"
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm"
+              className={FIELD}
             />
           </div>
           <div>
-            <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">🇬🇧 EN (optionnel)</label>
+            <label htmlFor={`cat-${id}-en`} className="flex items-end md:min-h-9 text-[13px] font-medium text-gp-ink/80 mb-1.5">EN (optionnel)</label>
             <input
+              id={`cat-${id}-en`}
               type="text"
               value={data.labels.en}
               onChange={(e) => onChangeLabel("en", e.target.value)}
               placeholder="Ex: Wedding & Engagement"
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm"
+              className={FIELD}
             />
           </div>
         </div>
       </div>
 
       <div className="flex items-center justify-end gap-2">
-        <button
-          onClick={onCancel}
-          disabled={saving || uploading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition"
-        >
-          <X size={13} /> Annuler
+        <button type="button" onClick={onCancel} disabled={saving || uploading} className={BTN_GHOST}>
+          <X size={16} /> Annuler
         </button>
         <button
+          type="button"
           onClick={onSave}
           disabled={saving || uploading || !data.labels.fr.trim()}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-50 transition"
+          className={BTN_PRIMARY}
         >
-          {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+          {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
           Enregistrer
         </button>
       </div>

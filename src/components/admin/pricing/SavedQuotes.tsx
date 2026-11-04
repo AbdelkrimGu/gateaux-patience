@@ -45,9 +45,9 @@ export default function SavedQuotes({ quotes, activeQuoteId, onOpen, onDeleted, 
   if (quotes.length === 0) {
     return (
       <div className={cn(CARD_CLASS, "text-center py-10 px-4")}>
-        <FileText size={28} className="mx-auto text-gray-300 mb-2" />
-        <p className="font-semibold text-gray-700">Aucun devis enregistré</p>
-        <p className="text-sm text-gray-400 mt-1 max-w-sm mx-auto">
+        <FileText size={28} className="mx-auto text-gp-raspberry/70 mb-2" />
+        <p className="font-semibold text-gp-ink/85">Aucun devis enregistré</p>
+        <p className="text-sm text-gp-ink/65 mt-1 max-w-sm mx-auto">
           Faites un calcul puis touchez «&nbsp;Enregistrer le devis&nbsp;» pour le retrouver ici.
         </p>
         <button type="button" onClick={onGoToCalc} className={cn(PRIMARY_BTN, "mt-4")}>
@@ -61,7 +61,7 @@ export default function SavedQuotes({ quotes, activeQuoteId, onOpen, onDeleted, 
     <div className="space-y-4">
       {quotes.length > 3 && (
         <div className="relative">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gp-ink/65" />
           <input
             type="search"
             value={query}
@@ -77,22 +77,22 @@ export default function SavedQuotes({ quotes, activeQuoteId, onOpen, onDeleted, 
 
       <div className={CARD_CLASS}>
         {list.length === 0 ? (
-          <p className="px-4 py-8 text-center text-sm text-gray-400">Aucun devis ne correspond à {quoted(query)}.</p>
+          <p className="px-4 py-8 text-center text-sm text-gp-ink/65">Aucun devis ne correspond à {quoted(query)}.</p>
         ) : (
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-gp-gold/20">
             {list.map((quote) => (
               <li key={quote.id} className="flex items-center gap-2 pl-4 pr-2 py-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 min-w-0 truncate">{quote.name}</p>
+                    <p className="text-sm font-medium text-gp-ink min-w-0 truncate">{quote.name}</p>
                     {quote.id === activeQuoteId && (
-                      <span className="shrink-0 text-[10px] font-medium text-rose-700 bg-rose-50 rounded-full px-2 py-0.5">
+                      <span className="shrink-0 text-[10px] font-medium text-gp-raspberry bg-gp-raspberry/5 rounded-full px-2 py-0.5">
                         ouvert
                       </span>
                     )}
                   </div>
-                  <p className="text-base font-bold text-rose-600 tabular-nums">{formatDA(quote.result.finalPrice)}</p>
-                  <p className="text-xs text-gray-400 flex flex-wrap items-center gap-x-2">
+                  <p className="text-base font-bold text-gp-raspberry tabular-nums">{formatDA(quote.result.finalPrice)}</p>
+                  <p className="text-xs text-gp-ink/65 flex flex-wrap items-center gap-x-2">
                     <span>{formatDate(quote.updatedAt)}</span>
                     <span className="inline-flex items-center gap-1">
                       <Clock size={11} /> {formatHours(quote.hours)}
@@ -103,19 +103,19 @@ export default function SavedQuotes({ quotes, activeQuoteId, onOpen, onDeleted, 
                       </span>
                     ) : null}
                   </p>
-                  {quote.note && <p className="text-xs text-gray-500 italic truncate mt-0.5">{quote.note}</p>}
+                  {quote.note && <p className="text-xs text-gp-ink/70 italic truncate mt-0.5">{quote.note}</p>}
                 </div>
                 <button
                   type="button"
                   onClick={() => onOpen(quote)}
-                  className="inline-flex items-center gap-1.5 min-h-[40px] px-3 rounded-xl bg-rose-50 text-rose-600 text-sm font-medium hover:bg-rose-100 transition shrink-0"
+                  className="inline-flex items-center gap-1.5 min-h-11 px-4 rounded-full bg-gp-raspberry/5 text-gp-raspberry text-sm font-medium hover:bg-gp-raspberry/10 transition shrink-0"
                 >
                   <FolderOpen size={15} /> Ouvrir
                 </button>
                 <button
                   type="button"
                   onClick={() => setDeleting({ quote, loading: false })}
-                  className={cn(ICON_BTN, "hover:text-red-500 hover:bg-red-50")}
+                  className={cn(ICON_BTN, "hover:text-red-700 hover:bg-red-50")}
                   aria-label={`Supprimer le devis ${quote.name}`}
                 >
                   <Trash2 size={15} />

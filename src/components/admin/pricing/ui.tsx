@@ -5,6 +5,7 @@ import { AlertTriangle, Check, Loader2, RotateCw, X } from "lucide-react";
 import { formatDA } from "@/lib/pricing-units";
 import { cn } from "@/lib/utils";
 import { numberError } from "./draft";
+import { BTN_DANGER, BTN_GHOST, BTN_PRIMARY, BTN_SECONDARY, CARD } from "../ui";
 
 // Dialogs can stack (a picker over the price-sheet editor, a confirm over
 // both): only the topmost one reacts to Escape.
@@ -101,23 +102,22 @@ export function useBeforeUnload(active: boolean) {
 
 // text-base on phones: iOS zooms the page when focusing an input under 16px.
 export const INPUT_CLASS =
-  "w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-base sm:text-sm text-gray-800 placeholder:text-gray-300 disabled:bg-gray-50 disabled:text-gray-400";
+  "w-full min-h-11 px-3 py-2.5 rounded-xl border border-gp-ink/20 bg-white focus:border-gp-raspberry focus:ring-4 focus:ring-gp-raspberry/15 outline-none transition text-base sm:text-sm text-gp-ink placeholder:text-gp-ink/45 disabled:bg-gp-cream disabled:text-gp-ink/65";
 
-export const LABEL_CLASS = "block text-xs font-medium text-gray-500 mb-1";
+export const LABEL_CLASS = "block text-[13px] font-medium text-gp-ink/75 mb-1";
 
-export const CARD_CLASS = "bg-white rounded-2xl border border-gray-100 shadow-sm";
+// The pricing screens share the admin look (components/admin/ui.tsx).
+export const CARD_CLASS = CARD;
 
-export const PRIMARY_BTN =
-  "inline-flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 rounded-xl bg-rose-500 text-white text-sm font-medium hover:bg-rose-600 disabled:opacity-50 transition shadow-sm";
+export const PRIMARY_BTN = BTN_PRIMARY;
 
-export const SECONDARY_BTN =
-  "inline-flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-50 transition";
+export const SECONDARY_BTN = BTN_SECONDARY;
 
 export const ICON_BTN =
-  "inline-flex items-center justify-center w-10 h-10 rounded-lg text-gray-400 transition disabled:opacity-40 shrink-0";
+  "inline-flex items-center justify-center w-11 h-11 rounded-full text-gp-ink/65 transition disabled:opacity-40 shrink-0";
 
 export function FieldError({ children, className }: { children: ReactNode; className?: string }) {
-  return <p className={cn("text-xs text-red-600 mt-1", className)}>{children}</p>;
+  return <p className={cn("text-xs text-red-700 mt-1", className)}>{children}</p>;
 }
 
 /**
@@ -162,14 +162,14 @@ export function DecimalInput({
             INPUT_CLASS,
             "tabular-nums",
             suffix && "pr-10",
-            missing && !message && "border-amber-300",
-            message && "border-red-300 focus:border-red-400 focus:ring-red-100",
+            missing && !message && "border-amber-400 bg-amber-50/50",
+            message && "border-red-400 bg-red-50/40 focus:border-red-500 focus:ring-red-100",
             inputClassName
           )}
           {...rest}
         />
         {suffix && (
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gp-ink/65">
             {suffix}
           </span>
         )}
@@ -220,7 +220,8 @@ export function Sheet({
   return (
     <>
       <div
-        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 sm:p-4"
+        // !m-0: a parent's space-y-* margin would shift a fixed overlay down.
+        className="fixed inset-0 !m-0 z-50 flex items-end sm:items-center justify-center bg-gp-ink/50 sm:p-4"
         onClick={softClose}
       >
         <div
@@ -229,16 +230,16 @@ export function Sheet({
           aria-label={title}
           onClick={(e) => e.stopPropagation()}
           className={cn(
-            "bg-white w-full rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col",
+            "bg-white w-full rounded-t-3xl sm:rounded-3xl shadow-gp-lifted flex flex-col overflow-hidden",
             size === "full" ? "h-[94dvh] sm:h-[90vh] sm:max-w-4xl" : "max-h-[90vh] sm:max-w-lg"
           )}
         >
-          <div className="flex items-center justify-between gap-3 pl-5 pr-2 py-2 border-b border-gray-100 shrink-0">
-            <h2 className="font-semibold text-gray-800">{title}</h2>
+          <div className="flex items-center justify-between gap-3 pl-5 pr-2 py-2 border-b border-gp-gold/30 bg-gp-cream shrink-0">
+            <h2 className="text-lg font-semibold leading-tight text-gp-ink">{title}</h2>
             <button
               type="button"
               onClick={guardCloseButton ? softClose : onClose}
-              className={cn(ICON_BTN, "hover:bg-gray-100 hover:text-gray-600")}
+              className={cn(ICON_BTN, "text-gp-ink/70 hover:bg-gp-ink/5 hover:text-gp-ink")}
               aria-label="Fermer"
             >
               <X size={18} />
@@ -246,7 +247,7 @@ export function Sheet({
           </div>
           <div className="overflow-y-auto overscroll-contain flex-1 min-h-0">{children}</div>
           {footer && (
-            <div className="shrink-0 border-t border-gray-100 px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <div className="shrink-0 border-t border-gp-gold/25 px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               {footer}
             </div>
           )}
@@ -296,29 +297,25 @@ export function ConfirmDialog({
 }) {
   useTopLayer(); // so the sheet underneath ignores Escape while this is open
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">
-      <div role="alertdialog" aria-modal="true" className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6">
+    <div className="fixed inset-0 !m-0 z-[60] flex items-center justify-center bg-gp-ink/50 p-4">
+      <div role="alertdialog" aria-modal="true" aria-label={title} className="bg-gp-cream rounded-3xl shadow-gp-lifted max-w-sm w-full p-6">
         <div className="flex items-start gap-3 mb-5">
           <div
             className={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-              tone === "danger" ? "bg-red-50 text-red-500" : "bg-amber-50 text-amber-500"
+              "w-11 h-11 rounded-full ring-1 flex items-center justify-center shrink-0",
+              tone === "danger" ? "bg-red-50 text-red-700 ring-red-200" : "bg-amber-50 text-amber-700 ring-amber-200"
             )}
           >
             <AlertTriangle size={20} />
           </div>
           <div>
-            <h2 className="font-semibold text-gray-800">{title}</h2>
-            {children && <div className="text-sm text-gray-500 mt-1 space-y-2">{children}</div>}
+            <h2 className="text-lg font-semibold leading-tight text-gp-ink">{title}</h2>
+            {children && <div className="text-sm text-gp-ink/75 mt-1.5 space-y-2">{children}</div>}
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 justify-end">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={loading}
-            className="min-h-[40px] px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 transition"
-          >
+        {/* Phones: stacked, full width, the confirm button nearest the thumb. */}
+        <div className="flex flex-col-reverse sm:flex-row sm:flex-wrap gap-2 sm:justify-end">
+          <button type="button" onClick={onCancel} disabled={loading} className={BTN_GHOST}>
             {cancelLabel}
           </button>
           {extraAction && (
@@ -326,7 +323,7 @@ export function ConfirmDialog({
               type="button"
               onClick={extraAction.onClick}
               disabled={loading}
-              className="min-h-[40px] px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+              className={BTN_SECONDARY}
             >
               {extraAction.label}
             </button>
@@ -335,10 +332,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className={cn(
-              "inline-flex items-center gap-2 min-h-[40px] px-4 py-2 rounded-xl text-sm font-medium text-white disabled:opacity-50 transition",
-              tone === "danger" ? "bg-red-500 hover:bg-red-600" : "bg-rose-500 hover:bg-rose-600"
-            )}
+            className={tone === "danger" ? BTN_DANGER : BTN_PRIMARY}
           >
             {loading && <Loader2 size={14} className="animate-spin" />}
             {confirmLabel}
@@ -353,18 +347,18 @@ export function SectionHeader({ title, subtitle, total }: { title: string; subti
   return (
     <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-2">
       <div className="min-w-0">
-        <h2 className="font-semibold text-gray-800">{title}</h2>
-        <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
+        <h2 className="text-[17px] font-semibold leading-tight text-gp-ink">{title}</h2>
+        <p className="text-xs text-gp-ink/70 mt-1">{subtitle}</p>
       </div>
       {total !== undefined && (
-        <span className="text-sm font-semibold text-gray-700 tabular-nums whitespace-nowrap pt-0.5">{formatDA(total)}</span>
+        <span className="text-sm font-semibold text-gp-ink/85 tabular-nums whitespace-nowrap pt-0.5">{formatDA(total)}</span>
       )}
     </div>
   );
 }
 
 export function EmptyHint({ children }: { children: ReactNode }) {
-  return <p className="px-4 pb-4 text-sm text-gray-400">{children}</p>;
+  return <p className="px-4 pb-4 text-sm text-gp-ink/65">{children}</p>;
 }
 
 export function Banner({
@@ -381,8 +375,8 @@ export function Banner({
       className={cn(
         "flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm",
         tone === "amber" && "bg-amber-50 border-amber-200 text-amber-800",
-        tone === "rose" && "bg-rose-50 border-rose-200 text-rose-800",
-        tone === "gray" && "bg-white border-gray-100 text-gray-700 shadow-sm"
+        tone === "rose" && "bg-gp-raspberry/5 border-gp-raspberry/25 text-gp-raspberry",
+        tone === "gray" && "bg-white border-gp-gold/25 text-gp-ink/85 shadow-gp-card"
       )}
     >
       <span className="mt-0.5 shrink-0">{icon}</span>
@@ -412,21 +406,21 @@ export function ChoiceCard({
       aria-checked={selected}
       onClick={onClick}
       className={cn(
-        "flex items-start gap-3 rounded-xl border-2 p-3 text-left transition",
-        selected ? "border-rose-400 bg-rose-50" : "border-gray-100 hover:border-gray-200"
+        "flex items-start gap-3 rounded-2xl border-2 p-3 text-left transition",
+        selected ? "border-gp-raspberry bg-gp-raspberry/5" : "border-gp-gold/30 bg-white hover:border-gp-ink/25"
       )}
     >
       <span
         className={cn(
-          "w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
-          selected ? "bg-rose-500 text-white" : "bg-gray-100 text-gray-500"
+          "w-9 h-9 rounded-full flex items-center justify-center shrink-0",
+          selected ? "bg-gp-raspberry text-gp-cream" : "bg-gp-champagne/70 text-gp-ink/75"
         )}
       >
         {icon}
       </span>
       <span className="min-w-0">
-        <span className="block text-sm font-semibold text-gray-800">{title}</span>
-        <span className="block text-xs text-gray-500 mt-0.5">{text}</span>
+        <span className="block text-sm font-semibold text-gp-ink">{title}</span>
+        <span className="block text-xs text-gp-ink/70 mt-0.5">{text}</span>
       </span>
     </button>
   );
@@ -438,7 +432,7 @@ export function CheckMark({ checked }: { checked: boolean }) {
     <span
       className={cn(
         "w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition",
-        checked ? "bg-rose-500 border-rose-500 text-white" : "border-gray-300 bg-white"
+        checked ? "bg-gp-raspberry border-gp-raspberry text-white" : "border-gp-ink/50 bg-white"
       )}
     >
       {checked && <Check size={13} strokeWidth={3} />}
@@ -470,7 +464,7 @@ export function ApiErrorBox({ error }: { error: { text: string; conflict: boolea
           <a
             href="/admin/login"
             onClick={leaveOnPurpose}
-            className="mt-2 inline-flex items-center gap-1.5 min-h-[40px] px-3 rounded-lg bg-white border border-red-200 text-red-700 text-sm font-medium hover:bg-red-50 transition"
+            className="mt-2 inline-flex items-center gap-1.5 min-h-11 px-4 rounded-full bg-white border border-red-200 text-red-700 text-sm font-medium hover:bg-red-50 transition"
           >
             Se reconnecter
           </a>
@@ -483,7 +477,7 @@ export function ApiErrorBox({ error }: { error: { text: string; conflict: boolea
             leaveOnPurpose();
             window.location.reload();
           }}
-          className="mt-2 inline-flex items-center gap-1.5 min-h-[40px] px-3 rounded-lg bg-white border border-red-200 text-red-700 text-sm font-medium hover:bg-red-50 transition"
+          className="mt-2 inline-flex items-center gap-1.5 min-h-11 px-4 rounded-full bg-white border border-red-200 text-red-700 text-sm font-medium hover:bg-red-50 transition"
         >
           <RotateCw size={14} /> Recharger
         </button>

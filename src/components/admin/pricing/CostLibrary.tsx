@@ -256,7 +256,7 @@ export default function CostLibrary({ items, templates, onSaved, onDeleted }: Pr
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gp-ink/65" />
           <input
             type="search"
             value={query}
@@ -275,9 +275,9 @@ export default function CostLibrary({ items, templates, onSaved, onDeleted }: Pr
 
       {items.length === 0 && (
         <div className={cn(CARD_CLASS, "text-center py-10 px-4")}>
-          <Wallet size={28} className="mx-auto text-gray-300 mb-2" />
-          <p className="font-semibold text-gray-700">Votre liste de coûts est vide</p>
-          <p className="text-sm text-gray-400 mt-1 max-w-sm mx-auto">
+          <Wallet size={28} className="mx-auto text-gp-raspberry/70 mb-2" />
+          <p className="font-semibold text-gp-ink/85">Votre liste de coûts est vide</p>
+          <p className="text-sm text-gp-ink/65 mt-1 max-w-sm mx-auto">
             Ajoutez ce que vous achetez pour vos gâteaux, avec son prix. Le calcul s&apos;en servira
             automatiquement.
           </p>
@@ -292,26 +292,26 @@ export default function CostLibrary({ items, templates, onSaved, onDeleted }: Pr
           <section key={section.kind} className={CARD_CLASS}>
             <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-2">
               <div className="min-w-0">
-                <h2 className="font-semibold text-gray-800">{section.title}</h2>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <h2 className="font-semibold text-gp-ink">{section.title}</h2>
+                <p className="text-xs text-gp-ink/70 mt-0.5">
                   {all.length} élément{all.length !== 1 ? "s" : ""}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => startNew(section.kind)}
-                className="inline-flex items-center gap-1 min-h-[40px] px-3 rounded-lg text-sm font-medium text-rose-600 hover:bg-rose-50 transition shrink-0"
+                className="inline-flex items-center gap-1 min-h-11 px-4 rounded-full text-sm font-medium text-gp-raspberry hover:bg-gp-raspberry/5 transition shrink-0"
               >
                 <Plus size={15} /> Ajouter
               </button>
             </div>
             {list.length === 0 ? (
-              <p className="px-4 pb-4 text-sm text-gray-400">{section.empty}</p>
+              <p className="px-4 pb-4 text-sm text-gp-ink/65">{section.empty}</p>
             ) : (
               groupItems(list).map(([group, groupList]) => (
                 <div key={group}>
-                  <p className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">{group}</p>
-                  <ul className="divide-y divide-gray-100 border-t border-gray-50">
+                  <p className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-gp-ink/65">{group}</p>
+                  <ul className="divide-y divide-gp-gold/20 border-t border-gp-gold/15">
                     {groupList.map((item) => (
                       <CostRow
                         key={item.id}
@@ -333,7 +333,7 @@ export default function CostLibrary({ items, templates, onSaved, onDeleted }: Pr
       })}
 
       {q && visible.length === 0 && items.length > 0 && (
-        <p className="text-center text-sm text-gray-400 py-6">Aucun coût ne correspond à {quoted(query)}.</p>
+        <p className="text-center text-sm text-gp-ink/65 py-6">Aucun coût ne correspond à {quoted(query)}.</p>
       )}
 
       {form && (
@@ -359,7 +359,7 @@ export default function CostLibrary({ items, templates, onSaved, onDeleted }: Pr
         >
           <p>{quoted(deleting.item.name)} sera retiré de votre liste, avec son historique de prix.</p>
           <DeleteImpact item={deleting.item} templates={templates} />
-          <p className="text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+          <p className="text-gp-ink/70 bg-gp-cream rounded-lg px-3 py-2">
             Les devis déjà enregistrés ne changent pas : ils gardent les prix du moment.
           </p>
         </ConfirmDialog>
@@ -416,17 +416,17 @@ function CostRow({
     >
       <div className="flex items-center gap-1 pl-4 pr-2 py-2.5">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-800">{item.name}</p>
-          <p className="text-sm font-semibold text-rose-600 tabular-nums">{priceLabel(item)}</p>
-          <p className="text-xs text-gray-400">
+          <p className="text-sm font-medium text-gp-ink">{item.name}</p>
+          <p className="text-sm font-semibold text-gp-raspberry tabular-nums">{priceLabel(item)}</p>
+          <p className="text-xs text-gp-ink/65">
             {item.group ? `${item.group} · ` : ""}modifié le {formatDate(item.updatedAt)}
           </p>
-          {item.note && <p className="text-xs text-gray-500 italic mt-0.5">{item.note}</p>}
+          {item.note && <p className="text-xs text-gp-ink/70 italic mt-0.5">{item.note}</p>}
         </div>
-        <button type="button" onClick={onEdit} className={cn(ICON_BTN, "hover:text-rose-500 hover:bg-rose-50")} aria-label={`Modifier ${item.name}`}>
+        <button type="button" onClick={onEdit} className={cn(ICON_BTN, "hover:text-gp-raspberry hover:bg-gp-raspberry/5")} aria-label={`Modifier ${item.name}`}>
           <Pencil size={15} />
         </button>
-        <button type="button" onClick={onDelete} className={cn(ICON_BTN, "hover:text-red-500 hover:bg-red-50")} aria-label={`Supprimer ${item.name}`}>
+        <button type="button" onClick={onDelete} className={cn(ICON_BTN, "hover:text-red-700 hover:bg-red-50")} aria-label={`Supprimer ${item.name}`}>
           <Trash2 size={15} />
         </button>
       </div>
@@ -441,20 +441,20 @@ function CostRow({
             type="button"
             onClick={onToggleHistory}
             aria-expanded={historyOpen}
-            className="inline-flex items-center gap-1.5 min-h-[40px] pr-2 text-xs font-medium text-gray-500 hover:text-rose-600"
+            className="inline-flex items-center gap-1.5 min-h-11 pr-2 text-xs font-medium text-gp-ink/70 hover:text-gp-raspberry"
           >
             <History size={13} />
             Historique des prix ({history.length})
             {historyOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
           </button>
           {historyOpen && (
-            <ul className="mt-1 mb-1 rounded-lg bg-gray-50 px-3 py-2 space-y-1 text-xs">
-              <li className="flex justify-between gap-3 text-gray-700">
+            <ul className="mt-1 mb-1 rounded-lg bg-gp-cream px-3 py-2 space-y-1 text-xs">
+              <li className="flex justify-between gap-3 text-gp-ink/85">
                 <span>Prix actuel</span>
                 <span className="font-semibold tabular-nums">{priceLabel(item)}</span>
               </li>
               {history.map((h, i) => (
-                <li key={`${h.at}-${i}`} className="flex justify-between gap-3 text-gray-500">
+                <li key={`${h.at}-${i}`} className="flex justify-between gap-3 text-gp-ink/70">
                   <span>jusqu&apos;au {formatDateTime(h.at)}</span>
                   <span className="tabular-nums text-right">{priceLabel(h)}</span>
                 </li>
@@ -572,14 +572,14 @@ function CostForm({
       </div>
     </fieldset>
   ) : (
-    <div className="flex items-center gap-2 rounded-xl bg-gray-50 pl-3 pr-1 text-sm text-gray-700">
-      {d.kind === "fixed" ? <Package size={15} className="text-gray-400" /> : <Scale size={15} className="text-gray-400" />}
+    <div className="flex items-center gap-2 rounded-xl bg-gp-cream pl-3 pr-1 text-sm text-gp-ink/85">
+      {d.kind === "fixed" ? <Package size={15} className="text-gp-ink/65" /> : <Scale size={15} className="text-gp-ink/65" />}
       <span>{d.kind === "fixed" ? "Coût fixe" : "Coût variable"}</span>
-      <span className="text-gray-300">·</span>
+      <span className="text-gp-ink/45">·</span>
       <button
         type="button"
         onClick={() => setKindOpen(true)}
-        className="min-h-[40px] px-2 font-medium text-rose-600 underline underline-offset-2"
+        className="min-h-11 px-2 font-medium text-gp-raspberry underline underline-offset-2"
       >
         changer
       </button>
@@ -649,15 +649,15 @@ function CostForm({
             />
           </div>
         )}
-        <p className="text-xs text-gray-400">Ex : 1450 DA pour 1 kg d&apos;amandes, ou 1200 DA pour 30 pièces.</p>
+        <p className="text-xs text-gp-ink/65">Ex : 1450 DA pour 1 kg d&apos;amandes, ou 1200 DA pour 30 pièces.</p>
       </div>
     );
 
   const previewBlock = preview && (
-    <div className="rounded-xl bg-rose-50 border border-rose-100 px-4 py-3" aria-live="polite">
-      <p className="text-xs font-medium text-rose-700">Soit</p>
-      <p className="text-lg font-bold text-rose-600 tabular-nums leading-tight">{preview.main}</p>
-      {preview.sub && <p className="text-xs text-gray-500 mt-0.5">({preview.sub})</p>}
+    <div className="rounded-xl bg-gp-raspberry/5 border border-gp-raspberry/15 px-4 py-3" aria-live="polite">
+      <p className="text-xs font-medium text-gp-raspberry">Soit</p>
+      <p className="text-lg font-bold text-gp-raspberry tabular-nums leading-tight">{preview.main}</p>
+      {preview.sub && <p className="text-xs text-gp-ink/70 mt-0.5">({preview.sub})</p>}
     </div>
   );
 
@@ -747,7 +747,7 @@ function CostForm({
               {nameBlock}
               {groupBlock}
               {noteBlock}
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gp-ink/70">
                 Si vous changez le prix, l&apos;ancien prix est gardé dans l&apos;historique.
               </p>
             </>
@@ -766,7 +766,7 @@ function CostForm({
             role={impact.tone === "amber" ? "alert" : undefined}
             className={cn(
               "text-sm rounded-xl px-4 py-3",
-              impact.tone === "amber" ? "bg-amber-50 text-amber-800" : "bg-gray-50 text-gray-600"
+              impact.tone === "amber" ? "bg-amber-50 text-amber-800" : "bg-gp-cream text-gp-ink/75"
             )}
           >
             {impact.text}

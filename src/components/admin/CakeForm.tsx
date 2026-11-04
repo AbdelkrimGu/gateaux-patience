@@ -3,7 +3,7 @@
 import { useState, useRef, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Sparkles, Upload, X, Loader2, Save, ChevronDown,
+  Sparkles, Upload, X, Loader2, Save, ChevronDown, Star, Users, CakeSlice, Lightbulb,
   Globe, GripVertical, Check, Eye, ChevronLeft, ChevronRight
 } from "lucide-react";
 import {
@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import type { AdminCake } from "@/lib/admin-data";
 import type { Category } from "@/lib/db-types";
 import { compressImage } from "@/lib/image-compress";
+import { BTN_INK, BTN_PRIMARY, CARD, FIELD, FIELD_LABEL, PageHeader, Switch } from "./ui";
 
 function SortableImage({
   id,
@@ -66,7 +67,10 @@ function SortableImage({
       onClick={() => {
         if (!isDragging) onPreview();
       }}
-      className="relative group aspect-square rounded-xl overflow-hidden bg-gray-100 touch-none"
+      className={cn(
+        "relative group aspect-square rounded-xl overflow-hidden bg-gp-champagne/50 touch-none",
+        index === 0 ? "ring-2 ring-gp-raspberry ring-offset-2 ring-offset-white" : "ring-1 ring-gp-gold/30"
+      )}
       {...attributes}
       {...listeners}
     >
@@ -74,26 +78,32 @@ function SortableImage({
       <img src={url} alt="" className="w-full h-full object-cover pointer-events-none" draggable={false} />
 
       {/* Hover hint — tells the user the tile is clickable. */}
-      <div className="absolute inset-0 bg-charcoal/0 group-hover:bg-charcoal/35 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
-        <div className="bg-white/95 rounded-full px-3 py-1.5 flex items-center gap-1.5 text-[11px] font-medium text-charcoal shadow">
+      <div className="absolute inset-0 bg-gp-ink/0 group-hover:bg-gp-ink/35 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
+        <div className="bg-white/95 rounded-full px-3 py-1.5 flex items-center gap-1.5 text-[11px] font-medium text-gp-ink shadow">
           <Eye size={12} />
           Aperçu
         </div>
       </div>
 
       {/* Position badge (always visible) — 01, 02, 03… */}
-      <div className="absolute top-1 left-1 bg-white/95 text-gray-700 text-[9px] px-1.5 py-0.5 rounded font-semibold tracking-wider shadow-sm pointer-events-none">
+      <div
+        className={cn(
+          "absolute top-1 left-1 text-[10px] px-1.5 py-0.5 rounded-full font-semibold tracking-wider shadow-gp-chip pointer-events-none tabular-nums",
+          index === 0 ? "bg-gp-raspberry text-gp-cream" : "bg-white/95 text-gp-ink/85"
+        )}
+      >
         {index === 0 ? "PRINCIPALE" : String(index + 1).padStart(2, "0")}
       </div>
 
       {/* Drag handle — always visible (no hover required) */}
-      <div className="absolute top-1 right-1 bg-white/90 text-gray-500 p-1 rounded shadow-sm pointer-events-none">
+      <div className="absolute top-1 right-1 bg-white/90 text-gp-ink/70 p-1 rounded-full shadow-gp-chip pointer-events-none">
         <GripVertical size={12} />
       </div>
 
       {/* Remove button — always visible bottom-right.
           stopPropagation on pointerdown + click stops the drag AND the preview
-          modal from opening when the user taps the X. */}
+          modal from opening when the user taps the X. The ::after widens the
+          tap area to 44px without covering the small photo. */}
       <button
         type="button"
         onPointerDown={(e) => {
@@ -103,11 +113,11 @@ function SortableImage({
           e.stopPropagation();
           onRemove();
         }}
-        className="absolute bottom-1 right-1 p-1.5 bg-white/95 rounded-lg text-red-500 hover:bg-red-50 shadow-sm"
+        className="absolute bottom-1 right-1 w-8 h-8 flex items-center justify-center bg-white/95 rounded-full text-red-700 hover:bg-red-50 shadow-gp-chip after:absolute after:-inset-1.5 after:content-['']"
         title="Supprimer"
         aria-label="Supprimer la photo"
       >
-        <X size={12} />
+        <X size={14} />
       </button>
     </div>
   );
@@ -143,12 +153,16 @@ function ImagePreviewModal({
     };
   }, [index, images.length, onClose, onNavigate]);
 
+  const navBtn =
+    "absolute top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-gp-cream/15 hover:bg-gp-cream/25 text-gp-cream flex items-center justify-center";
+
   return (
     <div
-      className="fixed inset-0 z-[200] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 !m-0 z-[200] bg-gp-ink/90 flex items-center justify-center p-4 animate-fade-in"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
+      aria-label="Aperçu de la photo"
     >
       <button
         type="button"
@@ -156,13 +170,13 @@ function ImagePreviewModal({
           e.stopPropagation();
           onClose();
         }}
-        className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-sm"
+        className="absolute top-4 right-4 z-10 w-12 h-12 rounded-full bg-gp-cream/15 hover:bg-gp-cream/25 text-gp-cream flex items-center justify-center"
         aria-label="Fermer"
       >
         <X size={20} />
       </button>
 
-      <div className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-full bg-white/10 text-white text-sm backdrop-blur-sm pointer-events-none">
+      <div className="absolute top-5 left-4 z-10 px-3 py-1.5 rounded-full bg-gp-cream/15 text-gp-cream text-sm tabular-nums pointer-events-none">
         {index + 1} / {images.length}
       </div>
 
@@ -174,7 +188,7 @@ function ImagePreviewModal({
               e.stopPropagation();
               onNavigate((index - 1 + images.length) % images.length);
             }}
-            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-10 w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-sm"
+            className={cn(navBtn, "left-3 md:left-6")}
             aria-label="Précédent"
           >
             <ChevronLeft size={22} />
@@ -185,7 +199,7 @@ function ImagePreviewModal({
               e.stopPropagation();
               onNavigate((index + 1) % images.length);
             }}
-            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-10 w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-sm"
+            className={cn(navBtn, "right-3 md:right-6")}
             aria-label="Suivant"
           >
             <ChevronRight size={22} />
@@ -201,7 +215,7 @@ function ImagePreviewModal({
         <img
           src={images[index]}
           alt=""
-          className="max-w-full max-h-[88vh] object-contain rounded-lg shadow-2xl"
+          className="max-w-full max-h-[88vh] object-contain rounded-xl border-[6px] border-gp-cream shadow-gp-lifted"
         />
       </div>
     </div>
@@ -209,10 +223,10 @@ function ImagePreviewModal({
 }
 
 type Lang = "fr" | "ar" | "en";
-const LANGS: { code: Lang; label: string; flag: string; dir: string }[] = [
-  { code: "fr", label: "Français", flag: "🇫🇷", dir: "ltr" },
-  { code: "ar", label: "العربية", flag: "🇩🇿", dir: "rtl" },
-  { code: "en", label: "English", flag: "🇬🇧", dir: "ltr" },
+const LANGS: { code: Lang; label: string; dir: string }[] = [
+  { code: "fr", label: "Français", dir: "ltr" },
+  { code: "ar", label: "العربية", dir: "rtl" },
+  { code: "en", label: "English", dir: "ltr" },
 ];
 
 interface Props {
@@ -540,47 +554,36 @@ export default function CakeForm({ cake, mode, categories }: Props) {
   const uploading = uploadProgress !== null;
   const noCategories = categoryOptions.length === 0;
 
-  return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">
-            {mode === "new" ? "Nouveau gâteau" : "Modifier le gâteau"}
-          </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {mode === "new" ? "Ajoutez une nouvelle création" : "Mettez à jour les informations"}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <span className="text-sm text-gray-600 font-medium">
-              {published ? "Publié" : "Brouillon"}
-            </span>
-            <div
-              onClick={() => setPublished(!published)}
-              className={cn(
-                "relative w-11 h-6 rounded-full transition-colors cursor-pointer",
-                published ? "bg-green-400" : "bg-gray-300"
-              )}
-            >
-              <div className={cn(
-                "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform",
-                published ? "translate-x-5" : "translate-x-0"
-              )} />
-            </div>
-          </label>
+  const saveDisabled = saving || !translations.fr.title || uploading || noCategories;
+  const saveLabel = saving ? "Enregistrement..." : saved ? "Enregistré !" : "Enregistrer";
+  const saveIcon = saving ? <Loader2 size={16} className="animate-spin" /> : saved ? <Check size={16} /> : <Save size={16} />;
+  const sectionTitle = "text-[15px] font-semibold text-gp-ink mb-3";
 
-          <button
-            onClick={handleSave}
-            disabled={saving || !translations.fr.title || uploading || noCategories}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-500 text-white text-sm font-semibold hover:bg-rose-600 disabled:opacity-50 transition shadow-sm"
-          >
-            {saving ? <Loader2 size={15} className="animate-spin" /> : saved ? <Check size={15} /> : <Save size={15} />}
-            {saving ? "Enregistrement..." : saved ? "Enregistré !" : "Enregistrer"}
-          </button>
-        </div>
-      </div>
+  return (
+    <div className="max-w-4xl mx-auto space-y-5">
+      <PageHeader
+        title={mode === "new" ? "Nouveau gâteau" : "Modifier le gâteau"}
+        subtitle={
+          mode === "new" ? (
+            "Remplissez les informations ci-dessous pour ajouter un gâteau"
+          ) : (
+            <span className="block truncate max-w-md">{cake?.translations.fr.title || "Sans titre"}</span>
+          )
+        }
+        actions={
+          <>
+            <div className="flex items-center gap-1 rounded-full bg-white border border-gp-gold/30 pl-4 pr-1">
+              <span className="text-sm font-medium text-gp-ink/85">{published ? "Publié" : "Brouillon"}</span>
+              <Switch checked={published} onChange={setPublished} label="Publié sur le site" />
+            </div>
+            {/* Computer: save next to the title. Phones get the sticky bar at the bottom. */}
+            <button onClick={handleSave} disabled={saveDisabled} className={cn(BTN_PRIMARY, "hidden md:inline-flex")}>
+              {saveIcon}
+              {saveLabel}
+            </button>
+          </>
+        }
+      />
 
       {noCategories && (
         <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-xl px-4 py-3">
@@ -589,43 +592,46 @@ export default function CakeForm({ cake, mode, categories }: Props) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5">
         {/* Left col — images + category */}
         <div className="lg:col-span-1 space-y-4">
           {/* Images */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <h3 className="font-semibold text-gray-700 mb-3 text-sm">Photos</h3>
+          <div className={cn(CARD, "p-4")}>
+            <h3 className={sectionTitle}>Photos</h3>
 
-            <div
+            <button
+              type="button"
               onClick={() => fileRef.current?.click()}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
-              className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-rose-300 hover:bg-rose-50/30 transition-colors mb-3"
+              className="w-full border-2 border-dashed border-gp-gold/50 bg-gp-cream/60 rounded-xl px-4 py-5 text-center cursor-pointer hover:border-gp-raspberry/40 hover:bg-gp-raspberry/5 transition-colors mb-3"
             >
               {uploading ? (
-                <Loader2 size={20} className="animate-spin text-rose-400 mx-auto mb-1" />
+                <Loader2 size={22} className="animate-spin text-gp-raspberry mx-auto mb-1.5" />
               ) : (
-                <Upload size={20} className="text-gray-400 mx-auto mb-1" />
+                <Upload size={22} className="text-gp-raspberry mx-auto mb-1.5" />
               )}
-              <p className="text-xs text-gray-500">
+              <span className="block text-sm font-medium text-gp-ink/80">
                 {uploading
                   ? uploadProgress!.phase === "preparing"
                     ? `Préparation des images...`
                     : `Téléchargement ${uploadProgress!.done}/${uploadProgress!.total}...`
                   : "Cliquez ou glissez vos photos"}
-              </p>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={(e) => handleFiles(e.target.files)}
-              />
-            </div>
+              </span>
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => handleFiles(e.target.files)}
+            />
 
             {uploadError && (
-              <p className="text-xs text-red-500 mb-2">{uploadError}</p>
+              <p role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3">
+                {uploadError}
+              </p>
             )}
 
             {images.length > 0 && (
@@ -635,7 +641,8 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                 onDragEnd={handleDragEnd}
               >
                 <SortableContext items={images} strategy={rectSortingStrategy}>
-                  <div className="grid grid-cols-3 gap-2">
+                  {/* 2 per row in the narrow computer column, so « PRINCIPALE » fits. */}
+                  <div className="grid grid-cols-3 lg:grid-cols-2 gap-2.5">
                     {images.map((img, i) => (
                       <SortableImage
                         key={img}
@@ -651,21 +658,22 @@ export default function CakeForm({ cake, mode, categories }: Props) {
               </DndContext>
             )}
             {images.length > 0 && (
-              <p className="text-[10px] text-gray-400 mt-2">
+              <p className="text-xs text-gp-ink/65 mt-2.5">
                 Glissez les photos pour les réorganiser. La 1ère sera la photo principale.
               </p>
             )}
           </div>
 
           {/* Category */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <h3 className="font-semibold text-gray-700 mb-3 text-sm">Catégorie</h3>
+          <div className={cn(CARD, "p-4")}>
+            <label htmlFor="cake-category" className={cn(sectionTitle, "block")}>Catégorie</label>
             <div className="relative">
               <select
+                id="cake-category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 disabled={noCategories}
-                className="w-full px-3 py-2.5 pr-8 rounded-xl border border-gray-200 text-sm focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none appearance-none bg-white disabled:bg-gray-50 disabled:text-gray-400"
+                className={cn(FIELD, "pr-9 appearance-none")}
               >
                 {categoryOptions.map((c) => (
                   <option key={c.id} value={c.slug}>
@@ -673,16 +681,16 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                   </option>
                 ))}
               </select>
-              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gp-ink/60 pointer-events-none" />
             </div>
-            <p className="text-[10px] text-gray-400 mt-2">
-              Gérer la liste dans <a href="/admin/categories" className="text-rose-500 hover:underline">Catégories</a>.
+            <p className="text-xs text-gp-ink/65 mt-2">
+              Gérer la liste dans <a href="/admin/categories" className="font-medium text-gp-raspberry underline">Catégories</a>.
             </p>
           </div>
 
           {/* Dimensions */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <h3 className="font-semibold text-gray-700 mb-3 text-sm">Dimensions & Portions</h3>
+          <div className={cn(CARD, "p-4")}>
+            <h3 className={sectionTitle}>Dimensions & Portions</h3>
             <div className="grid grid-cols-3 gap-2 mb-3">
               {[
                 { key: "length", label: "Long. (cm)" },
@@ -690,13 +698,15 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                 { key: "height", label: "Haut. (cm)" },
               ].map(({ key, label }) => (
                 <div key={key}>
-                  <label className="block text-[10px] text-gray-400 mb-1">{label}</label>
+                  <label htmlFor={`cake-${key}`} className="block text-xs font-medium text-gp-ink/70 mb-1">{label}</label>
                   <input
+                    id={`cake-${key}`}
                     type="number"
                     min="0"
+                    inputMode="decimal"
                     value={dims[key as keyof typeof dims]}
                     onChange={(e) => setDims((d) => ({ ...d, [key]: e.target.value }))}
-                    className="w-full px-2 py-2 rounded-lg border border-gray-200 text-sm focus:border-rose-400 focus:ring-1 focus:ring-rose-100 outline-none text-center"
+                    className={cn(FIELD, "px-2 text-center tabular-nums")}
                     placeholder="—"
                   />
                 </div>
@@ -708,13 +718,15 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                 { key: "persons", label: "Personnes" },
               ].map(({ key, label }) => (
                 <div key={key}>
-                  <label className="block text-[10px] text-gray-400 mb-1">{label}</label>
+                  <label htmlFor={`cake-${key}`} className="block text-xs font-medium text-gp-ink/70 mb-1">{label}</label>
                   <input
+                    id={`cake-${key}`}
                     type="number"
                     min="0"
+                    inputMode="numeric"
                     value={dims[key as keyof typeof dims]}
                     onChange={(e) => setDims((d) => ({ ...d, [key]: e.target.value }))}
-                    className="w-full px-2 py-2 rounded-lg border border-gray-200 text-sm focus:border-rose-400 focus:ring-1 focus:ring-rose-100 outline-none text-center"
+                    className={cn(FIELD, "px-2 text-center tabular-nums")}
                     placeholder="—"
                   />
                 </div>
@@ -722,89 +734,69 @@ export default function CakeForm({ cake, mode, categories }: Props) {
             </div>
           </div>
 
-          {/* Featured */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <label className="flex items-center justify-between cursor-pointer">
+          {/* Featured + hero showcase */}
+          <div className={cn(CARD, "divide-y divide-gp-gold/20")}>
+            <div className="flex items-center justify-between gap-3 pl-4 pr-2 py-2.5">
               <div>
-                <p className="font-semibold text-gray-700 text-sm">Gâteau à la une</p>
-                <p className="text-xs text-gray-400">Affiché en premier sur la page d&apos;accueil</p>
+                <p className="font-semibold text-gp-ink text-sm flex items-center gap-1.5">
+                  <Star size={13} className="text-gp-raspberry" />
+                  Gâteau à la une
+                </p>
+                <p className="text-xs text-gp-ink/65 mt-0.5">Affiché en premier sur la page d&apos;accueil</p>
               </div>
-              <div
-                onClick={() => setFeatured(!featured)}
-                className={cn(
-                  "relative w-11 h-6 rounded-full transition-colors cursor-pointer",
-                  featured ? "bg-rose-400" : "bg-gray-300"
-                )}
-              >
-                <div className={cn(
-                  "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform",
-                  featured ? "translate-x-5" : "translate-x-0"
-                )} />
-              </div>
-            </label>
-          </div>
-
-          {/* Hero showcase */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <label className="flex items-center justify-between cursor-pointer">
+              <Switch checked={featured} onChange={setFeatured} label="Gâteau à la une" onClass="bg-gp-raspberry" />
+            </div>
+            <div className="flex items-center justify-between gap-3 pl-4 pr-2 py-2.5">
               <div>
-                <p className="font-semibold text-gray-700 text-sm flex items-center gap-1.5">
-                  <Sparkles size={12} className="text-amber-500" />
+                <p className="font-semibold text-gp-ink text-sm flex items-center gap-1.5">
+                  <Sparkles size={13} className="text-amber-700" />
                   Vitrine d&apos;accueil
                 </p>
-                <p className="text-xs text-gray-400">Apparait dans le carrousel cinéma en haut du site</p>
+                <p className="text-xs text-gp-ink/65 mt-0.5">Apparait dans le carrousel cinéma en haut du site</p>
               </div>
-              <div
-                onClick={() => setHero(!hero)}
-                className={cn(
-                  "relative w-11 h-6 rounded-full transition-colors cursor-pointer",
-                  hero ? "bg-amber-400" : "bg-gray-300"
-                )}
-              >
-                <div className={cn(
-                  "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform",
-                  hero ? "translate-x-5" : "translate-x-0"
-                )} />
-              </div>
-            </label>
+              <Switch checked={hero} onChange={setHero} label="Vitrine d'accueil" onClass="bg-amber-600" />
+            </div>
           </div>
         </div>
 
         {/* Right col — titles + descriptions */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <div className="flex items-center gap-2 mb-4">
-              <Globe size={15} className="text-gray-400" />
-              <span className="text-sm font-semibold text-gray-700">Titres & Descriptions</span>
+          <div className={cn(CARD, "p-4 md:p-5")}>
+            <div className="flex items-center gap-2 mb-3">
+              <Globe size={16} className="text-gp-raspberry" />
+              <h3 className="text-[15px] font-semibold text-gp-ink">Titres & Descriptions</h3>
             </div>
 
-            <div className="flex gap-1 mb-4 bg-gray-100 p-1 rounded-xl">
+            <div role="tablist" aria-label="Langue" className="flex gap-1 mb-4 bg-gp-ink/5 p-1 rounded-full">
               {LANGS.map((l) => (
                 <button
                   key={l.code}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeLang === l.code}
                   onClick={() => setActiveLang(l.code)}
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-all",
+                    "flex-1 flex items-center justify-center gap-1.5 min-h-11 rounded-full text-sm font-medium transition",
                     activeLang === l.code
-                      ? "bg-white text-gray-800 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "bg-white text-gp-ink font-semibold shadow-gp-card"
+                      : "text-gp-ink/70 hover:text-gp-ink"
                   )}
                 >
-                  <span>{l.flag}</span>
-                  <span className="hidden sm:inline">{l.label}</span>
+                  <span lang={l.code}>{l.label}</span>
                   {translations[l.code].title && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                    <span aria-label="rempli" className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
                   )}
                 </button>
               ))}
             </div>
 
-            <div className="space-y-3" dir={LANGS.find((l) => l.code === activeLang)?.dir}>
+            <div className="space-y-4" dir={LANGS.find((l) => l.code === activeLang)?.dir}>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">
+                <label htmlFor="cake-title" className={FIELD_LABEL}>
                   Titre {activeLang === "fr" ? "(requis)" : "(rempli par l'IA ou copié du FR)"}
                 </label>
                 <input
+                  id="cake-title"
                   type="text"
                   value={cur.title}
                   onChange={(e) =>
@@ -814,29 +806,31 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                     }))
                   }
                   placeholder={activeLang === "fr" ? "Ex: Gâteau Princesse" : activeLang === "ar" ? "عنوان الكعكة" : "Cake title"}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm transition"
+                  className={FIELD}
                 />
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-gray-500">Description</label>
+                <div className="flex items-end justify-between gap-2 mb-1.5">
+                  <label htmlFor="cake-description" className={cn(FIELD_LABEL, "mb-0")}>Description</label>
                   {activeLang === "fr" && (
                     <button
+                      type="button"
                       onClick={handleGenerate}
                       disabled={generating || !translations.fr.title}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-500 text-white text-xs font-medium hover:bg-violet-600 disabled:opacity-50 transition"
+                      className={cn(BTN_INK, "px-4 text-[13px]")}
                     >
                       {generating ? (
-                        <Loader2 size={12} className="animate-spin" />
+                        <Loader2 size={14} className="animate-spin" />
                       ) : (
-                        <Sparkles size={12} />
+                        <Sparkles size={14} />
                       )}
                       {generating ? "Génération IA..." : "Traduire & générer (IA)"}
                     </button>
                   )}
                 </div>
                 <textarea
+                  id="cake-description"
                   rows={5}
                   value={cur.description}
                   onChange={(e) =>
@@ -852,15 +846,18 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                       ? "وصف الكعكة..."
                       : "Cake description..."
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm transition resize-none"
+                  className={cn(FIELD, "resize-none leading-relaxed")}
                 />
                 {aiError && (
-                  <p className="text-xs text-red-500 mt-1">{aiError}</p>
+                  <p role="alert" className="text-sm text-red-700 mt-1.5">{aiError}</p>
                 )}
                 {activeLang === "fr" && !aiError && (
-                  <p className="text-[10px] text-gray-400 mt-1">
-                    💡 L&apos;IA traduit le titre FR vers AR/EN et génère les 3 descriptions en une fois.
-                    Ajoutez des photos avant de générer pour un meilleur résultat.
+                  <p className="text-xs text-gp-ink/65 mt-1.5 flex gap-1.5">
+                    <Lightbulb size={13} className="shrink-0 mt-px text-gp-raspberry" />
+                    <span>
+                      L&apos;IA traduit le titre FR vers AR/EN et génère les 3 descriptions en une fois.
+                      Ajoutez des photos avant de générer pour un meilleur résultat.
+                    </span>
                   </p>
                 )}
               </div>
@@ -869,36 +866,46 @@ export default function CakeForm({ cake, mode, categories }: Props) {
 
           {/* Preview card */}
           {(images[0] || translations.fr.title) && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Aperçu</h3>
+            <div className={cn(CARD, "p-4 md:p-5")}>
+              <h3 className={sectionTitle}>Aperçu</h3>
               <div className="flex gap-4 items-start">
                 {images[0] && (
-                  <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-gray-100">
+                  <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-gp-champagne/50 border-4 border-gp-cream shadow-gp-print -rotate-2">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={images[0]} alt="" className="w-full h-full object-cover" />
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="font-semibold text-gray-800 text-sm">
+                  <p className="font-display font-semibold text-gp-ink text-base tracking-[-0.01em]">
                     {translations.fr.title || "—"}
                   </p>
-                  <p className="text-xs text-rose-500 mt-0.5">
+                  <p className="text-xs font-medium text-gp-raspberry mt-0.5">
                     {categoryOptions.find((c) => c.slug === category)?.labels.fr || "—"}
                   </p>
                   {translations.fr.description && (
-                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                    <p className="text-xs text-gp-ink/70 mt-1 line-clamp-2">
                       {translations.fr.description}
                     </p>
                   )}
-                  <div className="flex gap-3 mt-2 text-xs text-gray-400">
-                    {dims.persons && <span>👥 {dims.persons} pers.</span>}
-                    {dims.pieces && <span>🍰 {dims.pieces} portions</span>}
+                  <div className="flex gap-3 mt-2 text-xs text-gp-ink/65">
+                    {dims.persons && <span className="inline-flex items-center gap-1"><Users size={12} /> {dims.persons} pers.</span>}
+                    {dims.pieces && <span className="inline-flex items-center gap-1"><CakeSlice size={12} /> {dims.pieces} portions</span>}
                   </div>
                 </div>
               </div>
             </div>
           )}
         </div>
+      </div>
+
+      {/* Phone: the save button stays under the thumb while she scrolls the long form. */}
+      {/* -bottom-4 / -mb-4: flush with the screen edge, over <main>'s bottom padding. */}
+      <div className="md:hidden sticky -bottom-4 -mb-4 z-20 -mx-4 px-4 pt-3 pb-3 bg-gp-cream border-t border-gp-gold/30">
+        {uploadError && <p className="text-xs text-red-700 mb-2 line-clamp-2">{uploadError}</p>}
+        <button onClick={handleSave} disabled={saveDisabled} className={cn(BTN_PRIMARY, "w-full min-h-12 text-base")}>
+          {saveIcon}
+          {saveLabel}
+        </button>
       </div>
 
       {previewIndex !== null && images[previewIndex] && (

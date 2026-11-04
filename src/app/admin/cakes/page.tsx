@@ -4,8 +4,28 @@ import Link from "next/link";
 import { getCakes } from "@/lib/admin-data";
 import AdminShell from "@/components/admin/AdminShell";
 import DeleteCakeButton from "@/components/admin/DeleteCakeButton";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, CakeSlice } from "lucide-react";
 import { ADMIN_COOKIE, verifySessionToken } from "@/lib/admin-auth";
+import { BTN_PRIMARY, CARD, EmptyState, ICON_BUTTON, PageHeader, StatusChip } from "@/components/admin/ui";
+import { cn } from "@/lib/utils";
+
+function Thumb({ src, className }: { src?: string; className: string }) {
+  return (
+    <span
+      className={cn(
+        "flex items-center justify-center overflow-hidden rounded-xl bg-gp-champagne/50 ring-1 ring-gp-gold/25 shrink-0",
+        className
+      )}
+    >
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt="" className="w-full h-full object-cover" />
+      ) : (
+        <CakeSlice size={18} className="text-gp-raspberry/60" />
+      )}
+    </span>
+  );
+}
 
 export default async function AdminCakesPage() {
   const cookieStore = await cookies();
@@ -16,136 +36,116 @@ export default async function AdminCakesPage() {
   return (
     <AdminShell>
       <div className="max-w-5xl mx-auto space-y-5">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">Gâteaux</h1>
-            <p className="text-sm text-gray-500">{cakes.length} gâteau{cakes.length !== 1 ? "x" : ""}</p>
-          </div>
-          <Link
-            href="/admin/cakes/new"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500 text-white text-sm font-medium hover:bg-rose-600 transition shadow-sm"
-          >
-            <Plus size={15} />
-            Nouveau gâteau
-          </Link>
-        </div>
-
-        {/* List */}
-        {cakes.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-            <div className="text-4xl mb-3">🎂</div>
-            <h2 className="font-semibold text-gray-700 mb-1">Aucun gâteau</h2>
-            <p className="text-sm text-gray-400 mb-4">Commencez par ajouter votre première création</p>
-            <Link
-              href="/admin/cakes/new"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-500 text-white text-sm font-medium hover:bg-rose-600 transition"
-            >
-              <Plus size={15} />
-              Ajouter un gâteau
+        <PageHeader
+          title="Gâteaux"
+          subtitle={`${cakes.length} gâteau${cakes.length !== 1 ? "x" : ""}`}
+          actions={
+            <Link href="/admin/cakes/new" className={BTN_PRIMARY}>
+              <Plus size={16} />
+              Nouveau gâteau
             </Link>
-          </div>
+          }
+        />
+
+        {cakes.length === 0 ? (
+          <EmptyState
+            icon={<CakeSlice size={24} />}
+            title="Aucun gâteau"
+            text="Commencez par ajouter votre première création"
+            action={
+              <Link href="/admin/cakes/new" className={BTN_PRIMARY}>
+                <Plus size={16} />
+                Ajouter un gâteau
+              </Link>
+            }
+          />
         ) : (
           <>
-            {/* Mobile card list */}
-            <div className="md:hidden space-y-3">
-              {cakes.map((cake) => (
-                <div key={cake.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 flex items-center gap-3">
-                  <Link href={`/admin/cakes/${cake.id}`} className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 shrink-0">
-                      {cake.images[0] ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={cake.images[0]} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300 text-lg">🎂</div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-gray-800 truncate">
-                        {cake.translations.fr.title || "Sans titre"}
-                      </p>
-                      <p className="text-xs text-gray-400 truncate">{cake.categoryLabel.fr}</p>
-                      <span className={`inline-flex items-center px-2 py-0.5 mt-1 rounded-full text-[10px] font-medium ${
-                        cake.published ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                      }`}>
-                        {cake.published ? "Publié" : "Brouillon"}
+            {/* Phone: one card per cake */}
+            <ul className="md:hidden space-y-2.5">
+              {cakes.map((cake) => {
+                const title = cake.translations.fr.title || "Sans titre";
+                return (
+                  <li key={cake.id} className={cn(CARD, "p-2.5 flex items-center gap-2")}>
+                    <Link href={`/admin/cakes/${cake.id}`} className="flex items-center gap-3 flex-1 min-w-0 rounded-xl">
+                      <Thumb src={cake.images[0]} className="w-16 h-16" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-semibold leading-snug text-gp-ink line-clamp-2">{title}</span>
+                        <span className="block text-xs text-gp-ink/65 truncate mt-0.5">{cake.categoryLabel.fr}</span>
+                        <StatusChip tone={cake.published ? "success" : "neutral"} className="mt-1.5">
+                          {cake.published ? "Publié" : "Brouillon"}
+                        </StatusChip>
                       </span>
-                    </div>
-                  </Link>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Link
-                      href={`/admin/cakes/${cake.id}`}
-                      className="p-2 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition"
-                      title="Modifier"
-                    >
-                      <Pencil size={16} />
                     </Link>
-                    <DeleteCakeButton id={cake.id} />
-                  </div>
-                </div>
-              ))}
-            </div>
+                    <div className="flex items-center shrink-0">
+                      <Link
+                        href={`/admin/cakes/${cake.id}`}
+                        className={cn(ICON_BUTTON, "hover:text-gp-raspberry hover:bg-gp-raspberry/5")}
+                        title="Modifier"
+                        aria-label={`Modifier « ${title} »`}
+                      >
+                        <Pencil size={17} />
+                      </Link>
+                      <DeleteCakeButton id={cake.id} title={title} />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
 
-            {/* Desktop table */}
-            <div className="hidden md:block bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Gâteau</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Catégorie</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {cakes.map((cake) => (
-                      <tr key={cake.id} className="hover:bg-gray-50/50 transition-colors">
+            {/* Computer: table */}
+            <div className={cn(CARD, "hidden md:block overflow-hidden")}>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gp-gold/25 bg-gp-champagne/30">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gp-ink/70 uppercase tracking-[0.12em]">Gâteau</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gp-ink/70 uppercase tracking-[0.12em]">Catégorie</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gp-ink/70 uppercase tracking-[0.12em]">Statut</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-gp-ink/70 uppercase tracking-[0.12em]">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gp-gold/20">
+                  {cakes.map((cake) => {
+                    const title = cake.translations.fr.title || "Sans titre";
+                    return (
+                      <tr key={cake.id} className="hover:bg-gp-cream/70 transition-colors">
                         <td className="px-4 py-3">
-                          <Link href={`/admin/cakes/${cake.id}`} className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0">
-                              {cake.images[0] ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={cake.images[0]} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-300 text-lg">🎂</div>
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-medium text-gray-800 truncate max-w-[220px] hover:text-rose-500 transition-colors">
-                                {cake.translations.fr.title || "Sans titre"}
-                              </p>
-                              <p className="text-xs text-gray-400">{cake.images.length} photo{cake.images.length !== 1 ? "s" : ""}</p>
-                            </div>
+                          <Link href={`/admin/cakes/${cake.id}`} className="group flex items-center gap-3 rounded-xl">
+                            <Thumb src={cake.images[0]} className="w-12 h-12" />
+                            <span className="min-w-0">
+                              <span className="block font-semibold text-gp-ink truncate max-w-[260px] group-hover:text-gp-raspberry transition-colors">
+                                {title}
+                              </span>
+                              <span className="block text-xs text-gp-ink/65 tabular-nums">
+                                {cake.images.length} photo{cake.images.length !== 1 ? "s" : ""}
+                              </span>
+                            </span>
                           </Link>
                         </td>
+                        <td className="px-4 py-3 text-gp-ink/80">{cake.categoryLabel.fr}</td>
                         <td className="px-4 py-3">
-                          <span className="text-gray-600">{cake.categoryLabel.fr}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                            cake.published ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                          }`}>
+                          <StatusChip tone={cake.published ? "success" : "neutral"}>
                             {cake.published ? "Publié" : "Brouillon"}
-                          </span>
+                          </StatusChip>
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center justify-end gap-2">
+                        <td className="px-4 py-2">
+                          <div className="flex items-center justify-end gap-1">
                             <Link
                               href={`/admin/cakes/${cake.id}`}
-                              className="p-2 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition"
+                              className={cn(ICON_BUTTON, "hover:text-gp-raspberry hover:bg-gp-raspberry/5")}
                               title="Modifier"
+                              aria-label={`Modifier « ${title} »`}
                             >
-                              <Pencil size={15} />
+                              <Pencil size={16} />
                             </Link>
-                            <DeleteCakeButton id={cake.id} />
+                            <DeleteCakeButton id={cake.id} title={title} />
                           </div>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </>
         )}
@@ -153,4 +153,3 @@ export default async function AdminCakesPage() {
     </AdminShell>
   );
 }
-

@@ -117,6 +117,8 @@ const config: Config = {
         "gp-print": "0 18px 40px -18px rgb(var(--gp-ink) / .35)",
         "gp-lifted": "0 40px 60px -30px rgb(var(--gp-ink) / .45)",
         "gp-chip": "0 10px 24px -12px rgb(var(--gp-ink) / .3)",
+        // Admin cards: a paper sheet resting on the cream table.
+        "gp-card": "0 1px 2px rgb(var(--gp-ink) / .04), 0 12px 28px -20px rgb(var(--gp-ink) / .28)",
       },
       borderRadius: {
         "gp-card": "32px",

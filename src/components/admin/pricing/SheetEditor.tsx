@@ -303,7 +303,7 @@ export default function SheetEditor({
         <div className="flex-1 min-w-0" aria-live="polite">
           {selected && current && (
             <>
-              <span className="block text-xs text-gray-500 truncate">
+              <span className="block text-xs text-gp-ink/70 truncate">
                 Prix · {selected.label.trim() || "taille sans nom"}
               </span>
               {current.problem ? (
@@ -314,7 +314,7 @@ export default function SheetEditor({
                 </span>
               ) : (
                 <span className="flex items-baseline gap-2">
-                  <span className="text-xl font-bold text-rose-600 tabular-nums leading-tight">
+                  <span className="text-xl font-bold text-gp-raspberry tabular-nums leading-tight">
                     {formatDA(current.priced.breakdown.finalPrice)}
                   </span>
                   {current.noHours && <span className="text-xs font-medium text-amber-700">0 h de travail ?</span>}
@@ -343,7 +343,7 @@ export default function SheetEditor({
       >
         <div
           ref={rootRef}
-          className="bg-gray-50 min-h-full p-4 sm:p-5 lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-5 lg:items-start"
+          className="bg-gp-cream min-h-full p-4 sm:p-5 lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-5 lg:items-start"
         >
           <div className="space-y-4 min-w-0">
             {/* ---------- The sheet ---------- */}
@@ -366,18 +366,18 @@ export default function SheetEditor({
                 <button
                   type="button"
                   onClick={() => setDialog({ type: "cake" })}
-                  className="w-full flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2 min-h-[56px] text-left hover:bg-gray-50 transition"
+                  className="w-full flex items-center gap-3 rounded-xl border border-gp-ink/15 bg-white px-3 py-2 min-h-[56px] text-left hover:bg-gp-cream transition"
                 >
                   <CakeThumb image={draft.cakeId ? cakeImage : undefined} size="sm" />
                   <span className="flex-1 min-w-0">
-                    <span className={cn("block text-sm truncate", draft.cakeId ? "font-medium text-gray-800" : "text-gray-400")}>
+                    <span className={cn("block text-sm truncate", draft.cakeId ? "font-medium text-gp-ink" : "text-gp-ink/65")}>
                       {draft.cakeId ? cakeTitle ?? "Gâteau introuvable" : "Aucun gâteau"}
                     </span>
                     {draft.cakeId && !cake && (
                       <span className="block text-xs text-amber-700">N&apos;est plus dans le catalogue</span>
                     )}
                   </span>
-                  <span className="text-sm font-medium text-rose-600 shrink-0 inline-flex items-center gap-0.5">
+                  <span className="text-sm font-medium text-gp-raspberry shrink-0 inline-flex items-center gap-0.5">
                     {draft.cakeId ? "Changer" : "Choisir"} <ChevronRight size={15} />
                   </span>
                 </button>
@@ -399,8 +399,8 @@ export default function SheetEditor({
             {/* ---------- Sizes ---------- */}
             <section className={cn(CARD_CLASS, "p-4 space-y-3")}>
               <div>
-                <h2 className="font-semibold text-gray-800">Tailles</h2>
-                <p className="text-xs text-gray-500 mt-0.5">Chaque taille a ses quantités, ses heures et son prix.</p>
+                <h2 className="font-semibold text-gp-ink">Tailles</h2>
+                <p className="text-xs text-gp-ink/70 mt-0.5">Chaque taille a ses quantités, ses heures et son prix.</p>
               </div>
               <div role="tablist" aria-label="Tailles" className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1">
                 {draft.variants.map((v) => {
@@ -416,7 +416,7 @@ export default function SheetEditor({
                       onClick={() => selectVariant(v.id)}
                       className={cn(
                         "relative shrink-0 min-w-[7rem] max-w-[11rem] min-h-[56px] rounded-xl border px-3 py-1.5 text-left transition",
-                        active ? "bg-rose-500 border-rose-500 text-white shadow-sm" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                        active ? "bg-gp-raspberry border-gp-raspberry text-white shadow-gp-card" : "bg-white border-gp-ink/15 text-gp-ink/85 hover:bg-gp-cream"
                       )}
                     >
                       <span className="block text-xs font-medium truncate">{v.label.trim() || "Sans nom"}</span>
@@ -426,7 +426,7 @@ export default function SheetEditor({
                         </span>
                       ) : (
                         <>
-                          <span className={cn("block text-base font-bold tabular-nums leading-tight", active ? "text-white" : "text-rose-600")}>
+                          <span className={cn("block text-base font-bold tabular-nums leading-tight", active ? "text-white" : "text-gp-raspberry")}>
                             {formatDA(info.priced.breakdown.finalPrice)}
                           </span>
                           {info.noHours && (
@@ -443,12 +443,12 @@ export default function SheetEditor({
                   type="button"
                   onClick={() => setDialog({ type: "size", copyByDefault: false })}
                   disabled={!canAddSize}
-                  className="shrink-0 min-h-[56px] inline-flex items-center gap-1.5 rounded-xl border border-dashed border-rose-200 px-3 text-sm font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-40 transition"
+                  className="shrink-0 min-h-[56px] inline-flex items-center gap-1.5 rounded-xl border border-dashed border-gp-raspberry/25 px-3 text-sm font-medium text-gp-raspberry hover:bg-gp-raspberry/5 disabled:opacity-40 transition"
                 >
                   <Plus size={15} /> Taille
                 </button>
               </div>
-              {!canAddSize && <p className="text-xs text-gray-400">{MAX_SIZES} tailles au maximum par fiche.</p>}
+              {!canAddSize && <p className="text-xs text-gp-ink/65">{MAX_SIZES} tailles au maximum par fiche.</p>}
               {draft.variants.length <= 1 && (
                 <button
                   type="button"
@@ -469,8 +469,8 @@ export default function SheetEditor({
 
             {!selected || !current ? (
               <div className={cn(CARD_CLASS, "p-6 text-center")}>
-                <p className="font-medium text-gray-700">Aucune taille</p>
-                <p className="text-sm text-gray-400 mt-1">Ajoutez une taille, ou les 4 tailles standard, pour calculer un prix.</p>
+                <p className="font-medium text-gp-ink/85">Aucune taille</p>
+                <p className="text-sm text-gp-ink/65 mt-1">Ajoutez une taille, ou les 4 tailles standard, pour calculer un prix.</p>
               </div>
             ) : (
               <VariantEditor
@@ -506,7 +506,7 @@ export default function SheetEditor({
                 <button
                   type="button"
                   onClick={() => setDialog({ type: "deleteSheet", loading: false })}
-                  className="inline-flex items-center gap-1.5 min-h-[40px] px-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition"
+                  className="inline-flex items-center gap-1.5 min-h-11 px-4 rounded-full text-sm font-medium text-red-700 hover:bg-red-50 transition"
                 >
                   <Trash2 size={14} /> Supprimer cette fiche
                 </button>
@@ -518,7 +518,7 @@ export default function SheetEditor({
           {selected && current && (
             <aside className="hidden lg:block lg:sticky lg:top-0">
               <div className={cn(CARD_CLASS, "p-4")}>
-                <h2 className="font-semibold text-gray-800 mb-2 truncate">Prix · {selected.label.trim() || "sans nom"}</h2>
+                <h2 className="font-semibold text-gp-ink mb-2 truncate">Prix · {selected.label.trim() || "sans nom"}</h2>
                 <PriceBreakdown
                   breakdown={current.priced.breakdown}
                   settings={settings}
@@ -587,7 +587,7 @@ export default function SheetEditor({
           onCancel={() => setDialog(null)}
         >
           <p>{quoted(template.name)} et son historique des prix seront supprimés.</p>
-          <p className="text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+          <p className="text-gp-ink/70 bg-gp-cream rounded-lg px-3 py-2">
             Les devis déjà enregistrés ne changent pas, ni le gâteau du catalogue.
           </p>
         </ConfirmDialog>
@@ -696,7 +696,7 @@ function VariantEditor({
           <button
             type="button"
             onClick={onDelete}
-            className="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition whitespace-nowrap"
+            className="inline-flex items-center justify-center gap-1.5 min-h-11 px-4 rounded-full text-sm font-medium text-red-700 hover:bg-red-50 transition whitespace-nowrap"
           >
             <Trash2 size={14} className="shrink-0" /> Supprimer la taille
           </button>
@@ -713,7 +713,7 @@ function VariantEditor({
         {fixed.length === 0 ? (
           <EmptyHint>Aucun coût fixe dans votre liste (onglet « Mes coûts »).</EmptyHint>
         ) : (
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-gp-gold/20">
             {fixed.map((l) => (
               <FixedLineRow
                 key={l.key}
@@ -737,7 +737,7 @@ function VariantEditor({
         {variable.length === 0 ? (
           <EmptyHint>Ajoutez ce que vous utilisez pour cette taille : amandes, chocolat, ruban…</EmptyHint>
         ) : (
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-gp-gold/20">
             {variable.map((l) => {
               const lc = costByKey.get(l.key);
               return (
@@ -755,7 +755,7 @@ function VariantEditor({
             })}
           </ul>
         )}
-        <div className="p-3 border-t border-gray-100">
+        <div className="p-3 border-t border-gp-gold/25">
           <AddLineButton tone="rose" onClick={onAddVariable}>Ajouter un coût variable</AddLineButton>
         </div>
       </section>
@@ -768,7 +768,7 @@ function VariantEditor({
           total={b.extrasTotal}
         />
         {extras.length > 0 && (
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-gp-gold/20">
             {extras.map((l) => (
               <ExtraLineRow
                 key={l.key}
@@ -780,14 +780,14 @@ function VariantEditor({
             ))}
           </ul>
         )}
-        <div className={cn("p-3", extras.length > 0 && "border-t border-gray-100")}>
+        <div className={cn("p-3", extras.length > 0 && "border-t border-gp-gold/25")}>
           <AddLineButton onClick={onAddExtra}>Ajouter un extra</AddLineButton>
         </div>
       </section>
 
       {/* ---------- Phone: detail of the price (the total is in the footer) ---------- */}
       <section className={cn(CARD_CLASS, "p-4 lg:hidden")}>
-        <h2 className="font-semibold text-gray-800 mb-2 truncate">Prix · {v.label.trim() || "sans nom"}</h2>
+        <h2 className="font-semibold text-gp-ink mb-2 truncate">Prix · {v.label.trim() || "sans nom"}</h2>
         <PriceBreakdown
           breakdown={b}
           settings={settings}

@@ -28,7 +28,7 @@ export function HoursField({
       <label htmlFor={id} className={LABEL_CLASS}>Heures de travail</label>
       <DecimalInput id={id} value={value} onChange={onChange} suffix="h" placeholder="0" error={err} />
       {!err && hint && (
-        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+        <p className="text-xs text-gp-ink/65 mt-1 flex items-center gap-1">
           <Clock size={11} /> {hint}
         </p>
       )}
@@ -62,21 +62,21 @@ export function FixedLineRow({
           role="checkbox"
           aria-checked={l.included}
           onClick={onToggle}
-          className="flex items-center gap-3 flex-1 min-w-0 text-left min-h-[44px] px-2 rounded-lg hover:bg-gray-50"
+          className="flex items-center gap-3 flex-1 min-w-0 text-left min-h-[44px] px-2 rounded-lg hover:bg-gp-cream"
         >
           <CheckMark checked={l.included} />
           <span className="min-w-0">
-            <span className={cn("block text-sm font-medium truncate", l.included ? "text-gray-800" : "text-gray-500 line-through")}>
+            <span className={cn("block text-sm font-medium truncate", l.included ? "text-gp-ink" : "text-gp-ink/70 line-through")}>
               {l.name}
             </span>
-            <span className="block text-xs text-gray-400 truncate">
+            <span className="block text-xs text-gp-ink/65 truncate">
               {priceLabel(l)}
               {flag}
             </span>
           </span>
         </button>
         <div className="flex items-center gap-1 shrink-0">
-          <span className="text-xs text-gray-400" aria-hidden>×</span>
+          <span className="text-xs text-gp-ink/65" aria-hidden>×</span>
           <DecimalInput
             id={`line-${l.key}`}
             value={l.qtyRaw}
@@ -90,7 +90,7 @@ export function FixedLineRow({
             missing={missing}
           />
         </div>
-        <span className="w-[4.5rem] text-right text-sm tabular-nums text-gray-700 shrink-0">{formatDA(cost)}</span>
+        <span className="w-[4.5rem] text-right text-sm tabular-nums text-gp-ink/85 shrink-0">{formatDA(cost)}</span>
       </div>
       {hint}
       {err && <FieldError className="pl-10 mt-0">{err}</FieldError>}
@@ -128,16 +128,16 @@ export function VariableLineRow({
     return (
       <li className="px-4 py-3 bg-red-50/60">
         <div className="flex items-start gap-2">
-          <AlertTriangle size={15} className="mt-0.5 shrink-0 text-red-500" />
+          <AlertTriangle size={15} className="mt-0.5 shrink-0 text-red-700" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-800">{l.name}</p>
+            <p className="text-sm font-medium text-gp-ink">{l.name}</p>
             <p className="text-xs text-red-700">{blocked}</p>
           </div>
           <button
             type="button"
             onClick={onRemove}
             data-problem="true"
-            className="inline-flex items-center gap-1.5 min-h-[40px] px-3 -my-1 rounded-lg bg-white border border-red-200 text-red-700 text-sm font-medium hover:bg-red-50 transition shrink-0"
+            className="inline-flex items-center gap-1.5 min-h-11 px-4 -my-1 rounded-full bg-white border border-red-200 text-red-700 text-sm font-medium hover:bg-red-50 transition shrink-0"
           >
             <Trash2 size={14} /> Retirer
           </button>
@@ -154,18 +154,18 @@ export function VariableLineRow({
     <li className="px-4 py-3">
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-800">
+          <p className="text-sm font-medium text-gp-ink">
             {l.name}
             {flag}
           </p>
-          <p className="text-xs text-gray-400">{priceLabel(l)}</p>
+          <p className="text-xs text-gp-ink/65">{priceLabel(l)}</p>
           {hint}
         </div>
-        <span className="pt-0.5 text-sm font-semibold tabular-nums text-gray-800 whitespace-nowrap">{formatDA(cost)}</span>
+        <span className="pt-0.5 text-sm font-semibold tabular-nums text-gp-ink whitespace-nowrap">{formatDA(cost)}</span>
         <button
           type="button"
           onClick={onRemove}
-          className={cn(ICON_BTN, "-mt-2 -mr-2 hover:text-red-500 hover:bg-red-50")}
+          className={cn(ICON_BTN, "-mt-2 -mr-2 hover:text-red-700 hover:bg-red-50")}
           aria-label={`Retirer ${l.name}`}
         >
           <Trash2 size={15} />
@@ -198,7 +198,7 @@ export function VariableLineRow({
             ))}
           </select>
         ) : (
-          <span className="text-sm text-gray-600">{unitLabel(l.qtyUnit, l.customUnit, qty)}</span>
+          <span className="text-sm text-gp-ink/75">{unitLabel(l.qtyUnit, l.customUnit, qty)}</span>
         )}
       </div>
       {err ? (
@@ -255,7 +255,7 @@ export function ExtraLineRow({
           <button
             type="button"
             onClick={onRemove}
-            className={cn(ICON_BTN, "hover:text-red-500 hover:bg-red-50")}
+            className={cn(ICON_BTN, "hover:text-red-700 hover:bg-red-50")}
             aria-label="Retirer cet extra"
           >
             <Trash2 size={15} />
@@ -282,7 +282,7 @@ export function AddLineButton({
     <button
       type="button"
       onClick={onClick}
-      className={cn(SECONDARY_BTN, "w-full border-dashed", tone === "rose" && "text-rose-600 border-rose-200 hover:bg-rose-50")}
+      className={cn(SECONDARY_BTN, "w-full border-dashed", tone === "rose" && "text-gp-raspberry border-gp-raspberry/25 hover:bg-gp-raspberry/5")}
     >
       <Plus size={16} /> {children}
     </button>

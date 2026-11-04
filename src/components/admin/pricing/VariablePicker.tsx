@@ -56,9 +56,9 @@ export default function VariablePicker({
     >
       {items.length === 0 ? (
         <div className="p-6 text-center">
-          <AlertTriangle size={24} className="mx-auto text-gray-300 mb-2" />
-          <p className="font-medium text-gray-700">Aucun coût variable dans votre liste</p>
-          <p className="text-sm text-gray-400 mt-1">
+          <AlertTriangle size={24} className="mx-auto text-gp-raspberry/70 mb-2" />
+          <p className="font-medium text-gp-ink/85">Aucun coût variable dans votre liste</p>
+          <p className="text-sm text-gp-ink/65 mt-1">
             {onGoToCosts
               ? "Ajoutez d'abord vos ingrédients et fournitures avec leur prix."
               : "Ajoutez d'abord vos ingrédients et fournitures dans l'onglet « Mes coûts »."}
@@ -73,7 +73,7 @@ export default function VariablePicker({
         <>
           <div className="sticky top-0 bg-white px-4 pt-3 pb-2 z-10">
             <div className="relative">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gp-ink/65" />
               <input
                 type="search"
                 value={query}
@@ -85,12 +85,12 @@ export default function VariablePicker({
             </div>
           </div>
           {groups.length === 0 ? (
-            <p className="px-5 py-8 text-center text-sm text-gray-400">Aucun résultat pour {quoted(query)}.</p>
+            <p className="px-5 py-8 text-center text-sm text-gp-ink/65">Aucun résultat pour {quoted(query)}.</p>
           ) : (
             <div className="pb-3">
               {groups.map(([group, list]) => (
                 <div key={group}>
-                  <p className="px-5 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">{group}</p>
+                  <p className="px-5 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-gp-ink/65">{group}</p>
                   <ul>
                     {list.map((item) => {
                       const justAdded = added.get(item.id) ?? 0;
@@ -100,13 +100,13 @@ export default function VariablePicker({
                             type="button"
                             onClick={() => pick(item)}
                             className={cn(
-                              "w-full flex items-center gap-3 px-5 py-2.5 min-h-[52px] text-left hover:bg-rose-50 active:bg-rose-100 transition",
+                              "w-full flex items-center gap-3 px-5 py-2.5 min-h-[52px] text-left hover:bg-gp-raspberry/5 active:bg-gp-raspberry/10 transition",
                               justAdded > 0 && "bg-emerald-50/60"
                             )}
                           >
                             <span className="flex-1 min-w-0">
-                              <span className="block text-sm font-medium text-gray-800 truncate">{item.name}</span>
-                              <span className="block text-xs text-gray-400">{priceLabel(item)}</span>
+                              <span className="block text-sm font-medium text-gp-ink truncate">{item.name}</span>
+                              <span className="block text-xs text-gp-ink/65">{priceLabel(item)}</span>
                             </span>
                             {justAdded > 0 ? (
                               <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-100 rounded-full px-2 py-0.5 shrink-0">
@@ -117,7 +117,7 @@ export default function VariablePicker({
                                 {usedLabel}
                               </span>
                             ) : null}
-                            <Plus size={16} className="text-rose-500 shrink-0" />
+                            <Plus size={16} className="text-gp-raspberry shrink-0" />
                           </button>
                         </li>
                       );
