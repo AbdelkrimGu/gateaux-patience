@@ -23,6 +23,8 @@ export const metadata: Metadata = {
 // The phone's browser chrome matches the ink top bar.
 export const viewport: Viewport = {
   themeColor: "#241618",
+  // Full-bleed on notched phones; the ink bars and the login pad themselves with env(safe-area-inset-*).
+  viewportFit: "cover",
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -38,7 +38,7 @@ export default function AdminLoginPage() {
   return (
     <div
       data-surface="ink"
-      className="min-h-[100dvh] flex items-center justify-center bg-gp-ink text-gp-cream px-4 py-10"
+      className="min-h-[100dvh] flex items-center justify-center bg-gp-ink text-gp-cream px-4 pt-[max(2.5rem,env(safe-area-inset-top))] pb-[max(2.5rem,env(safe-area-inset-bottom))]"
     >
       <div className="w-full max-w-sm">
         {/* The crowned badge stamps in; the gold wordmark signs. */}

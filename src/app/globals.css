@@ -439,6 +439,10 @@
   :where(.gp-admin [data-surface="ink"] [data-surface="paper"]) :focus-visible {
     outline-color: rgb(var(--gp-raspberry));
   }
+  /* An ink element that is itself focusable (the phone price bar button). */
+  :where(.gp-admin) [data-surface="ink"]:focus-visible {
+    outline-color: rgb(var(--gp-champagne));
+  }
 
   :where(.gp-admin) a {
     text-underline-offset: 0.25em;

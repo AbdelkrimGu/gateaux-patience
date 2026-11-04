@@ -25,6 +25,7 @@ export default async function EditCakePage({ params }: { params: Promise<{ id: s
       <PageHeader
         width="4xl"
         eyebrow={<BackLink href="/admin/cakes">Gâteaux</BackLink>}
+        eyebrowOnPhone
         title="Modifier le gâteau"
         subtitle={<span className="block truncate max-w-md">{cake.translations.fr.title || "Sans titre"}</span>}
       />

@@ -370,6 +370,7 @@ export default function PricingManager({
   return (
     <div>
       <PageHeader
+        compact
         eyebrow="Atelier"
         title="Calcul des prix"
         subtitle="Le juste prix de chaque gâteau, à partir de vos coûts et de votre temps."

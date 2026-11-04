@@ -4,7 +4,7 @@ import { useState, useRef, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Sparkles, Upload, X, Loader2, Save, ChevronDown,
-  Globe, GripVertical, Check, Eye, ChevronLeft, ChevronRight, Star, Crown
+  Globe, GripVertical, Check, Eye, ChevronLeft, ChevronRight, Star, Crown, AlertTriangle
 } from "lucide-react";
 import {
   DndContext,
@@ -114,7 +114,7 @@ function SortableImage({
           e.stopPropagation();
           onRemove();
         }}
-        className="absolute bottom-1 right-1 w-9 h-9 lg:w-7 lg:h-7 flex items-center justify-center bg-gp-paper/95 rounded-full text-red-700 hover:bg-red-50 shadow-sm"
+        className="absolute bottom-0.5 right-0.5 w-11 h-11 [@media(pointer:fine)]:w-8 [@media(pointer:fine)]:h-8 flex items-center justify-center bg-gp-paper/95 rounded-full text-red-700 hover:bg-red-50 shadow-sm"
         title="Supprimer"
         aria-label="Supprimer la photo"
       >
@@ -222,7 +222,7 @@ function ImagePreviewModal({
 function SaveHint({ text, onClick }: { text: string; onClick?: () => void }) {
   if (!onClick) return <p className="text-xs font-medium text-amber-800">{text}</p>;
   return (
-    <button type="button" onClick={onClick} className="min-h-[32px] text-left text-xs font-medium text-amber-800 underline underline-offset-2">
+    <button type="button" onClick={onClick} className="min-h-[44px] text-left text-[13px] font-medium text-amber-800 underline underline-offset-2">
       {text}
     </button>
   );
@@ -297,6 +297,8 @@ export default function CakeForm({ cake, mode, categories }: Props) {
     phase: "preparing" | "uploading";
   } | null>(null);
   const [uploadError, setUploadError] = useState("");
+  // Save failures are shown next to « Enregistrer » (phone bar + computer bar), not in the Photos card.
+  const [saveError, setSaveError] = useState("");
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [category, setCategory] = useState(initialCategory);
   const [translations, setTranslations] = useState({
@@ -499,9 +501,10 @@ export default function CakeForm({ cake, mode, categories }: Props) {
 
   async function handleSave() {
     setSaving(true);
+    setSaveError("");
     const cat = categoryOptions.find((c) => c.slug === category);
     if (!cat) {
-      setUploadError("Sélectionnez une catégorie valide.");
+      setSaveError("Sélectionnez une catégorie valide.");
       setSaving(false);
       return;
     }
@@ -550,7 +553,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
       }, 800);
     } catch (e) {
       console.error("[save]", e);
-      setUploadError(e instanceof Error ? e.message : "Erreur lors de l'enregistrement");
+      setSaveError(e instanceof Error ? e.message : "Erreur lors de l'enregistrement");
     } finally {
       setSaving(false);
     }
@@ -560,12 +563,21 @@ export default function CakeForm({ cake, mode, categories }: Props) {
   const uploading = uploadProgress !== null;
   const noCategories = categoryOptions.length === 0;
 
-  const saveDisabled = saving || !translations.fr.title || uploading || noCategories;
+  // One condition drives both the greyed-out button and the hint that explains it.
+  const titleMissing = !translations.fr.title.trim();
+  const saveDisabled = saving || titleMissing || uploading || noCategories;
   // Rendered twice (computer bar, phone bar): one is hidden, ids stay unique.
   const publishSwitch = (where: string) => (
     <div className="flex items-center gap-1">
-      <Switch checked={published} onChange={setPublished} label="Publier sur le site" tone="emerald" id={`cake-published-${where}`} />
-      <label htmlFor={`cake-published-${where}`} className="text-sm font-semibold text-gp-ink cursor-pointer select-none pr-1">
+      <Switch
+        checked={published}
+        onChange={setPublished}
+        label="Publié"
+        labelledBy={`cake-published-${where}-label`}
+        tone="emerald"
+        id={`cake-published-${where}`}
+      />
+      <label id={`cake-published-${where}-label`} htmlFor={`cake-published-${where}`} className="text-sm font-semibold text-gp-ink cursor-pointer select-none pr-1">
         {published ? "Publié" : "Brouillon"}
       </label>
     </div>
@@ -576,6 +588,16 @@ export default function CakeForm({ cake, mode, categories }: Props) {
       {saving ? "Enregistrement..." : saved ? "Enregistré !" : "Enregistrer"}
     </button>
   );
+  // A failed save: bring the message into view wherever she is on the page.
+  useEffect(() => {
+    if (!saveError) return;
+    const el = Array.from(document.querySelectorAll<HTMLElement>("[data-save-error]")).find((n) => n.offsetParent !== null);
+    if (!el) return;
+    // Only when it is off-screen (the phone bar is sticky, always in view).
+    const r = el.getBoundingClientRect();
+    if (r.top < 64 || r.bottom > window.innerHeight) el.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [saveError]);
+
   // Why « Enregistrer » is greyed out, in her words; touching it leads to the field.
   function goToTitle() {
     setActiveLang("fr");
@@ -587,7 +609,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
   }
   const saveHint = noCategories
     ? null
-    : !translations.fr.title.trim()
+    : titleMissing
       ? "Ajoutez un titre en français pour enregistrer."
       : uploading
         ? "Patientez, les photos se téléchargent…"
@@ -605,7 +627,13 @@ export default function CakeForm({ cake, mode, categories }: Props) {
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          {saveHint && <SaveHint text={saveHint} onClick={!translations.fr.title.trim() ? goToTitle : undefined} />}
+          {saveError ? (
+            <p data-save-error role="alert" className="max-w-[22rem] text-[13px] font-medium text-red-800">
+              {saveError}
+            </p>
+          ) : (
+            saveHint && <SaveHint text={saveHint} onClick={titleMissing ? goToTitle : undefined} />
+          )}
           {saveButton}
         </div>
       </div>
@@ -793,20 +821,20 @@ export default function CakeForm({ cake, mode, categories }: Props) {
         </div>
 
         {/* Right col — titles + descriptions */}
-        <div className="lg:col-span-2 space-y-4">
+        {/* Phones: the titles come first (the title is the one required field). */}
+        <div className="lg:col-span-2 space-y-4 order-first md:order-none">
           <section className={cn(CARD, "p-4")}>
             <div className="flex items-center gap-2 mb-3">
               <Globe size={16} className="text-gp-ink/65" />
               <h3 className={cn(SECTION_TITLE, "mb-0")}>Titres & Descriptions</h3>
             </div>
 
-            <div role="tablist" aria-label="Langue" className="flex gap-1 mb-4 bg-gp-ink/[0.06] p-1 rounded-full">
+            <div role="group" aria-label="Langue" className="flex gap-1 mb-4 bg-gp-ink/[0.06] p-1 rounded-full">
               {LANGS.map((l) => (
                 <button
                   key={l.code}
                   type="button"
-                  role="tab"
-                  aria-selected={activeLang === l.code}
+                  aria-pressed={activeLang === l.code}
                   onClick={() => setActiveLang(l.code)}
                   className={cn(
                     "flex-1 flex items-center justify-center gap-1.5 min-h-[44px] rounded-full text-sm font-semibold transition-colors duration-150",
@@ -930,7 +958,14 @@ export default function CakeForm({ cake, mode, categories }: Props) {
 
       {/* Phone: publish + save always within thumb reach */}
       <div className="md:hidden sticky bottom-0 z-20 -mx-4 px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-gp-paper/95 backdrop-blur border-t border-gp-ink/10 shadow-[0_-10px_24px_-18px_rgb(var(--gp-ink)/0.5)]">
-        {saveHint && <SaveHint text={saveHint} onClick={!translations.fr.title.trim() ? goToTitle : undefined} />}
+        {saveError ? (
+          <p data-save-error role="alert" className="flex items-start gap-1.5 mb-1.5 text-[13px] font-medium text-red-800">
+            <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+            {saveError}
+          </p>
+        ) : (
+          saveHint && <SaveHint text={saveHint} onClick={titleMissing ? goToTitle : undefined} />
+        )}
         <div className="flex items-center justify-between gap-2">
           {publishSwitch("bar")}
           {saveButton}

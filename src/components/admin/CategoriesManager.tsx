@@ -9,8 +9,9 @@ import type { Category } from "@/lib/db-types";
 import { compressImage } from "@/lib/image-compress";
 import { cn } from "@/lib/utils";
 import {
-  BTN_AI, BTN_DANGER, BTN_GHOST, BTN_GOLD, BTN_PRIMARY, CARD, EmptyState, ICON_BTN_BASE, INPUT, PageHeader,
+  BTN_AI, BTN_GHOST, BTN_GOLD, BTN_PRIMARY, CARD, EmptyState, ICON_BTN_BASE, INPUT, PageHeader,
 } from "./ui";
+import { ConfirmDialog } from "./dialogs";
 
 interface Props {
   initial: Category[];
@@ -240,9 +241,10 @@ export default function CategoriesManager({ initial }: Props) {
         title="Catégories"
         subtitle={`${categories.length} catégorie${categories.length !== 1 ? "s" : ""} · libellés et image modifiables`}
         actions={
-          <button onClick={startNew} disabled={editing.mode !== "none"} className={BTN_GOLD}>
+          <button onClick={startNew} disabled={editing.mode !== "none"} className={BTN_GOLD} aria-label="Nouvelle catégorie">
             <Plus size={16} />
-            Nouvelle catégorie
+            <span className="sm:hidden">Ajouter</span>
+            <span className="hidden sm:inline">Nouvelle catégorie</span>
           </button>
         }
       />
@@ -341,51 +343,29 @@ export default function CategoriesManager({ initial }: Props) {
         )}
       </div>
 
-      {/* Delete confirm dialog */}
+      {/* Delete confirm dialog (same dialog as every other delete in the admin) */}
       {deleteState && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gp-ink/60 p-4 motion-safe:animate-gpa-fade">
-          <div
-            role="alertdialog"
-            aria-modal="true"
-            aria-label="Supprimer la catégorie ?"
-            className="bg-gp-paper text-gp-ink rounded-[24px] shadow-[0_24px_60px_-20px_rgb(var(--gp-ink)/0.6)] max-w-sm w-full p-6"
-          >
-            <div className="flex items-start gap-3 mb-4">
-              <div className="w-11 h-11 rounded-full bg-red-50 text-red-700 ring-1 ring-red-200 flex items-center justify-center shrink-0">
-                <AlertTriangle size={20} />
-              </div>
-              <div>
-                <h2 className="font-display text-lg font-semibold leading-tight tracking-[-0.02em]">Supprimer la catégorie ?</h2>
-                <p className="text-sm text-gp-ink/75 mt-1.5">
-                  « {deleteState.label} » sera supprimée définitivement (image incluse).
-                </p>
-              </div>
-            </div>
-            {deleteState.loading ? (
-              <p className="text-sm text-gp-ink/70 flex items-center gap-2 mb-4" role="status">
-                <Loader2 size={14} className="animate-spin" /> Vérification...
-              </p>
-            ) : deleteState.cakesAffected && deleteState.cakesAffected > 0 ? (
-              <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-2.5 mb-4">
-                {deleteState.cakesAffected} gâteau{deleteState.cakesAffected > 1 ? "x" : ""} utilise{deleteState.cakesAffected > 1 ? "nt" : ""} cette catégorie.
-                Ils resteront visibles mais leur catégorie ne pourra plus être modifiée vers celle-ci.
-              </p>
-            ) : (
-              <p className="text-sm text-gp-ink/75 bg-gp-cream rounded-xl px-3.5 py-2.5 mb-4">
-                Aucun gâteau n&apos;utilise cette catégorie.
-              </p>
-            )}
-            <div className="flex flex-wrap gap-2 justify-end">
-              <button onClick={() => setDeleteState(null)} disabled={deleteState.loading} className={BTN_GHOST}>
-                Annuler
-              </button>
-              <button onClick={confirmDelete} disabled={deleteState.loading} className={BTN_DANGER}>
-                <Trash2 size={15} />
-                Supprimer
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="Supprimer la catégorie ?"
+          confirmLabel="Supprimer"
+          loading={deleteState.loading}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteState(null)}
+        >
+          <p>« {deleteState.label} » sera supprimée définitivement (image incluse).</p>
+          {deleteState.loading && deleteState.cakesAffected === null ? (
+            <p className="flex items-center gap-2" role="status">
+              <Loader2 size={14} className="animate-spin" /> Vérification...
+            </p>
+          ) : deleteState.cakesAffected && deleteState.cakesAffected > 0 ? (
+            <p className="text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-2.5">
+              {deleteState.cakesAffected} gâteau{deleteState.cakesAffected > 1 ? "x" : ""} utilise{deleteState.cakesAffected > 1 ? "nt" : ""} cette catégorie.
+              Ils resteront visibles mais leur catégorie ne pourra plus être modifiée vers celle-ci.
+            </p>
+          ) : (
+            <p className="bg-gp-cream rounded-xl px-3.5 py-2.5">Aucun gâteau n&apos;utilise cette catégorie.</p>
+          )}
+        </ConfirmDialog>
       )}
     </div>
   );
@@ -535,7 +515,7 @@ function EditorRow({
                     e.stopPropagation();
                     onRemoveImage();
                   }}
-                  className="absolute top-1 right-1 w-9 h-9 flex items-center justify-center bg-gp-paper/95 rounded-full text-red-700 hover:bg-gp-paper shadow-sm"
+                  className="absolute top-1 right-1 w-11 h-11 flex items-center justify-center bg-gp-paper/95 rounded-full text-red-700 hover:bg-gp-paper shadow-sm"
                   title="Retirer l'image"
                   aria-label="Retirer l'image"
                 >
@@ -567,7 +547,7 @@ function EditorRow({
         {/* Label inputs */}
         <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <div className="flex items-end justify-between gap-2 mb-1.5">
+            <div className="flex items-center justify-between gap-2 mb-1.5">
               <label htmlFor={`cat-fr-${id}`} className="block text-[13px] font-medium text-gp-ink/80">
                 Français (requis)
               </label>
@@ -576,7 +556,7 @@ function EditorRow({
                 onClick={handleTranslate}
                 disabled={translating || !data.labels.fr.trim()}
                 title="Traduire en arabe + anglais avec l'IA"
-                className={cn(BTN_AI, "px-3 -my-2 text-xs")}
+                className={cn(BTN_AI, "px-3 text-xs")}
               >
                 {translating ? (
                   <Loader2 size={13} className="animate-spin" />

@@ -86,7 +86,7 @@ export default function SavedQuotes({ quotes, activeQuoteId, onOpen, onDeleted, 
               <li key={quote.id} className="flex items-center gap-2 pl-4 pr-2 py-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 min-w-0">
-                    <p className="text-sm font-medium text-gp-ink min-w-0 truncate">{quote.name}</p>
+                    <p className="text-sm font-medium text-gp-ink min-w-0 line-clamp-2 break-words">{quote.name}</p>
                     {quote.id === activeQuoteId && (
                       <span className="shrink-0 text-xs font-medium text-gp-raspberry bg-gp-raspberry/[0.06] rounded-full px-2 py-0.5">
                         ouvert

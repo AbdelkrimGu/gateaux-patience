@@ -33,7 +33,7 @@ export const ICON_BTN_BASE =
 // text-base on phones: iOS zooms the page when focusing an input under 16px.
 // Border at ink/45 so the field's edge reads at 3:1 on paper.
 export const INPUT =
-  "w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-gp-ink/45 bg-gp-paper text-base sm:text-sm text-gp-ink placeholder:text-gp-ink/45 focus:border-gp-raspberry focus:ring-2 focus:ring-gp-raspberry/20 outline-none transition-colors duration-150 disabled:bg-gp-ink/[0.04] disabled:text-gp-ink/50 disabled:border-gp-ink/20";
+  "w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-gp-ink/45 bg-gp-paper text-base lg:text-sm text-gp-ink placeholder:text-gp-ink/55 focus:border-gp-raspberry focus:ring-2 focus:ring-gp-raspberry/20 outline-none transition-colors duration-150 disabled:bg-gp-ink/[0.04] disabled:text-gp-ink/50 disabled:border-gp-ink/20";
 
 export const LABEL = "block text-[13px] font-medium text-gp-ink/80 mb-1.5";
 
@@ -61,32 +61,56 @@ export function PageHeader({
   subtitle,
   actions,
   width = "5xl",
+  compact = false,
+  eyebrowOnPhone = false,
 }: {
   title: ReactNode;
   eyebrow?: ReactNode;
   subtitle?: ReactNode;
   actions?: ReactNode;
   width?: "4xl" | "5xl";
+  /** Phones: title only (screens where the work starts right away, like pricing). */
+  compact?: boolean;
+  /** Phones hide the eyebrow to save height; keep it when it is a way back (BackLink). */
+  eyebrowOnPhone?: boolean;
 }) {
+  // Phones get a short header (title, one line of subtitle, action beside it) so
+  // the work starts in the first half of the screen; computers keep the full masthead.
   return (
-    <div data-surface="ink" className="-mx-4 md:-mx-8 mb-5 md:mb-7 px-4 md:px-8 bg-gp-ink text-gp-cream">
+    <div data-surface="ink" data-page-header="" className="-mx-4 md:-mx-8 mb-2 sm:mb-5 md:mb-7 px-4 md:px-8 bg-gp-ink text-gp-cream">
       <div
         className={cn(
-          "mx-auto pt-3 md:pt-10 pb-11 md:pb-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between",
+          "mx-auto pt-1.5 sm:pt-3 md:pt-10 pb-8 sm:pb-11 md:pb-12 flex flex-row items-end justify-between gap-3",
           width === "4xl" ? "max-w-4xl" : "max-w-5xl"
         )}
       >
         <div className="min-w-0">
-          {eyebrow && <p className={cn(EYEBROW, "text-gp-gold mb-1.5")}>{eyebrow}</p>}
-          <h1 className="font-display text-[28px] md:text-[36px] font-semibold leading-[1.02] tracking-[-0.03em] text-gp-cream">
+          {eyebrow && (
+            <p className={cn(EYEBROW, "text-gp-gold mb-1 sm:mb-1.5", eyebrowOnPhone ? "block" : "hidden sm:block")}>{eyebrow}</p>
+          )}
+          <h1
+            className={cn(
+              "font-display font-semibold leading-[1.05] tracking-[-0.03em] text-gp-cream md:text-[36px]",
+              compact ? "text-[24px] sm:text-[28px]" : "text-[26px] sm:text-[28px]"
+            )}
+          >
             {title}
           </h1>
-          {subtitle && <p className="mt-2 text-sm text-gp-cream/75 max-w-[60ch]">{subtitle}</p>}
+          {subtitle && (
+            <p
+              className={cn(
+                "mt-1 sm:mt-2 text-sm text-gp-cream/75 max-w-[60ch] truncate sm:whitespace-normal",
+                compact && "hidden sm:block"
+              )}
+            >
+              {subtitle}
+            </p>
+          )}
         </div>
-        {actions && <div className="flex flex-wrap items-center gap-2 shrink-0">{actions}</div>}
+        {actions && <div className="flex flex-wrap items-center justify-end gap-2 shrink-0">{actions}</div>}
       </div>
       {/* The paper sheet's top edge. */}
-      <div aria-hidden className="relative top-px h-7 -mt-7 -mx-4 md:-mx-8 rounded-t-[28px] bg-gp-cream" />
+      <div aria-hidden className="relative top-px h-5 -mt-5 sm:h-7 sm:-mt-7 -mx-4 md:-mx-8 rounded-t-[22px] sm:rounded-t-[28px] bg-gp-cream" />
     </div>
   );
 }
@@ -165,10 +189,13 @@ export function Switch({
   label,
   tone = "raspberry",
   id,
+  labelledBy,
 }: {
   checked: boolean;
   onChange: (next: boolean) => void;
   label: string;
+  /** Id of the visible label, so the spoken name matches what she sees. */
+  labelledBy?: string;
   tone?: "raspberry" | "emerald";
   id?: string;
 }) {
@@ -179,7 +206,8 @@ export function Switch({
       role="switch"
       id={id}
       aria-checked={checked}
-      aria-label={label}
+      aria-label={labelledBy ? undefined : label}
+      aria-labelledby={labelledBy}
       onClick={() => onChange(!checked)}
       className="relative inline-flex items-center justify-center w-14 h-11 shrink-0 rounded-full"
     >
@@ -187,7 +215,7 @@ export function Switch({
         aria-hidden
         className={cn(
           "relative block w-12 h-7 rounded-full transition-colors duration-150",
-          checked ? on : "bg-gp-ink/30"
+          checked ? on : "bg-gp-ink/45"
         )}
       >
         <span

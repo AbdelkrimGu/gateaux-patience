@@ -108,7 +108,7 @@ export default function VariablePicker({
                           >
                             <span className="flex-1 min-w-0">
                               <span className="block text-sm font-medium text-gp-ink truncate">{item.name}</span>
-                              <span className="block text-xs text-gp-ink/65">{priceLabel(item)}</span>
+                              <span className="block text-xs text-gp-ink/65 tabular-nums">{priceLabel(item)}</span>
                             </span>
                             {justAdded > 0 ? (
                               <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-100 rounded-full px-2 py-0.5 shrink-0">

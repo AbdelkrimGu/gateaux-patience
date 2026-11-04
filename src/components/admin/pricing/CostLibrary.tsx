@@ -419,7 +419,8 @@ function CostRow({
           <p className="text-sm font-medium text-gp-ink">{item.name}</p>
           <p className="text-sm font-semibold text-gp-raspberry tabular-nums">{priceLabel(item)}</p>
           <p className="text-xs text-gp-ink/65">
-            {item.group ? `${item.group} · ` : ""}modifié le {formatDate(item.updatedAt)}
+            {/* The group is already the heading above the row. */}
+            modifié le {formatDate(item.updatedAt)}
           </p>
           {item.note && <p className="text-xs text-gp-ink/70 italic mt-0.5">{item.note}</p>}
         </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import { CheckCircle2, Eye, Trash2, Phone, MessageSquare, Clock, Inbox, RotateCcw, Loader2 } from "lucide-react";
 import { BTN_SECONDARY, CARD, EmptyState, ICON_BTN_BASE, PageHeader, StatusPill } from "@/components/admin/ui";
+import { ConfirmDialog } from "@/components/admin/dialogs";
 import { cn } from "@/lib/utils";
 
 interface Order {
@@ -20,10 +21,19 @@ interface Order {
 const STATUS_LABELS = { new: "Nouveau", seen: "Vu", done: "Terminé" };
 const STATUS_DOT = { new: "bg-emerald-500", seen: "bg-amber-500", done: "bg-gp-ink/30" };
 
+/** « de Karim » / « d'Amina » (French elision before a vowel or a mute h). */
+function ofName(name: string): string {
+  const first = name.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").charAt(0).toLowerCase();
+  return "aeiouyh".includes(first) ? `d'${name.trim()}` : `de ${name.trim()}`;
+}
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "new" | "seen" | "done">("all");
+  const [pendingDelete, setPendingDelete] = useState<Order | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Session expired: back to the login page instead of an empty list.
   function checkSession(res: Response) {
@@ -54,11 +64,25 @@ export default function AdminOrdersPage() {
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
   }
 
+  // Always confirmed first (styled dialog); a failure keeps the dialog open with a message.
   async function deleteOrder(id: string) {
-    if (!confirm("Supprimer cette commande ?")) return;
-    const res = await fetch(`/api/admin/orders/${id}`, { method: "DELETE" });
-    if (!checkSession(res)) return;
-    setOrders((prev) => prev.filter((o) => o.id !== id));
+    if (deleting) return; // no double submit
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/admin/orders/${id}`, { method: "DELETE" });
+      if (res.status === 401) {
+        checkSession(res);
+        return;
+      }
+      if (!res.ok) throw new Error();
+      setOrders((prev) => prev.filter((o) => o.id !== id));
+      setPendingDelete(null);
+    } catch {
+      setDeleteError("La suppression n'a pas abouti. Vérifiez la connexion et réessayez.");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
@@ -84,20 +108,19 @@ export default function AdminOrdersPage() {
       <PageHeader
         eyebrow="Atelier"
         title="Commandes"
-        subtitle={`${orders.length} demande${orders.length !== 1 ? "s" : ""} au total`}
+        subtitle={loading ? "Chargement…" : `${orders.length} demande${orders.length !== 1 ? "s" : ""} au total`}
       />
       <div className="max-w-5xl mx-auto space-y-4">
         {/* Filter tabs */}
-        <div role="tablist" aria-label="Filtrer les commandes" className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
+        <div role="group" aria-label="Filtrer les commandes" className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           {(["all", "new", "seen", "done"] as const).map((f) => (
             <button
               key={f}
               type="button"
-              role="tab"
-              aria-selected={filter === f}
+              aria-pressed={filter === f}
               onClick={() => setFilter(f)}
               className={cn(
-                "inline-flex items-center justify-center gap-1 sm:gap-2 min-h-[44px] px-1 sm:pl-4 sm:pr-2.5 rounded-full text-[13px] sm:text-sm font-semibold whitespace-nowrap transition-colors duration-150",
+                "inline-flex items-center justify-center sm:justify-start gap-2 min-h-[44px] pl-4 pr-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors duration-150",
                 filter === f
                   ? "bg-gp-ink text-gp-cream"
                   : "bg-gp-paper text-gp-ink/80 border border-gp-ink/20 hover:border-gp-ink/40"
@@ -106,11 +129,12 @@ export default function AdminOrdersPage() {
               {f === "all" ? "Toutes" : STATUS_LABELS[f]}
               <span
                 className={cn(
-                  "min-w-[1.25rem] text-center text-xs px-1 sm:px-1.5 py-0.5 rounded-full tabular-nums",
+                  "min-w-[1.5rem] text-center text-xs px-1.5 py-0.5 rounded-full tabular-nums",
                   filter === f ? "bg-gp-gold text-gp-ink" : "bg-gp-ink/[0.07] text-gp-ink/80"
                 )}
               >
-                {counts[f]}
+                {/* No zero counts before the list has arrived. */}
+                {loading ? "…" : counts[f]}
               </span>
             </button>
           ))}
@@ -164,8 +188,9 @@ export default function AdminOrdersPage() {
                     {/* Actions */}
                     <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
                       {order.phone && (
-                        <div className="flex gap-2">
-                          <a href={`tel:${order.phone}`} className={cn(BTN_SECONDARY, "flex-1 sm:flex-none px-4 tabular-nums whitespace-nowrap")}>
+                        // Wraps onto two lines on narrow phones rather than running past the card.
+                        <div className="flex flex-wrap gap-2">
+                          <a href={`tel:${order.phone}`} className={cn(BTN_SECONDARY, "flex-1 basis-[10rem] sm:flex-none sm:basis-auto px-4 tabular-nums break-all")}>
                             <Phone size={15} />
                             {order.phone}
                           </a>
@@ -173,7 +198,7 @@ export default function AdminOrdersPage() {
                             href={`https://wa.me/${order.phone.replace(/\D/g, "")}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-full bg-emerald-700 text-white text-sm font-semibold hover:bg-emerald-800 transition-colors flex-1 sm:flex-none"
+                            className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-full bg-emerald-700 text-white text-sm font-semibold hover:bg-emerald-800 transition-colors flex-1 basis-[8rem] sm:flex-none sm:basis-auto"
                           >
                             <MessageSquare size={15} />
                             WhatsApp
@@ -181,39 +206,42 @@ export default function AdminOrdersPage() {
                         </div>
                       )}
 
-                      <div className="flex items-center gap-2 sm:ml-auto">
+                      <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
                         {order.status !== "seen" && (
                           <button
                             onClick={() => updateStatus(order.id, "seen")}
-                            className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3.5 rounded-full text-sm font-medium text-amber-900 bg-amber-50 border border-amber-300 hover:bg-amber-100 transition-colors flex-1 sm:flex-none"
+                            className={cn(BTN_SECONDARY, "px-3.5 flex-1 basis-[8.5rem] sm:basis-auto sm:flex-none whitespace-nowrap")}
                           >
-                            <Eye size={15} />
+                            <Eye size={15} className="text-amber-700" />
                             Marquer vu
                           </button>
                         )}
                         {order.status !== "done" && (
                           <button
                             onClick={() => updateStatus(order.id, "done")}
-                            className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3.5 rounded-full text-sm font-medium text-emerald-900 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 transition-colors flex-1 sm:flex-none"
+                            className={cn(BTN_SECONDARY, "px-3.5 flex-1 basis-[8.5rem] sm:basis-auto sm:flex-none whitespace-nowrap")}
                           >
-                            <CheckCircle2 size={15} />
-                            Terminé
+                            <CheckCircle2 size={15} className="text-emerald-700" />
+                            Marquer terminé
                           </button>
                         )}
                         {order.status === "done" && (
                           <button
                             onClick={() => updateStatus(order.id, "new")}
-                            className={cn(BTN_SECONDARY, "px-3.5 flex-1 sm:flex-none")}
+                            className={cn(BTN_SECONDARY, "px-3.5 flex-1 basis-[8.5rem] sm:basis-auto sm:flex-none whitespace-nowrap")}
                           >
                             <RotateCcw size={15} />
                             Réouvrir
                           </button>
                         )}
                         <button
-                          onClick={() => deleteOrder(order.id)}
-                          className={cn(ICON_BTN_BASE, "hover:text-red-700 hover:bg-red-50")}
+                          onClick={() => {
+                            setDeleteError(null);
+                            setPendingDelete(order);
+                          }}
+                          className={cn(ICON_BTN_BASE, "ml-auto sm:ml-0 hover:text-red-700 hover:bg-red-50")}
                           title="Supprimer"
-                          aria-label="Supprimer cette commande"
+                          aria-label={order.name.trim() ? `Supprimer la demande ${ofName(order.name)}` : "Supprimer cette demande"}
                         >
                           <Trash2 size={17} />
                         </button>
@@ -226,6 +254,19 @@ export default function AdminOrdersPage() {
           </ul>
         )}
       </div>
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title={pendingDelete.name.trim() ? `Supprimer la demande ${ofName(pendingDelete.name)} ?` : "Supprimer cette demande ?"}
+          confirmLabel="Supprimer"
+          loading={deleting}
+          error={deleteError}
+          onConfirm={() => deleteOrder(pendingDelete.id)}
+          onCancel={() => setPendingDelete(null)}
+        >
+          <p>Elle sera supprimée définitivement de vos commandes.</p>
+        </ConfirmDialog>
+      )}
     </AdminShell>
   );
 }

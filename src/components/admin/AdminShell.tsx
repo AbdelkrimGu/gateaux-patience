@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -31,6 +31,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Phone top bar shows the page name only once the page header has scrolled away.
+  const [headerGone, setHeaderGone] = useState(false);
+  const burgerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   async function handleLogout() {
     await fetch("/api/admin/login", { method: "DELETE" });
@@ -41,12 +46,36 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     return item.exact ? pathname === item.href : pathname.startsWith(item.href);
   }
 
-  // Phone menu: Escape closes it, and the page behind doesn't scroll.
+  // Phone menu is a real modal: focus moves in, Tab stays inside, Escape closes,
+  // and focus goes back to the burger. (The page never scrolls behind it: the
+  // shell is a fixed-height layout and only <main> scrolls.)
   useEffect(() => {
     if (!sidebarOpen) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setSidebarOpen(false);
+    const burger = burgerRef.current;
+    closeRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSidebarOpen(false);
+        return;
+      }
+      if (e.key !== "Tab" || !menuRef.current) return;
+      const focusables = menuRef.current.querySelectorAll<HTMLElement>("a[href], button:not([disabled])");
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      burger?.focus();
+    };
   }, [sidebarOpen]);
 
   const current = NAV.find((n) => isActive(n));
@@ -134,6 +163,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div className="fixed inset-0 bg-gp-ink/70 motion-safe:animate-gpa-fade" onClick={() => setSidebarOpen(false)} />
           <aside
+            ref={menuRef}
             data-surface="ink"
             role="dialog"
             aria-modal="true"
@@ -141,6 +171,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             className="relative z-10 flex flex-col w-[84vw] max-w-[310px] h-full bg-gp-ink text-gp-cream shadow-[24px_0_48px_-24px_rgb(0_0_0/0.6)] pt-[env(safe-area-inset-top)] motion-safe:animate-gpa-drawer"
           >
             <button
+              ref={closeRef}
               type="button"
               onClick={() => setSidebarOpen(false)}
               aria-label="Fermer le menu"
@@ -162,6 +193,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         >
           <div className="flex items-center gap-1 h-14 px-1.5">
             <button
+              ref={burgerRef}
               className="w-11 h-11 rounded-full flex items-center justify-center text-gp-cream hover:bg-gp-cream/[0.08]"
               onClick={() => setSidebarOpen(true)}
               aria-label="Ouvrir le menu"
@@ -173,8 +205,14 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               <BrandBadge size={32} className="ring-gp-gold" />
               <BrandWordmark className="w-[112px] text-gp-gold" label="Gateaux Patience, tableau de bord" />
             </Link>
-            {/* Where she is: the masthead below says it big; this stays once it scrolls away. */}
-            <span className="flex-1 min-w-0 text-right pr-1 text-[13px] font-medium text-gp-cream/75 truncate">
+            {/* Where she is, once the page header (which says it big) has scrolled away. */}
+            <span
+              aria-hidden={!headerGone}
+              className={cn(
+                "flex-1 min-w-0 text-right pr-1 text-[13px] font-medium text-gp-cream/80 truncate transition-opacity duration-150",
+                headerGone ? "opacity-100" : "opacity-0"
+              )}
+            >
               {current && current.href !== "/admin" ? current.label : ""}
             </span>
             <a
@@ -192,7 +230,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         {/* Content: cream paper under the ink masthead of each page. */}
         {/* scroll-pb: a focused field is scrolled clear of sticky bottom bars (pricing result bar). */}
         {/* Bottom padding on an inner box: Chrome keeps sticky bars out of the scroller's own padding. */}
-        <main className="flex-1 overflow-y-auto bg-gp-cream px-4 md:px-8 scroll-pb-32">
+        <main
+          className="flex-1 overflow-y-auto bg-gp-cream px-4 md:px-8 scroll-pb-32"
+          onScroll={(e) => setHeaderGone(e.currentTarget.scrollTop > 64)}
+        >
           <div className="pb-10">{children}</div>
         </main>
       </div>

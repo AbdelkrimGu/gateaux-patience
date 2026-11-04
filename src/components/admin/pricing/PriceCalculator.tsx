@@ -257,7 +257,8 @@ export default function PriceCalculator({
   return (
     <div
       ref={rootRef}
-      className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-5 lg:items-start"
+      // Below lg: -mb-10 cancels the page's bottom padding so the price bar ends at the very bottom.
+      className="-mb-10 lg:mb-0 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-5 lg:items-start"
       onFocus={(e: FocusEvent) => isTypingField(e.target) && setTyping(true)}
       onBlur={(e: FocusEvent) => !isTypingField(e.relatedTarget) && setTyping(false)}
     >
@@ -557,7 +558,7 @@ export default function PriceCalculator({
         </section>
 
         {/* ---------- Phone: sticky result bar (one slim line while typing) ---------- */}
-        <div className="lg:hidden sticky bottom-0 z-20 pt-1">
+        <div className="lg:hidden sticky bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-20 pt-1">
           <div className="rounded-[22px] overflow-hidden shadow-[0_-10px_30px_-12px_rgb(var(--gp-ink)/0.55)] ring-1 ring-gp-ink/20">
             {typing ? (
               <div data-surface="ink" className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm bg-gp-ink text-gp-cream">
@@ -629,7 +630,7 @@ export default function PriceCalculator({
       </div>
 
       {/* ---------- Desktop: result column ---------- */}
-      <aside className="hidden lg:block lg:sticky lg:top-0">
+      <aside className="hidden lg:block lg:sticky lg:top-4">
         <div className={cn(CARD_CLASS, "p-4")}>
           <h2 className="font-display text-[17px] font-semibold tracking-[-0.02em] text-gp-ink mb-2">Résultat</h2>
           <PriceBreakdown

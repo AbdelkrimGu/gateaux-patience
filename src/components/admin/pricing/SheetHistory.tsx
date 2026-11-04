@@ -41,14 +41,6 @@ export function PriceDelta({ from, to, className }: { from: number; to: number; 
   );
 }
 
-/** Same, in one word, for a one-line hint in the list. */
-export const TRIGGER_SHORT: Record<PriceChangeTrigger, string> = {
-  created: "création",
-  template: "fiche",
-  cost: "coût",
-  settings: "réglages",
-};
-
 export type ChangeSummary = Pick<TemplatePriceChange, "at" | "trigger" | "oldPrice" | "newPrice">;
 
 /** The last change as a sentence (screen readers, the size's action sheet). */
@@ -58,8 +50,8 @@ export function changeSentence(entry: ChangeSummary): string {
   return `${d === 0 ? "Prix inchangé" : signed(d)} le ${formatShortDate(entry.at)} · ${TRIGGER_LABEL[entry.trigger]}`;
 }
 
-/** One short line under a price: « +50 DA · 18/10 · coût » (`full`: « Coût modifié »). */
-export function LatestChangeHint({ entry, full = false }: { entry: ChangeSummary; full?: boolean }) {
+/** One short line under a price, in plain words: « +50 DA · 18/10 (coût modifié) », « Prix inchangé · 04/11 (coût modifié) ». */
+export function LatestChangeHint({ entry }: { entry: ChangeSummary }) {
   if (entry.trigger === "created" || entry.oldPrice === null) {
     return <span className="text-xs text-gp-ink/65">depuis le {formatShortDate(entry.at)}</span>;
   }
@@ -67,9 +59,9 @@ export function LatestChangeHint({ entry, full = false }: { entry: ChangeSummary
   return (
     <span className="text-xs text-gp-ink/65 whitespace-nowrap">
       <span className={cn("font-semibold tabular-nums", d > 0 ? "text-red-700" : d < 0 ? "text-emerald-700" : "text-gp-ink/70")}>
-        {d === 0 ? "=" : signed(d)}
+        {d === 0 ? "Prix inchangé" : signed(d)}
       </span>
-      {` · ${formatShortDate(entry.at)} · ${full ? TRIGGER_LABEL[entry.trigger] : TRIGGER_SHORT[entry.trigger]}`}
+      {` · ${formatShortDate(entry.at)} (${TRIGGER_LABEL[entry.trigger].toLowerCase()})`}
     </span>
   );
 }

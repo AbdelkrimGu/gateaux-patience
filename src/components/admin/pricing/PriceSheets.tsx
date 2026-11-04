@@ -526,7 +526,7 @@ function SizeRow({
               type="button"
               onClick={onHistory}
               aria-label={`Historique des prix : ${v.label}. ${changeSentence(change)}`}
-              className="min-w-0 truncate text-left py-2 -my-2 hover:opacity-80"
+              className="min-w-0 truncate text-left py-[14px] -my-[14px] hover:opacity-80"
             >
               <LatestChangeHint entry={change} />
             </button>
@@ -544,7 +544,7 @@ function SizeRow({
         onClick={() => onCopy(b.finalPrice)}
         aria-label={copied ? "Prix copié" : `Copier le prix : ${v.label}`}
         className={cn(
-          "inline-flex items-center justify-center w-10 h-10 rounded-xl transition shrink-0",
+          "inline-flex items-center justify-center w-11 h-11 rounded-full transition shrink-0",
           copied ? "bg-emerald-700 text-white" : "bg-gp-raspberry/[0.06] text-gp-raspberry hover:bg-gp-raspberry/10"
         )}
       >
@@ -554,7 +554,7 @@ function SizeRow({
         type="button"
         onClick={onMore}
         aria-label={`Plus d'actions : ${v.label}`}
-        className="inline-flex items-center justify-center w-10 h-10 rounded-xl text-gp-ink/65 hover:bg-gp-ink/[0.07] hover:text-gp-ink transition shrink-0"
+        className="inline-flex items-center justify-center w-11 h-11 rounded-full text-gp-ink/65 hover:bg-gp-ink/[0.07] hover:text-gp-ink transition shrink-0"
       >
         <MoreHorizontal size={18} />
       </button>

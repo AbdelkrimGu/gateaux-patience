@@ -66,10 +66,10 @@ export function FixedLineRow({
         >
           <CheckMark checked={l.included} />
           <span className="min-w-0">
-            <span className={cn("block text-sm font-medium truncate", l.included ? "text-gp-ink" : "text-gp-ink/70 line-through")}>
+            <span className={cn("block text-sm font-medium leading-snug break-words", l.included ? "text-gp-ink" : "text-gp-ink/70 line-through")}>
               {l.name}
             </span>
-            <span className="block text-xs text-gp-ink/65 truncate">
+            <span className="block text-xs text-gp-ink/65 tabular-nums">
               {priceLabel(l)}
               {flag}
             </span>
@@ -158,7 +158,7 @@ export function VariableLineRow({
             {l.name}
             {flag}
           </p>
-          <p className="text-xs text-gp-ink/65">{priceLabel(l)}</p>
+          <p className="text-xs text-gp-ink/65 tabular-nums">{priceLabel(l)}</p>
           {hint}
         </div>
         <span className="pt-0.5 text-sm font-semibold tabular-nums text-gp-ink whitespace-nowrap">{formatDA(cost)}</span>

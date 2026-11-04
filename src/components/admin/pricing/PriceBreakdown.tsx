@@ -9,8 +9,7 @@ import { formatHours } from "./format";
 
 type SettingsLike = Pick<PricingSettings, "hourlyRate" | "marginPercent" | "roundTo">;
 
-/** `provisional`: only on the Réglages tab, while the owner hasn't confirmed her formula. */
-export function FormulaSteps({ settings, provisional = false }: { settings?: SettingsLike; provisional?: boolean }) {
+export function FormulaSteps({ settings }: { settings?: SettingsLike }) {
   return (
     <div className="text-sm text-gp-ink/80 space-y-2">
       <ol className="list-decimal pl-5 space-y-1">
@@ -23,11 +22,6 @@ export function FormulaSteps({ settings, provisional = false }: { settings?: Set
           {settings.roundTo > 0
             ? `Arrondi : au multiple de ${formatDA(settings.roundTo)} supérieur.`
             : "Pas d'arrondi : le prix est gardé tel quel."}
-        </p>
-      )}
-      {provisional && (
-        <p className="text-xs text-gp-ink/65">
-          Formule provisoire : elle pourra être ajustée selon votre propre méthode.
         </p>
       )}
     </div>

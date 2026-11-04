@@ -19,6 +19,7 @@ export default async function NewCakePage() {
       <PageHeader
         width="4xl"
         eyebrow={<BackLink href="/admin/cakes">Gâteaux</BackLink>}
+        eyebrowOnPhone
         title="Nouveau gâteau"
         subtitle="Remplissez les informations ci-dessous pour ajouter un gâteau"
       />

@@ -40,9 +40,10 @@ export default async function AdminCakesPage() {
         title="Gâteaux"
         subtitle={`${cakes.length} gâteau${cakes.length !== 1 ? "x" : ""}`}
         actions={
-          <Link href="/admin/cakes/new" className={BTN_GOLD}>
+          <Link href="/admin/cakes/new" className={BTN_GOLD} aria-label="Nouveau gâteau">
             <Plus size={16} />
-            Nouveau gâteau
+            <span className="sm:hidden">Ajouter</span>
+            <span className="hidden sm:inline">Nouveau gâteau</span>
           </Link>
         }
       />
@@ -66,11 +67,11 @@ export default async function AdminCakesPage() {
             {/* Mobile card list */}
             <ul className="md:hidden space-y-2.5">
               {cakes.map((cake) => (
-                <li key={cake.id} className={cn(CARD, "p-2.5 flex items-center gap-2")}>
+                <li key={cake.id} className={cn(CARD, "p-2.5 pr-1 flex items-center gap-1")}>
                   <Link href={`/admin/cakes/${cake.id}`} className="flex items-center gap-3 flex-1 min-w-0 rounded-xl p-0.5">
                     <Thumb src={cake.images[0]} size="md" />
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-gp-ink truncate">
+                      <p className="font-semibold text-gp-ink leading-snug line-clamp-2 break-words">
                         {cake.translations.fr.title || "Sans titre"}
                       </p>
                       <p className="text-xs text-gp-ink/70 truncate">{cake.categoryLabel.fr}</p>
@@ -86,16 +87,9 @@ export default async function AdminCakesPage() {
                       </div>
                     </div>
                   </Link>
+                  {/* The whole row opens the cake, so phones only need the delete button here. */}
                   <div className="flex items-center shrink-0">
-                    <Link
-                      href={`/admin/cakes/${cake.id}`}
-                      className={cn(ICON_BTN_BASE, "hover:text-gp-raspberry hover:bg-gp-raspberry/[0.06]")}
-                      title="Modifier"
-                      aria-label="Modifier"
-                    >
-                      <Pencil size={17} />
-                    </Link>
-                    <DeleteCakeButton id={cake.id} />
+                    <DeleteCakeButton id={cake.id} title={cake.translations.fr.title.trim() || "Sans titre"} />
                   </div>
                 </li>
               ))}
@@ -152,7 +146,7 @@ export default async function AdminCakesPage() {
                             >
                               <Pencil size={16} />
                             </Link>
-                            <DeleteCakeButton id={cake.id} />
+                            <DeleteCakeButton id={cake.id} title={cake.translations.fr.title.trim() || "Sans titre"} />
                           </div>
                         </td>
                       </tr>
