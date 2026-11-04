@@ -49,6 +49,11 @@ export const TRIGGER_SHORT: Record<PriceChangeTrigger, string> = {
   settings: "réglages",
 };
 
+// The same labels inside a sentence: « (coût modifié) ».
+const TRIGGER_LONG_LOWER = Object.fromEntries(
+  Object.entries(TRIGGER_LABEL).map(([k, v]) => [k, v.toLowerCase()])
+) as Record<PriceChangeTrigger, string>;
+
 export type ChangeSummary = Pick<TemplatePriceChange, "at" | "trigger" | "oldPrice" | "newPrice">;
 
 /** The last change as a sentence (screen readers, the size's action sheet). */
@@ -58,18 +63,18 @@ export function changeSentence(entry: ChangeSummary): string {
   return `${d === 0 ? "Prix inchangé" : signed(d)} le ${formatShortDate(entry.at)} · ${TRIGGER_LABEL[entry.trigger]}`;
 }
 
-/** One short line under a price: « +50 DA · 18/10 · coût » (`full`: « Coût modifié »). */
+/** One short line under a price: « +50 DA · 18/10 (coût modifié) », « Prix inchangé · 04/11 (fiche modifiée) ». */
 export function LatestChangeHint({ entry, full = false }: { entry: ChangeSummary; full?: boolean }) {
   if (entry.trigger === "created" || entry.oldPrice === null) {
     return <span className="text-xs text-gp-ink/65">depuis le {formatShortDate(entry.at)}</span>;
   }
   const d = Math.round((entry.newPrice - entry.oldPrice) * 100) / 100;
   return (
-    <span className="text-xs text-gp-ink/65 whitespace-nowrap">
+    <span className="text-xs text-gp-ink/65">
       <span className={cn("font-semibold tabular-nums", d > 0 ? "text-red-700" : d < 0 ? "text-emerald-700" : "text-gp-ink/70")}>
-        {d === 0 ? "=" : signed(d)}
+        {d === 0 ? "Prix inchangé" : signed(d)}
       </span>
-      {` · ${formatShortDate(entry.at)} · ${full ? TRIGGER_LABEL[entry.trigger] : TRIGGER_SHORT[entry.trigger]}`}
+      {` · ${formatShortDate(entry.at)} (${(full ? TRIGGER_LABEL : TRIGGER_LONG_LOWER)[entry.trigger]})`}
     </span>
   );
 }

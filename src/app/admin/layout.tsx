@@ -24,6 +24,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#F8F2E9",
+  // Edge to edge when added to the home screen: the top bar, the tab bar and
+  // the login pad themselves with env(safe-area-inset-*).
+  viewportFit: "cover",
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

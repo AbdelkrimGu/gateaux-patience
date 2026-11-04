@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -18,6 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import { BrandBadge, BrandWordmark } from "@/components/gp/Brand";
 import Squiggle from "@/components/gp/Squiggle";
+import { useDialogFocus } from "./dialogs";
 
 const NAV = [
   { href: "/admin", label: "Tableau de bord", short: "Accueil", icon: LayoutDashboard, exact: true },
@@ -27,7 +28,47 @@ const NAV = [
   { href: "/admin/pricing", label: "Calcul des prix", short: "Prix", icon: Calculator, exact: false },
 ];
 
-export default function AdminShell({ children }: { children: React.ReactNode }) {
+const alwaysTop = () => true;
+
+/** Phone menu panel: focus goes to « Fermer le menu », stays inside, returns to the burger. */
+function PhoneMenu({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+  const panel = useRef<HTMLElement>(null);
+  const closeBtn = useRef<HTMLButtonElement>(null);
+  useDialogFocus(panel, alwaysTop, closeBtn);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  return (
+    <div className="md:hidden fixed inset-0 z-50 flex" role="dialog" aria-modal="true" aria-label="Menu">
+      <div className="fixed inset-0 bg-gp-ink/50" onClick={onClose} />
+      <aside
+        ref={panel}
+        tabIndex={-1}
+        className="ga-drawer relative z-10 flex h-full w-[min(19rem,86vw)] flex-col bg-gp-cream shadow-gp-lifted outline-none pt-[env(safe-area-inset-top)]"
+      >
+        <button
+          ref={closeBtn}
+          type="button"
+          onClick={onClose}
+          aria-label="Fermer le menu"
+          className="absolute right-2 top-[calc(0.5rem+env(safe-area-inset-top))] inline-flex h-11 w-11 items-center justify-center rounded-full text-gp-ink/70 hover:bg-gp-ink/5"
+        >
+          <X size={20} />
+        </button>
+        {children}
+      </aside>
+    </div>
+  );
+}
+
+/**
+ * `title`: what the page is (« Nouveau gâteau »), shown in the phone top bar.
+ * Defaults to the section name. On phones the top bar is the page title: the
+ * page headers then skip their big H1 (see PageHeader).
+ */
+export default function AdminShell({ children, title }: { children: React.ReactNode; title?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -41,14 +82,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     return item.exact ? pathname === item.href : pathname.startsWith(item.href);
   }
 
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [menuOpen]);
-
   const current = NAV.find((n) => isActive(n));
+  const closeMenu = () => setMenuOpen(false);
 
   // Shared by the computer sidebar and the phone menu.
   function sidebar(close?: () => void) {
@@ -96,7 +131,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                     <Squiggle
                       variant="underline"
                       drawn
-                      duration={500}
+                      duration={200}
                       strokeWidth={2.5}
                       className="absolute -bottom-1.5 left-0 h-[6px] w-full text-gp-raspberry"
                     />
@@ -138,37 +173,28 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       </aside>
 
       {/* Phone: full menu (logout, view site…) behind the top-right button */}
-      {menuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex" role="dialog" aria-modal="true" aria-label="Menu">
-          <div className="fixed inset-0 bg-gp-ink/50" onClick={() => setMenuOpen(false)} />
-          <aside className="ga-drawer relative z-10 flex h-full w-[min(19rem,86vw)] flex-col bg-gp-cream shadow-gp-lifted">
-            <button
-              type="button"
-              onClick={() => setMenuOpen(false)}
-              aria-label="Fermer le menu"
-              className="absolute right-2 top-2 inline-flex h-11 w-11 items-center justify-center rounded-full text-gp-ink/70 hover:bg-gp-ink/5"
-            >
-              <X size={20} />
-            </button>
-            {sidebar(() => setMenuOpen(false))}
-          </aside>
-        </div>
-      )}
+      {menuOpen && <PhoneMenu onClose={closeMenu}>{sidebar(closeMenu)}</PhoneMenu>}
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="flex shrink-0 items-center gap-3 border-b border-gp-gold/30 bg-gp-cream/95 px-4 py-2 md:px-8 md:py-3">
-          <Link href="/admin" className="md:hidden shrink-0 rounded-full" aria-label="Tableau de bord">
+        {/* Safe-area top: added to the home screen (viewport-fit=cover), the bar clears the notch. */}
+        <header className="flex shrink-0 items-center gap-2 border-b border-gp-gold/30 bg-gp-cream/95 px-2 pt-[max(0.25rem,env(safe-area-inset-top))] pb-1 md:gap-3 md:px-8 md:py-3">
+          <Link
+            href="/admin"
+            className="md:hidden inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+            aria-label="Tableau de bord"
+          >
             <BrandBadge size={36} />
           </Link>
-          <p className="min-w-0 flex-1 truncate">
-            <span className="hidden md:inline text-xs font-medium uppercase tracking-[0.16em] text-gp-ink/65">
+          <div className="min-w-0 flex-1">
+            <p className="hidden md:block truncate text-xs font-medium uppercase tracking-[0.16em] text-gp-ink/65">
               Atelier · {current?.label || "Admin"}
-            </span>
-            <span className="md:hidden font-display text-lg font-semibold tracking-[-0.02em] text-gp-ink">
-              {current?.label || "Admin"}
-            </span>
-          </p>
+            </p>
+            {/* Phones: the page title lives here (PageHeader hides its H1 below md). */}
+            <h1 className="md:hidden truncate text-lg font-semibold leading-tight tracking-[-0.02em] text-gp-ink">
+              {title || current?.label || "Admin"}
+            </h1>
+          </div>
           <a
             href="/"
             target="_blank"
@@ -190,7 +216,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </header>
 
         {/* scroll-pb: a focused field is scrolled clear of sticky bottom bars (pricing result bar). */}
-        <main className="flex-1 overflow-y-auto px-4 pt-5 pb-4 md:px-8 md:pt-8 md:pb-12 scroll-pb-32">{children}</main>
+        <main className="flex-1 overflow-y-auto px-4 pt-4 pb-4 md:px-8 md:pt-8 md:pb-12 scroll-pb-32">{children}</main>
 
         {/* Phone: the five sections always one tap away, under the thumb */}
         <nav

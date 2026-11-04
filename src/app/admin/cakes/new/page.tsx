@@ -14,7 +14,7 @@ export default async function NewCakePage() {
   const categories = await getCategories();
 
   return (
-    <AdminShell>
+    <AdminShell title="Nouveau gâteau">
       {/* CakeForm prints the page title next to its Save button. */}
       <CakeForm mode="new" categories={categories} />
     </AdminShell>

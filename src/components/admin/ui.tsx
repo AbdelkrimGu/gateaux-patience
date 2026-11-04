@@ -22,6 +22,8 @@ export const BTN_SECONDARY = cn(
 
 export const BTN_GHOST = cn(BTN_BASE, "px-4 text-gp-ink/75 hover:bg-gp-ink/5 hover:text-gp-ink");
 
+// The one danger fill of the admin (every "Supprimer" confirm uses it, through
+// ConfirmDialog): brick red-700, far enough from raspberry to read as "destroy".
 export const BTN_DANGER = cn(BTN_BASE, "bg-red-700 text-white hover:bg-red-800");
 
 /** Secondary action that pairs with the raspberry one (AI helpers…): ink pill. */
@@ -33,34 +35,47 @@ export const ICON_BUTTON =
 export const ICON_BUTTON_DANGER = cn(ICON_BUTTON, "hover:bg-red-50 hover:text-red-700");
 
 export const FIELD =
-  "w-full min-h-11 px-3.5 py-2.5 rounded-xl border border-gp-ink/20 bg-white text-base sm:text-sm text-gp-ink placeholder:text-gp-ink/45 outline-none transition focus:border-gp-raspberry focus:ring-4 focus:ring-gp-raspberry/15 disabled:bg-gp-cream disabled:text-gp-ink/65";
+  "w-full min-h-11 px-3.5 py-2.5 rounded-xl border border-gp-ink/20 bg-white text-base lg:text-sm text-gp-ink placeholder:text-gp-ink/45 outline-none transition focus:border-gp-raspberry focus:ring-4 focus:ring-gp-raspberry/15 disabled:bg-gp-cream disabled:text-gp-ink/65";
 
 export const FIELD_LABEL = "block text-[13px] font-medium text-gp-ink/75 mb-1.5";
 
-/** Title block of every admin page, with the gold doily edge under it. */
+/**
+ * Title block of every admin page, with the gold doily edge under it.
+ * Phones: the top bar of AdminShell already says what the page is (it holds
+ * the H1 there), so the big title and the lace are computer-only; eyebrow,
+ * subtitle and actions stay. `hideSubtitleOnPhone`: a long explanatory
+ * subtitle that would push the work below the first screen.
+ */
 export function PageHeader({
   eyebrow,
   title,
   subtitle,
   actions,
+  hideSubtitleOnPhone = false,
 }: {
   eyebrow?: string;
   title: ReactNode;
   subtitle?: ReactNode;
   actions?: ReactNode;
+  hideSubtitleOnPhone?: boolean;
 }) {
+  const phoneEmpty = !eyebrow && !actions && (!subtitle || hideSubtitleOnPhone);
   return (
-    <header>
+    <header className={cn(phoneEmpty && "ga-phone-collapsed hidden md:block")}>
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
         <div className="min-w-0">
           {eyebrow && (
-            <p className="text-xs font-medium uppercase tracking-[0.16em] text-gp-ink/65 mb-1">{eyebrow}</p>
+            <p className="text-xs font-medium uppercase tracking-[0.16em] text-gp-ink/65 md:mb-1">{eyebrow}</p>
           )}
-          <h1 className="text-[1.75rem] md:text-[2.125rem] font-semibold leading-[1.05] tracking-[-0.03em] text-gp-ink">
+          <h1 className="hidden md:block text-[2.125rem] font-semibold leading-[1.05] tracking-[-0.03em] text-gp-ink">
             {title}
           </h1>
-          {subtitle && <p className="mt-1.5 text-sm text-gp-ink/70">{subtitle}</p>}
-          <div aria-hidden className="ga-lace w-28 mt-3" />
+          {subtitle && (
+            <p className={cn("mt-0.5 md:mt-1.5 text-sm text-gp-ink/70", hideSubtitleOnPhone && "hidden md:block")}>
+              {subtitle}
+            </p>
+          )}
+          <div aria-hidden className="hidden md:block ga-lace w-28 mt-3" />
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </div>

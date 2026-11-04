@@ -148,7 +148,7 @@ export default function PricingSettingsForm({ settings, onSaved }: Props) {
 
       <section className={cn(CARD_CLASS, "p-4")}>
         <h2 className="font-semibold text-gp-ink mb-2">Comment le prix est calculé</h2>
-        <FormulaSteps settings={settings} provisional />
+        <FormulaSteps settings={settings} />
       </section>
     </div>
   );

@@ -15,7 +15,7 @@ import PriceBreakdown from "./PriceBreakdown";
 import { CakePicker, CakeThumb, SizeDialog, StandardSizesDialog, type NewSize } from "./SheetDialogs";
 import {
   blockedReason, hasContent, isUnfinished, MAX_SIZES, partsFromLabel, priceDraft, reconcileSheetFixed,
-  scaleDraft, SHEET_DRAFT_KEY, sheetDraftFrom, standardSizes, toTemplateInput, toVariantInput,
+  scaleDraft, SHEET_DRAFT_KEY, sheetDraftFrom, standardSizes, toTemplateInput, toVariantInput, unfinishedText,
   variantDraftFrom, variantProblem, type CakeOption, type SheetDraft, type StoredSheetDraft,
   type VariantDraft,
 } from "./sheet-draft";
@@ -41,8 +41,12 @@ interface Props {
   onDirtyChange?: (dirty: boolean) => void;
 }
 
-/** What a size shows in its pill and in the footer. */
-type SizeInfo = { priced: PricedVariant; problem: string | null; unfinished: boolean; noHours: boolean };
+/**
+ * What a size shows in its pill and in the footer. `note` replaces the price in
+ * the breakdowns: a problem, or « à compléter » for a size without ingredients
+ * (such a size never shows a price, see isUnfinished in sheet-draft).
+ */
+type SizeInfo = { priced: PricedVariant; problem: string | null; unfinished: boolean; noHours: boolean; note: string | null };
 
 function storeDraft(draft: SheetDraft, selectedId: string | null) {
   try {
@@ -115,9 +119,17 @@ export default function SheetEditor({
     draft.variants.map((v) => {
       const p = priceDraft(v, items, settings);
       const input = toVariantInput(v, items);
+      const problem = variantProblem(v, p);
+      const unfinished = isUnfinished(input);
       return [
         v.id,
-        { priced: p, problem: variantProblem(v, p), unfinished: isUnfinished(input), noHours: !(input.hours > 0) },
+        {
+          priced: p,
+          problem,
+          unfinished,
+          noHours: !(input.hours > 0),
+          note: problem ?? (unfinished ? `à compléter : ${unfinishedText(input)}` : null),
+        },
       ];
     })
   );
@@ -478,6 +490,7 @@ export default function SheetEditor({
                 v={selected}
                 priced={current.priced}
                 problem={current.problem}
+                priceNote={current.note}
                 triedSave={triedSave}
                 saved={savedIds.has(selected.id)}
                 itemsById={itemsById}
@@ -524,7 +537,7 @@ export default function SheetEditor({
                   settings={settings}
                   hours={draftHours(selected)}
                   portions={draftPortions(selected)}
-                  incomplete={current.problem}
+                  incomplete={current.note}
                 />
               </div>
             </aside>
@@ -601,6 +614,7 @@ function VariantEditor({
   v,
   priced,
   problem,
+  priceNote,
   triedSave,
   saved,
   itemsById,
@@ -619,6 +633,8 @@ function VariantEditor({
   v: VariantDraft;
   priced: PricedVariant;
   problem: string | null;
+  /** Replaces the price in the detail below (problem or « à compléter »). */
+  priceNote: string | null;
   triedSave: boolean;
   saved: boolean;
   itemsById: Map<string, CostItem>;
@@ -793,7 +809,7 @@ function VariantEditor({
           settings={settings}
           hours={draftHours(v)}
           portions={draftPortions(v)}
-          incomplete={problem}
+          incomplete={priceNote}
         />
       </section>
     </>

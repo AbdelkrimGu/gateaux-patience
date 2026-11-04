@@ -2,13 +2,14 @@
 
 import { useRef, useState } from "react";
 import {
-  Plus, Pencil, Trash2, Check, X, Loader2, Tag, AlertTriangle,
+  Plus, Pencil, Trash2, Check, X, Loader2, Tag,
   Upload, ImagePlus, Sparkles,
 } from "lucide-react";
 import type { Category } from "@/lib/db-types";
 import { compressImage } from "@/lib/image-compress";
 import { cn } from "@/lib/utils";
-import { BTN_DANGER, BTN_GHOST, BTN_INK, BTN_PRIMARY, BTN_SECONDARY, CARD, FIELD, ICON_BUTTON, ICON_BUTTON_DANGER, PageHeader } from "./ui";
+import { ConfirmDialog } from "./dialogs";
+import { BTN_GHOST, BTN_INK, BTN_PRIMARY, CARD, FIELD, ICON_BUTTON, ICON_BUTTON_DANGER, PageHeader } from "./ui";
 
 interface Props {
   initial: Category[];
@@ -344,56 +345,31 @@ export default function CategoriesManager({ initial }: Props) {
         )}
       </div>
 
-      {/* Delete confirm dialog */}
+      {/* Delete confirm dialog: the same one as every other delete of the admin */}
       {deleteState && (
-        <div className="fixed inset-0 !m-0 z-50 flex items-end sm:items-center justify-center bg-gp-ink/50 sm:p-4">
-          <div
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="delete-category-title"
-            className="bg-gp-cream rounded-t-3xl sm:rounded-3xl shadow-gp-lifted w-full sm:max-w-sm p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6"
-          >
-            <div className="flex items-start gap-3 mb-4">
-              <div className="w-11 h-11 rounded-full bg-red-50 text-red-700 ring-1 ring-red-200 flex items-center justify-center shrink-0">
-                <AlertTriangle size={20} />
-              </div>
-              <div>
-                <h2 id="delete-category-title" className="text-lg font-semibold text-gp-ink leading-tight">Supprimer la catégorie ?</h2>
-                <p className="text-sm text-gp-ink/75 mt-1">
-                  « {deleteState.label} » sera supprimée définitivement (image incluse).
-                </p>
-              </div>
-            </div>
-            {deleteState.loading ? (
-              <p className="text-sm text-gp-ink/70 flex items-center gap-2 mb-4">
-                <Loader2 size={14} className="animate-spin" /> Vérification...
-              </p>
-            ) : deleteState.cakesAffected && deleteState.cakesAffected > 0 ? (
-              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-4">
-                {deleteState.cakesAffected} gâteau{deleteState.cakesAffected > 1 ? "x" : ""} utilise{deleteState.cakesAffected > 1 ? "nt" : ""} cette catégorie.
-                Ils resteront visibles mais leur catégorie ne pourra plus être modifiée vers celle-ci.
-              </p>
-            ) : (
-              <p className="text-sm text-gp-ink/75 bg-white border border-gp-gold/25 rounded-xl px-3 py-2 mb-4">
-                Aucun gâteau n&apos;utilise cette catégorie.
-              </p>
-            )}
-            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
-              <button
-                type="button"
-                onClick={() => setDeleteState(null)}
-                disabled={deleteState.loading}
-                className={BTN_SECONDARY}
-              >
-                Annuler
-              </button>
-              <button type="button" onClick={confirmDelete} disabled={deleteState.loading} className={BTN_DANGER}>
-                <Trash2 size={16} />
-                Supprimer
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="Supprimer la catégorie ?"
+          confirmLabel="Supprimer"
+          loading={deleteState.loading}
+          onCancel={() => setDeleteState(null)}
+          onConfirm={confirmDelete}
+        >
+          <p>« {deleteState.label} » sera supprimée définitivement (image incluse).</p>
+          {deleteState.loading ? (
+            <p className="text-gp-ink/70 flex items-center gap-2">
+              <Loader2 size={14} className="animate-spin" /> Vérification...
+            </p>
+          ) : deleteState.cakesAffected && deleteState.cakesAffected > 0 ? (
+            <p className="text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+              {deleteState.cakesAffected} gâteau{deleteState.cakesAffected > 1 ? "x" : ""} utilise{deleteState.cakesAffected > 1 ? "nt" : ""} cette catégorie.
+              Ils resteront visibles mais leur catégorie ne pourra plus être modifiée vers celle-ci.
+            </p>
+          ) : (
+            <p className="text-gp-ink/75 bg-white border border-gp-gold/25 rounded-xl px-3 py-2">
+              Aucun gâteau n&apos;utilise cette catégorie.
+            </p>
+          )}
+        </ConfirmDialog>
       )}
     </div>
   );
@@ -576,7 +552,7 @@ function EditorRow({
                 onClick={handleTranslate}
                 disabled={translating || !data.labels.fr.trim()}
                 title="Traduire en arabe + anglais avec l'IA"
-                className={cn(BTN_INK, "min-h-9 px-3 text-xs gap-1.5 after:absolute after:-inset-y-1 relative after:inset-x-0 after:content-['']")}
+                className={cn(BTN_INK, "px-3.5 text-xs gap-1.5")}
               >
                 {translating ? (
                   <Loader2 size={12} className="animate-spin" />
@@ -600,7 +576,7 @@ function EditorRow({
             )}
           </div>
           <div>
-            <label htmlFor={`cat-${id}-ar`} className="flex items-end md:min-h-9 text-[13px] font-medium text-gp-ink/80 mb-1.5">AR (optionnel)</label>
+            <label htmlFor={`cat-${id}-ar`} className="flex items-end md:min-h-11 text-[13px] font-medium text-gp-ink/80 mb-1.5">AR (optionnel)</label>
             <input
               id={`cat-${id}-ar`}
               type="text"
@@ -612,7 +588,7 @@ function EditorRow({
             />
           </div>
           <div>
-            <label htmlFor={`cat-${id}-en`} className="flex items-end md:min-h-9 text-[13px] font-medium text-gp-ink/80 mb-1.5">EN (optionnel)</label>
+            <label htmlFor={`cat-${id}-en`} className="flex items-end md:min-h-11 text-[13px] font-medium text-gp-ink/80 mb-1.5">EN (optionnel)</label>
             <input
               id={`cat-${id}-en`}
               type="text"

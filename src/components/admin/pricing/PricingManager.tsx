@@ -372,6 +372,7 @@ export default function PricingManager({
       <PageHeader
         title="Calcul des prix"
         subtitle="Le juste prix de chaque gâteau, à partir de vos coûts et de votre temps."
+        hideSubtitleOnPhone
       />
 
       <nav

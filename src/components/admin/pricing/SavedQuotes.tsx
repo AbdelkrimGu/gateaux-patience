@@ -81,36 +81,40 @@ export default function SavedQuotes({ quotes, activeQuoteId, onOpen, onDeleted, 
         ) : (
           <ul className="divide-y divide-gp-gold/20">
             {list.map((quote) => (
-              <li key={quote.id} className="flex items-center gap-2 pl-4 pr-2 py-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <p className="text-sm font-medium text-gp-ink min-w-0 truncate">{quote.name}</p>
-                    {quote.id === activeQuoteId && (
-                      <span className="shrink-0 text-[10px] font-medium text-gp-raspberry bg-gp-raspberry/5 rounded-full px-2 py-0.5">
-                        ouvert
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-base font-bold text-gp-raspberry tabular-nums">{formatDA(quote.result.finalPrice)}</p>
-                  <p className="text-xs text-gp-ink/65 flex flex-wrap items-center gap-x-2">
-                    <span>{formatDate(quote.updatedAt)}</span>
-                    <span className="inline-flex items-center gap-1">
-                      <Clock size={11} /> {formatHours(quote.hours)}
-                    </span>
-                    {quote.portions ? (
-                      <span className="inline-flex items-center gap-1">
-                        <Users size={11} /> {formatQty(quote.portions)} {quote.portions > 1 ? "parts" : "part"}
-                      </span>
-                    ) : null}
-                  </p>
-                  {quote.note && <p className="text-xs text-gp-ink/70 italic truncate mt-0.5">{quote.note}</p>}
-                </div>
+              <li key={quote.id} className="flex items-center gap-1 pr-2">
+                {/* The whole card opens the devis: a big target, and the name gets the room. */}
                 <button
                   type="button"
                   onClick={() => onOpen(quote)}
-                  className="inline-flex items-center gap-1.5 min-h-11 px-4 rounded-full bg-gp-raspberry/5 text-gp-raspberry text-sm font-medium hover:bg-gp-raspberry/10 transition shrink-0"
+                  aria-label={`Ouvrir le devis ${quote.name}`}
+                  className="flex-1 min-w-0 flex items-center gap-3 pl-4 pr-2 py-3 text-left rounded-xl hover:bg-gp-cream/70 transition"
                 >
-                  <FolderOpen size={15} /> Ouvrir
+                  <span className="flex-1 min-w-0">
+                    <span className="flex items-start gap-2 min-w-0">
+                      <span className="text-sm font-medium leading-snug text-gp-ink min-w-0 line-clamp-2">{quote.name}</span>
+                      {quote.id === activeQuoteId && (
+                        <span className="shrink-0 text-[11px] font-medium text-gp-raspberry bg-gp-raspberry/5 rounded-full px-2 py-0.5">
+                          ouvert
+                        </span>
+                      )}
+                    </span>
+                    <span className="block text-base font-bold text-gp-raspberry tabular-nums">{formatDA(quote.result.finalPrice)}</span>
+                    <span className="text-xs text-gp-ink/65 flex flex-wrap items-center gap-x-2">
+                      <span>{formatDate(quote.updatedAt)}</span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock size={11} /> {formatHours(quote.hours)}
+                      </span>
+                      {quote.portions ? (
+                        <span className="inline-flex items-center gap-1">
+                          <Users size={11} /> {formatQty(quote.portions)} {quote.portions > 1 ? "parts" : "part"}
+                        </span>
+                      ) : null}
+                    </span>
+                    {quote.note && <span className="block text-xs text-gp-ink/70 italic line-clamp-2 mt-0.5">{quote.note}</span>}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 shrink-0 text-sm font-medium text-gp-raspberry">
+                    <FolderOpen size={16} /> <span className="hidden sm:inline">Ouvrir</span>
+                  </span>
                 </button>
                 <button
                   type="button"
@@ -118,7 +122,7 @@ export default function SavedQuotes({ quotes, activeQuoteId, onOpen, onDeleted, 
                   className={cn(ICON_BTN, "hover:text-red-700 hover:bg-red-50")}
                   aria-label={`Supprimer le devis ${quote.name}`}
                 >
-                  <Trash2 size={15} />
+                  <Trash2 size={16} />
                 </button>
               </li>
             ))}

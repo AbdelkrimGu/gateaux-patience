@@ -616,7 +616,7 @@ export default function CakeForm({ cake, mode, categories }: Props) {
                   ? uploadProgress!.phase === "preparing"
                     ? `Préparation des images...`
                     : `Téléchargement ${uploadProgress!.done}/${uploadProgress!.total}...`
-                  : "Cliquez ou glissez vos photos"}
+                  : "Ajoutez ou glissez vos photos"}
               </span>
             </button>
             <input
@@ -767,13 +767,12 @@ export default function CakeForm({ cake, mode, categories }: Props) {
               <h3 className="text-[15px] font-semibold text-gp-ink">Titres & Descriptions</h3>
             </div>
 
-            <div role="tablist" aria-label="Langue" className="flex gap-1 mb-4 bg-gp-ink/5 p-1 rounded-full">
+            <div role="group" aria-label="Langue" className="flex gap-1 mb-4 bg-gp-ink/5 p-1 rounded-full">
               {LANGS.map((l) => (
                 <button
                   key={l.code}
                   type="button"
-                  role="tab"
-                  aria-selected={activeLang === l.code}
+                  aria-pressed={activeLang === l.code}
                   onClick={() => setActiveLang(l.code)}
                   className={cn(
                     "flex-1 flex items-center justify-center gap-1.5 min-h-11 rounded-full text-sm font-medium transition",
@@ -899,8 +898,9 @@ export default function CakeForm({ cake, mode, categories }: Props) {
       </div>
 
       {/* Phone: the save button stays under the thumb while she scrolls the long form. */}
-      {/* -bottom-4 / -mb-4: flush with the screen edge, over <main>'s bottom padding. */}
-      <div className="md:hidden sticky -bottom-4 -mb-4 z-20 -mx-4 px-4 pt-3 pb-3 bg-gp-cream border-t border-gp-gold/30">
+      {/* -bottom-4 / -mb-4: flush with the screen edge, over <main>'s bottom padding; the
+          cream "skirt" shadow covers the sub-pixel seam where content peeked out. */}
+      <div className="md:hidden sticky -bottom-4 -mb-4 z-20 -mx-4 px-4 pt-3 pb-3 bg-gp-cream border-t border-gp-gold/30 shadow-[0_6px_0_0_rgb(var(--gp-cream))]">
         {uploadError && <p className="text-xs text-red-700 mb-2 line-clamp-2">{uploadError}</p>}
         <button onClick={handleSave} disabled={saveDisabled} className={cn(BTN_PRIMARY, "w-full min-h-12 text-base")}>
           {saveIcon}

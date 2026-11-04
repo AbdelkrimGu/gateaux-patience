@@ -338,17 +338,19 @@ export default function PriceSheets({
                     <div className="flex items-center gap-3 pl-4 pr-2 pt-3 pb-2">
                       <CakeThumb image={cake?.image ?? t.cakeImage} />
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gp-ink truncate">{t.name}</h3>
+                        <h3 className="font-semibold leading-snug text-gp-ink line-clamp-2">{t.name}</h3>
                         {(cake?.title ?? t.cakeTitle) && (
-                          <p className="text-xs text-gp-ink/65 truncate">{cake?.title ?? t.cakeTitle}</p>
+                          <p className="text-xs text-gp-ink/65 line-clamp-2">{cake?.title ?? t.cakeTitle}</p>
                         )}
                       </div>
                       <button
                         type="button"
                         onClick={() => openEditor({ template: t })}
-                        className="inline-flex items-center gap-1.5 min-h-11 px-4 rounded-full text-sm font-medium text-gp-ink/75 hover:bg-gp-ink/5 transition shrink-0"
+                        aria-label={`Modifier la fiche ${quoted(t.name)}`}
+                        // Icon only on phones: the sheet name gets the room.
+                        className="inline-flex items-center justify-center gap-1.5 min-h-11 min-w-11 sm:px-4 rounded-full text-sm font-medium text-gp-ink/75 hover:bg-gp-ink/5 transition shrink-0"
                       >
-                        <Pencil size={14} className="shrink-0" /> Modifier
+                        <Pencil size={16} className="shrink-0" /> <span className="hidden sm:inline">Modifier</span>
                       </button>
                     </div>
                     {t.note && <p className="px-4 pb-1 text-xs text-gp-ink/70 italic">{t.note}</p>}
@@ -487,11 +489,11 @@ function SizeRow({
     return (
       <li className="flex items-center gap-2 pl-4 pr-2 py-1.5 min-h-[56px]">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gp-ink truncate">
+          <p className="text-sm font-medium leading-snug text-gp-ink line-clamp-2">
             {v.label}
             {parts}
           </p>
-          <p className={cn("text-xs truncate", brokenState ? "text-amber-700" : "text-gp-ink/65")}>
+          <p className={cn("text-xs line-clamp-2", brokenState ? "text-amber-700" : "text-gp-ink/65")}>
             {brokenState ? `À corriger : ${brokenState.culprits.join(", ")}` : `À compléter : ${unfinishedText(v)}`}
           </p>
         </div>
@@ -513,7 +515,7 @@ function SizeRow({
   return (
     <li className="flex items-center gap-1 pl-4 pr-1 py-1.5 min-h-[56px]">
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gp-ink truncate">
+        <p className="text-sm font-medium leading-snug text-gp-ink line-clamp-2">
           {v.label}
           {parts}
         </p>
@@ -524,9 +526,12 @@ function SizeRow({
               type="button"
               onClick={onHistory}
               aria-label={`Historique des prix : ${v.label}. ${changeSentence(change)}`}
-              className="min-w-0 truncate text-left py-2 -my-2 hover:opacity-80"
+              // 44px tap target; on a narrow phone the hint wraps to 2 lines and the row grows.
+              className="min-w-0 text-left min-h-11 -mb-1.5 flex items-center hover:opacity-80"
             >
-              <LatestChangeHint entry={change} />
+              <span className="line-clamp-2">
+                <LatestChangeHint entry={change} />
+              </span>
             </button>
           )}
         </div>

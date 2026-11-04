@@ -24,8 +24,8 @@ export default async function AdminDashboard() {
   const newOrders = orders.filter((o) => o.status === "new");
 
   const stats = [
-    { label: "Gâteaux publiés", value: cakes.filter((c) => c.published).length, icon: CakeSlice, href: "/admin/cakes" },
-    { label: "Total gâteaux", value: cakes.length, icon: Eye, href: "/admin/cakes" },
+    { label: "Gâteaux publiés", value: cakes.filter((c) => c.published).length, icon: Eye, href: "/admin/cakes" },
+    { label: "Total gâteaux", value: cakes.length, icon: CakeSlice, href: "/admin/cakes" },
     { label: "Nouvelles commandes", value: newOrders.length, icon: ShoppingBag, href: "/admin/orders", highlight: newOrders.length > 0 },
     { label: "Gâteaux à la une", value: cakes.filter((c) => c.featured).length, icon: Star, href: "/admin/cakes" },
   ];

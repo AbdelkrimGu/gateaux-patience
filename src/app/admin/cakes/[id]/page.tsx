@@ -20,7 +20,7 @@ export default async function EditCakePage({ params }: { params: Promise<{ id: s
   if (!cake) notFound();
 
   return (
-    <AdminShell>
+    <AdminShell title="Modifier le gâteau">
       {/* CakeForm prints the page title next to its Save button. */}
       <CakeForm mode="edit" cake={cake} categories={categories} />
     </AdminShell>

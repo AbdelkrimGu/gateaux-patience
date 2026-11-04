@@ -557,8 +557,9 @@ export default function PriceCalculator({
         </section>
 
         {/* ---------- Phone: sticky result bar (one slim line while typing) ---------- */}
-        {/* -bottom-4 + cream band: flush with the screen edge, nothing peeks out under the card. */}
-        <div className="lg:hidden sticky -bottom-4 -mb-4 -mx-4 px-4 z-20 pt-1 pb-3 bg-[linear-gradient(to_bottom,transparent_0.75rem,rgb(var(--gp-cream))_0.75rem)]">
+        {/* Negative offsets = main's bottom padding (4 phones, 12 tablets): flush with the screen
+            edge; cream band + "skirt" shadow so nothing peeks out under the card. */}
+        <div className="lg:hidden sticky -bottom-4 -mb-4 -mx-4 px-4 md:-bottom-12 md:-mb-12 md:-mx-8 md:px-8 z-20 pt-1 pb-3 shadow-[0_6px_0_0_rgb(var(--gp-cream))] bg-[linear-gradient(to_bottom,transparent_0.75rem,rgb(var(--gp-cream))_0.75rem)]">
           <div className="bg-white rounded-2xl border border-gp-gold/40 shadow-[0_-8px_24px_-12px_rgb(var(--gp-ink)/0.25)] overflow-hidden">
             {typing ? (
               <div className="flex items-center justify-between gap-3 px-4 py-2 text-sm">

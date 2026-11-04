@@ -1,82 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type InputHTMLAttributes, type ReactNode } from "react";
-import { AlertTriangle, Check, Loader2, RotateCw, X } from "lucide-react";
+import { useEffect, type InputHTMLAttributes, type ReactNode } from "react";
+import { Check, RotateCw } from "lucide-react";
 import { formatDA } from "@/lib/pricing-units";
 import { cn } from "@/lib/utils";
 import { numberError } from "./draft";
-import { BTN_DANGER, BTN_GHOST, BTN_PRIMARY, BTN_SECONDARY, CARD } from "../ui";
-
-// Dialogs can stack (a picker over the price-sheet editor, a confirm over
-// both): only the topmost one reacts to Escape.
-const layers: object[] = [];
-
-function useTopLayer(): () => boolean {
-  const token = useRef({});
-  useEffect(() => {
-    const t = token.current;
-    layers.push(t);
-    return () => {
-      const i = layers.lastIndexOf(t);
-      if (i >= 0) layers.splice(i, 1);
-    };
-  }, []);
-  return useCallback(() => layers[layers.length - 1] === token.current, []);
-}
-
-// Phone back button / gesture: every open Sheet adds a history entry, so
-// "back" closes the topmost sheet (asking first when dirty) instead of leaving
-// the page. One global listener, so stacked sheets don't all react.
-const backStack: Array<() => void> = [];
-let ignorePops = 0; // our own history.back() calls when a sheet closes another way
-let popListening = false;
-
-function onPopState() {
-  if (ignorePops > 0) {
-    ignorePops--;
-    return;
-  }
-  backStack[backStack.length - 1]?.();
-}
-
-function useBackButton(onBack: () => void) {
-  const onBackRef = useRef(onBack);
-  useEffect(() => {
-    onBackRef.current = onBack;
-  });
-  useEffect(() => {
-    if (!popListening) {
-      window.addEventListener("popstate", onPopState);
-      popListening = true;
-    }
-    let pushed = true;
-    let mounted = true;
-    // Same URL and state (Next keeps its router data in it): only adds a step.
-    window.history.pushState(window.history.state, "");
-    const handler = () => {
-      pushed = false; // the browser just removed our entry
-      onBackRef.current();
-      // Still open (asks for confirmation, or refused to close): put the entry
-      // back so the next "back" still lands here.
-      setTimeout(() => {
-        if (mounted && !pushed) {
-          window.history.pushState(window.history.state, "");
-          pushed = true;
-        }
-      }, 0);
-    };
-    backStack.push(handler);
-    return () => {
-      mounted = false;
-      const i = backStack.lastIndexOf(handler);
-      if (i >= 0) backStack.splice(i, 1);
-      if (pushed) {
-        ignorePops++;
-        window.history.back();
-      }
-    };
-  }, []);
-}
+import { BTN_PRIMARY, BTN_SECONDARY, CARD } from "../ui";
 
 // Set when she leaves on purpose from a button of ours (« Recharger »,
 // « Se reconnecter »): her drafts are kept on the phone, no browser warning.
@@ -100,9 +29,9 @@ export function useBeforeUnload(active: boolean) {
   }, [active]);
 }
 
-// text-base on phones: iOS zooms the page when focusing an input under 16px.
+// text-base up to lg: iOS (phones, iPad, landscape) zooms on a field under 16px.
 export const INPUT_CLASS =
-  "w-full min-h-11 px-3 py-2.5 rounded-xl border border-gp-ink/20 bg-white focus:border-gp-raspberry focus:ring-4 focus:ring-gp-raspberry/15 outline-none transition text-base sm:text-sm text-gp-ink placeholder:text-gp-ink/45 disabled:bg-gp-cream disabled:text-gp-ink/65";
+  "w-full min-h-11 px-3 py-2.5 rounded-xl border border-gp-ink/20 bg-white focus:border-gp-raspberry focus:ring-4 focus:ring-gp-raspberry/15 outline-none transition text-base lg:text-sm text-gp-ink placeholder:text-gp-ink/45 disabled:bg-gp-cream disabled:text-gp-ink/65";
 
 export const LABEL_CLASS = "block text-[13px] font-medium text-gp-ink/75 mb-1";
 
@@ -179,169 +108,8 @@ export function DecimalInput({
   );
 }
 
-/**
- * Bottom sheet on phones, centered modal from `sm` up. With `dirty`, a stray
- * tap on the backdrop (or Escape) asks before throwing her typing away.
- * `size="full"`: almost full height on phones, a wide panel on computers.
- * `guardCloseButton`: the X asks too (big editors, where X is easy to hit).
- */
-export function Sheet({
-  title,
-  onClose,
-  children,
-  footer,
-  dirty = false,
-  size = "default",
-  guardCloseButton = false,
-}: {
-  title: string;
-  onClose: () => void;
-  children: ReactNode;
-  footer?: ReactNode;
-  dirty?: boolean;
-  size?: "default" | "full";
-  guardCloseButton?: boolean;
-}) {
-  const [confirming, setConfirming] = useState(false);
-  const softClose = useCallback(() => (dirty ? setConfirming(true) : onClose()), [dirty, onClose]);
-  const isTop = useTopLayer();
-  useBackButton(() => {
-    if (!confirming) softClose();
-  });
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !confirming && isTop()) softClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [softClose, confirming, isTop]);
-
-  return (
-    <>
-      <div
-        // !m-0: a parent's space-y-* margin would shift a fixed overlay down.
-        className="fixed inset-0 !m-0 z-50 flex items-end sm:items-center justify-center bg-gp-ink/50 sm:p-4"
-        onClick={softClose}
-      >
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={title}
-          onClick={(e) => e.stopPropagation()}
-          className={cn(
-            "bg-white w-full rounded-t-3xl sm:rounded-3xl shadow-gp-lifted flex flex-col overflow-hidden",
-            size === "full" ? "h-[94dvh] sm:h-[90vh] sm:max-w-4xl" : "max-h-[90vh] sm:max-w-lg"
-          )}
-        >
-          <div className="flex items-center justify-between gap-3 pl-5 pr-2 py-2 border-b border-gp-gold/30 bg-gp-cream shrink-0">
-            <h2 className="text-lg font-semibold leading-tight text-gp-ink">{title}</h2>
-            <button
-              type="button"
-              onClick={guardCloseButton ? softClose : onClose}
-              className={cn(ICON_BTN, "text-gp-ink/70 hover:bg-gp-ink/5 hover:text-gp-ink")}
-              aria-label="Fermer"
-            >
-              <X size={18} />
-            </button>
-          </div>
-          <div className="overflow-y-auto overscroll-contain flex-1 min-h-0">{children}</div>
-          {footer && (
-            <div className="shrink-0 border-t border-gp-gold/25 px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-              {footer}
-            </div>
-          )}
-        </div>
-      </div>
-      {/* Sibling, not child: clicks in the dialog must not reach the backdrop. */}
-      {confirming && (
-        <ConfirmDialog
-          title="Abandonner les modifications ?"
-          confirmLabel="Abandonner"
-          cancelLabel="Continuer"
-          onConfirm={() => {
-            setConfirming(false);
-            onClose();
-          }}
-          onCancel={() => setConfirming(false)}
-        >
-          <p>Ce que vous venez de saisir ne sera pas enregistré.</p>
-        </ConfirmDialog>
-      )}
-    </>
-  );
-}
-
-/** Same look as the delete dialog in CategoriesManager. */
-export function ConfirmDialog({
-  title,
-  children,
-  confirmLabel,
-  cancelLabel = "Annuler",
-  tone = "danger",
-  loading = false,
-  onConfirm,
-  onCancel,
-  extraAction,
-}: {
-  title: string;
-  children?: ReactNode;
-  confirmLabel: string;
-  cancelLabel?: string;
-  tone?: "danger" | "primary";
-  loading?: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
-  /** A third choice between cancel and confirm (« Enregistrer d'abord »). */
-  extraAction?: { label: string; onClick: () => void };
-}) {
-  useTopLayer(); // so the sheet underneath ignores Escape while this is open
-  return (
-    <div className="fixed inset-0 !m-0 z-[60] flex items-center justify-center bg-gp-ink/50 p-4">
-      <div role="alertdialog" aria-modal="true" aria-label={title} className="bg-gp-cream rounded-3xl shadow-gp-lifted max-w-sm w-full p-6">
-        <div className="flex items-start gap-3 mb-5">
-          <div
-            className={cn(
-              "w-11 h-11 rounded-full ring-1 flex items-center justify-center shrink-0",
-              tone === "danger" ? "bg-red-50 text-red-700 ring-red-200" : "bg-amber-50 text-amber-700 ring-amber-200"
-            )}
-          >
-            <AlertTriangle size={20} />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold leading-tight text-gp-ink">{title}</h2>
-            {children && <div className="text-sm text-gp-ink/75 mt-1.5 space-y-2">{children}</div>}
-          </div>
-        </div>
-        {/* Phones: stacked, full width, the confirm button nearest the thumb. */}
-        <div className="flex flex-col-reverse sm:flex-row sm:flex-wrap gap-2 sm:justify-end">
-          <button type="button" onClick={onCancel} disabled={loading} className={BTN_GHOST}>
-            {cancelLabel}
-          </button>
-          {extraAction && (
-            <button
-              type="button"
-              onClick={extraAction.onClick}
-              disabled={loading}
-              className={BTN_SECONDARY}
-            >
-              {extraAction.label}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={loading}
-            className={tone === "danger" ? BTN_DANGER : BTN_PRIMARY}
-          >
-            {loading && <Loader2 size={14} className="animate-spin" />}
-            {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+// The dialogs live with the rest of the admin look; pricing screens import them from here.
+export { ConfirmDialog, Sheet } from "../dialogs";
 
 export function SectionHeader({ title, subtitle, total }: { title: string; subtitle: string; total?: number }) {
   return (

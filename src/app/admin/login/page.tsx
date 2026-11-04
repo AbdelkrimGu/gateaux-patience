@@ -38,7 +38,7 @@ export default function AdminLoginPage() {
 
   return (
     // The one brand moment of the admin: cream menu paper on raspberry, like the home.
-    <div className="min-h-dvh flex items-center justify-center bg-gp-raspberry px-3 py-10">
+    <div className="min-h-dvh flex items-center justify-center bg-gp-raspberry px-3 pt-[max(2.5rem,env(safe-area-inset-top))] pb-[max(2.5rem,env(safe-area-inset-bottom))]">
       <div className="w-full max-w-[400px]">
         {/* drop-shadow on the wrapper: a box-shadow would be cut by the scallop mask */}
         <div className="drop-shadow-[0_24px_30px_rgb(36_22_24_/_0.35)]">

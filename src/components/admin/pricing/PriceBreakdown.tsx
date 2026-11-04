@@ -141,7 +141,7 @@ export default function PriceBreakdown({
         </p>
       )}
       <details className="mt-3 group">
-        <summary className="cursor-pointer select-none text-sm font-medium text-gp-ink/75 hover:text-gp-raspberry py-2 list-none flex items-center gap-1.5">
+        <summary className="cursor-pointer select-none text-sm font-medium text-gp-ink/75 hover:text-gp-raspberry min-h-11 list-none flex items-center gap-1.5">
           <Info size={14} />
           Comment le prix est calculé
         </summary>
