@@ -294,8 +294,10 @@ const newId = () =>
 
 /**
  * Scaled quantity she barely has to adjust, rounded according to its unit:
- * - g, ml, cm (the small unit of a family): whole number, at least 1
- *   (5 g × 1,88 → 9 g; 30 ml × 1,88 → 56 ml);
+ * - g, ml, cm (the small unit of a family): whole number, at least 1, when
+ *   the source was whole or the result reaches 10 (5 g × 1,88 → 9 g;
+ *   30 ml × 1,88 → 56 ml); a small fractional source keeps its precision, so
+ *   a pinch of an expensive powder is never rounded up (0,3 g × 1,9 → 0,57 g);
  * - pièce and her own units: whole number, at least 1, when the source was
  *   whole (3 œufs × 1,88 → 6); a fractional source keeps its precision
  *   (0,5 pièce × 1,88 → 0,94);
@@ -306,8 +308,9 @@ function roundQty(qty: number, source: number, unit: UnitCode): number {
   const precise = qty >= 100 ? Math.round(qty) : Number(qty.toPrecision(3));
   if (!(source > 0)) return precise;
   const { family, toBase } = UNITS[unit];
-  const whole =
-    family === "count" || family === "custom" ? Number.isInteger(source) : family !== "flat" && toBase === 1;
+  const counted = family === "count" || family === "custom";
+  const smallUnit = !counted && family !== "flat" && toBase === 1;
+  const whole = smallUnit ? Number.isInteger(source) || qty >= 10 : counted && Number.isInteger(source);
   return whole ? Math.max(1, Math.round(qty)) : precise;
 }
 
