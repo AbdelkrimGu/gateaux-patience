@@ -9,7 +9,7 @@ import { formatDA } from "@/lib/pricing-units";
 import { cn } from "@/lib/utils";
 import { ApiError, apiJson, errorText, type ErrorInfo } from "./api";
 import { draftHours, draftPortions, extraLine, lineFromItem, portionsError, toQuoteLine, type DraftLine } from "./draft";
-import { quoted, searchKey } from "./format";
+import { NNBSP, quoted, searchKey } from "./format";
 import { AddLineButton, ExtraLineRow, FixedLineRow, HoursField, VariableLineRow } from "./lines";
 import PriceBreakdown from "./PriceBreakdown";
 import { CakePicker, CakeThumb, SizeDialog, StandardSizesDialog, type NewSize } from "./SheetDialogs";
@@ -30,6 +30,8 @@ interface Props {
   initialVariantId?: string;
   /** Unsaved editor kept on the phone (reload, expired session), resumed as is. */
   restored?: StoredSheetDraft;
+  /** Name of the sheet this new one was copied from (`restored` holds the copy). */
+  copyOf?: string;
   /** Opened from « Corriger »: go straight to the line to fix. */
   focusProblemOnOpen?: boolean;
   items: CostItem[];
@@ -72,10 +74,11 @@ type Dialog =
 const PROBLEM_SELECTOR = '[aria-invalid="true"], [data-missing="true"], [data-problem="true"]';
 
 export default function SheetEditor({
-  template, initialVariantId, restored, focusProblemOnOpen = false, items, settings, cakes, onSaved,
+  template, initialVariantId, restored, copyOf, focusProblemOnOpen = false, items, settings, cakes, onSaved,
   onDeleted, onClose, onDirtyChange,
 }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<SheetDraft>(() =>
     restored ? reconcileSheetFixed(restored.draft, items) : sheetDraftFrom(template, items)
   );
@@ -102,6 +105,14 @@ export default function SheetEditor({
     onDirtyChange?.(dirty);
   }, [dirty, onDirtyChange]);
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
+
+  // A copy is for another cake: its name is the first thing to retype.
+  useEffect(() => {
+    if (!copyOf) return;
+    nameRef.current?.focus();
+    nameRef.current?.select();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /** Every way out of the editor: what's on the phone has been saved or given up. */
   function close() {
@@ -352,6 +363,7 @@ export default function SheetEditor({
                 <label htmlFor="sheet-name" className={LABEL_CLASS}>Nom de la fiche</label>
                 <input
                   id="sheet-name"
+                  ref={nameRef}
                   type="text"
                   value={draft.name}
                   onChange={(e) => update((d) => ({ ...d, name: e.target.value }))}
@@ -360,6 +372,12 @@ export default function SheetEditor({
                   data-missing={draft.name.trim() === "" ? "true" : undefined}
                   className={cn(INPUT_CLASS, triedSave && !draft.name.trim() && "border-amber-300")}
                 />
+                {copyOf && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Copie de {quoted(copyOf)}, avec toutes ses tailles. Donnez-lui le nom du nouveau gâteau{NNBSP}; la fiche
+                    d&apos;origine ne change pas.
+                  </p>
+                )}
               </div>
               <div>
                 <p className={LABEL_CLASS}>Gâteau du catalogue (optionnel)</p>

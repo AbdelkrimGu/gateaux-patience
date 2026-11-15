@@ -12,7 +12,7 @@ import {
 } from "@/lib/pricing-templates";
 import { compatibleUnits } from "@/lib/pricing-units";
 import {
-  draftHours, draftPortions, draftProblems, lineFromItem, parseStoredLine, problemsText, toQuoteLine,
+  draftHours, draftPortions, draftProblems, lineFromItem, newKey, parseStoredLine, problemsText, toQuoteLine,
   type DraftLine,
 } from "./draft";
 import { numberToRaw, quoted } from "./format";
@@ -126,6 +126,32 @@ export function sheetDraftFrom(t: PriceTemplate | null, items: CostItem[]): Shee
   };
 }
 
+const SHEET_NAME_MAX = 100; // server limit for a sheet name
+const COPY_SUFFIX = " (copie)";
+
+/**
+ * `t` as a new, unsaved sheet for another cake: same sizes, quantities, extras
+ * and fixed-cost choices, but nothing that ties it to its source. New size ids
+ * and line keys (so its price history starts from scratch), no catalog cake.
+ * Sizes keep their order, so the copy of size n is `variants[n]`.
+ */
+export function copySheetDraft(t: PriceTemplate, items: CostItem[]): SheetDraft {
+  const d = sheetDraftFrom(t, items);
+  return {
+    ...d,
+    templateId: null,
+    updatedAt: null,
+    cakeId: null,
+    name: `${t.name.slice(0, SHEET_NAME_MAX - COPY_SUFFIX.length).trimEnd()}${COPY_SUFFIX}`,
+    variants: d.variants.map((v) => ({
+      ...v,
+      id: emptyVariant("").id, // the id generator every new size goes through
+      // Fixed lines keep their key: it is derived from the cost, one per size.
+      lines: v.lines.map((l) => (l.kind === "fixed" ? l : { ...l, key: newKey(l.kind === "extra" ? "x" : "v") })),
+    })),
+  };
+}
+
 // ---------- Editor → API shape ----------
 
 export function toVariantInput(v: VariantDraft, items: CostItem[]): TemplateVariantInput {
@@ -171,7 +197,10 @@ export function priceDraft(v: VariantDraft, items: CostItem[], settings: Pricing
 }
 
 /** Why a variable line can't be priced any more, or null. */
-export function blockedReason(l: DraftLine, itemsById: Map<string, CostItem>): string | null {
+export function blockedReason(
+  l: Pick<DraftLine, "kind" | "costItemId">,
+  itemsById: Map<string, CostItem>
+): string | null {
   if (l.kind !== "variable") return null;
   const item = l.costItemId ? itemsById.get(l.costItemId) : undefined;
   if (!item) return DELETED_MSG;

@@ -28,6 +28,9 @@ export function priceChangeLabel(before: PriceLike, after: PriceLike): string {
     : `${priceLabel(before)} → ${priceLabel(after)}`;
 }
 
+/** Narrow no-break space, before : ; ? ! (written as an escape: it is invisible in an editor). */
+export const NNBSP = " ";
+
 /** « name » with the non-breaking spaces French typography expects. */
 export function quoted(s: string): string {
   return `« ${s} »`;

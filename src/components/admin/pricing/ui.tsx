@@ -29,6 +29,18 @@ function useTopLayer(): () => boolean {
 const backStack: Array<() => void> = [];
 let ignorePops = 0; // our own history.back() calls when a sheet closes another way
 let popListening = false;
+// History entries of sheets that just closed. They are given back a moment
+// later, so a sheet that opens in the same render as another closes (« ⋯ » →
+// « Voir le détail ») takes over its entry. Going back and pushing at once
+// left the page one step too far: closing the second sheet then left the page.
+let spareEntries = 0;
+
+function releaseSpareEntries() {
+  if (spareEntries === 0) return;
+  ignorePops++;
+  window.history.go(-spareEntries);
+  spareEntries = 0;
+}
 
 function onPopState() {
   if (ignorePops > 0) {
@@ -51,7 +63,8 @@ function useBackButton(onBack: () => void) {
     let pushed = true;
     let mounted = true;
     // Same URL and state (Next keeps its router data in it): only adds a step.
-    window.history.pushState(window.history.state, "");
+    if (spareEntries > 0) spareEntries--;
+    else window.history.pushState(window.history.state, "");
     const handler = () => {
       pushed = false; // the browser just removed our entry
       onBackRef.current();
@@ -70,8 +83,8 @@ function useBackButton(onBack: () => void) {
       const i = backStack.lastIndexOf(handler);
       if (i >= 0) backStack.splice(i, 1);
       if (pushed) {
-        ignorePops++;
-        window.history.back();
+        spareEntries++;
+        setTimeout(releaseSpareEntries, 0);
       }
     };
   }, []);

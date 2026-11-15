@@ -2,21 +2,22 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  AlertTriangle, Check, ClipboardList, Copy, FilePlus2, History, MoreHorizontal, Pencil, Plus, RotateCcw,
-  Search, Settings2, Wrench,
+  AlertTriangle, Check, ClipboardList, Copy, CopyPlus, Eye, FilePlus2, History, MoreHorizontal, Pencil, Plus,
+  RotateCcw, Search, Settings2, Wrench,
 } from "lucide-react";
 import type { CostItem, PriceTemplate, PricingSettings, TemplatePriceChange, TemplateVariant } from "@/lib/pricing-types";
 import { formatDA } from "@/lib/pricing-units";
 import { cn } from "@/lib/utils";
 import { apiJson, errorText } from "./api";
-import { formatDateTime, quoted, searchKey } from "./format";
+import { formatDateTime, NNBSP, quoted, searchKey } from "./format";
 import { CakeThumb } from "./SheetDialogs";
 import SheetEditor, { clearStoredSheetDraft } from "./SheetEditor";
 import SheetHistory, { changeSentence, LatestChangeHint, type ChangeSummary, type HistoryState } from "./SheetHistory";
 import {
-  brokenSheets, liveKey, parseStoredSheetDraft, SHEET_DRAFT_KEY, sizeTitle, unfinishedText, type CakeOption,
-  type LiveSize, type StoredSheetDraft,
+  brokenSheets, copySheetDraft, liveKey, parseStoredSheetDraft, SHEET_DRAFT_KEY, sizeTitle, unfinishedText,
+  type CakeOption, type LiveSize, type StoredSheetDraft,
 } from "./sheet-draft";
+import SizeDetail from "./SizeDetail";
 import { Banner, CARD_CLASS, ConfirmDialog, ErrorBox, INPUT_CLASS, PRIMARY_BTN, SECONDARY_BTN, Sheet } from "./ui";
 
 interface Props {
@@ -38,7 +39,13 @@ type EditorState = {
   variantId?: string;
   restored?: StoredSheetDraft;
   focusProblem?: boolean;
+  copyOf?: string; // new sheet copied from the one with this name
 };
+
+type SizeRef = { templateId: string; variantId: string };
+
+const moreId = (templateId: string, variantId: string) => `size-more-${liveKey(templateId, variantId)}`;
+const copyId = (templateId: string) => `sheet-copy-${templateId}`;
 
 /** Clipboard API when allowed (https / localhost), the old textarea trick otherwise. */
 async function copyText(text: string): Promise<boolean> {
@@ -76,7 +83,10 @@ export default function PriceSheets({
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [historyFor, setHistoryFor] = useState<{ templateId: string; variantId?: string } | null>(null);
   const [histories, setHistories] = useState<Record<string, HistoryState>>({});
-  const [actionsFor, setActionsFor] = useState<{ templateId: string; variantId: string } | null>(null);
+  const [actionsFor, setActionsFor] = useState<SizeRef | null>(null);
+  const [detailFor, setDetailFor] = useState<SizeRef | null>(null);
+  const [pendingCopy, setPendingCopy] = useState<{ templateId: string; variantId?: string } | null>(null);
+  const opener = useRef<string | null>(null); // id of the button that opened the current sheet
   const [copied, setCopied] = useState<string | null>(null);
   const [copyFailed, setCopyFailed] = useState<string | null>(null);
   const [flash, setFlash] = useState("");
@@ -197,6 +207,41 @@ export default function PriceSheets({
     setEditor(state);
   }
 
+  /** Back on the button she came from, once the sheet it opened is gone. */
+  function focusOpener() {
+    const id = opener.current;
+    if (id) requestAnimationFrame(() => document.getElementById(id)?.focus({ preventScroll: true }));
+  }
+
+  function openActions(templateId: string, variantId: string) {
+    opener.current = moreId(templateId, variantId);
+    setActionsFor({ templateId, variantId });
+  }
+
+  /**
+   * The whole sheet as a new, unsaved one, opened on the size she was looking
+   * at. Nothing reaches the server before « Enregistrer », which creates it
+   * like any new sheet: the source and its history are never touched.
+   */
+  function copySheet(t: PriceTemplate, variantId?: string) {
+    const draft = copySheetDraft(t, items);
+    const i = Math.max(0, t.variants.findIndex((v) => v.id === variantId));
+    setPendingCopy(null);
+    openEditor({
+      template: null,
+      // Handed over like an editor left unsaved, so it is kept on the phone the same way.
+      restored: { v: 1, draft, selectedId: draft.variants[i]?.id ?? null, savedAt: new Date().toISOString() },
+      copyOf: t.name,
+    });
+  }
+
+  function startCopy(t: PriceTemplate, variantId?: string) {
+    setActionsFor(null);
+    // The copy takes the place of the unsaved sheet kept on the phone: ask first.
+    if (stored) setPendingCopy({ templateId: t.id, variantId });
+    else copySheet(t, variantId);
+  }
+
   const q = searchKey(query);
   const list = templates
     .filter((t) => {
@@ -209,6 +254,10 @@ export default function PriceSheets({
   const historyTemplate = historyFor ? templates.find((t) => t.id === historyFor.templateId) : undefined;
   const actionTemplate = actionsFor ? templates.find((t) => t.id === actionsFor.templateId) : undefined;
   const actionVariant = actionTemplate?.variants.find((v) => v.id === actionsFor?.variantId);
+  const detailTemplate = detailFor ? templates.find((t) => t.id === detailFor.templateId) : undefined;
+  const detailVariant = detailTemplate?.variants.find((v) => v.id === detailFor?.variantId);
+  const detailSize = detailTemplate && detailVariant ? live.get(liveKey(detailTemplate.id, detailVariant.id)) : undefined;
+  const copyTemplate = pendingCopy ? templates.find((t) => t.id === pendingCopy.templateId) : undefined;
   const storedTemplate = stored?.draft.templateId ? templates.find((t) => t.id === stored.draft.templateId) : undefined;
 
   return (
@@ -362,20 +411,33 @@ export default function PriceSheets({
                           change={lastChange(t, v)}
                           copied={copied === liveKey(t.id, v.id)}
                           onCopy={(price) => void copy(t, v, price)}
-                          onMore={() => setActionsFor({ templateId: t.id, variantId: v.id })}
+                          moreId={moreId(t.id, v.id)}
+                          onMore={() => openActions(t.id, v.id)}
                           onHistory={() => openHistory(t.id, v.id)}
                           onFix={(focusProblem) => openEditor({ template: t, variantId: v.id, focusProblem })}
                         />
                       ))}
                     </ul>
 
-                    <div className="border-t border-gray-100 px-2 py-1">
+                    <div className="flex flex-wrap items-center justify-between gap-x-2 border-t border-gray-100 px-2 py-1">
                       <button
                         type="button"
                         onClick={() => openHistory(t.id)}
                         className="inline-flex items-center gap-1.5 min-h-[40px] px-2 text-sm font-medium text-gray-500 hover:text-rose-600"
                       >
                         <History size={14} /> Historique des prix
+                      </button>
+                      <button
+                        type="button"
+                        id={copyId(t.id)}
+                        onClick={() => {
+                          opener.current = copyId(t.id);
+                          startCopy(t);
+                        }}
+                        aria-label={`Copier la fiche ${quoted(t.name)} en nouvelle fiche`}
+                        className="inline-flex items-center gap-1.5 min-h-[44px] px-2 text-sm font-medium text-gray-500 hover:text-rose-600"
+                      >
+                        <CopyPlus size={14} /> Copier la fiche
                       </button>
                     </div>
                   </article>
@@ -391,6 +453,7 @@ export default function PriceSheets({
           template={editor.template}
           initialVariantId={editor.variantId}
           restored={editor.restored}
+          copyOf={editor.copyOf}
           focusProblemOnOpen={editor.focusProblem}
           items={items}
           settings={settings}
@@ -408,7 +471,10 @@ export default function PriceSheets({
             setEditor(null);
             setFlash("Fiche supprimée.");
           }}
-          onClose={() => setEditor(null)}
+          onClose={() => {
+            if (editor.copyOf) focusOpener();
+            setEditor(null);
+          }}
         />
       )}
 
@@ -424,10 +490,65 @@ export default function PriceSheets({
             setActionsFor(null);
             onUseForQuote(actionTemplate, actionVariant);
           }}
+          onView={() => {
+            setActionsFor(null);
+            setDetailFor(actionsFor);
+          }}
           onHistory={() => openHistory(actionTemplate.id, actionVariant.id)}
           onEdit={() => openEditor({ template: actionTemplate, variantId: actionVariant.id })}
-          onClose={() => setActionsFor(null)}
+          onCopySheet={() => startCopy(actionTemplate, actionVariant.id)}
+          onClose={() => {
+            setActionsFor(null);
+            focusOpener();
+          }}
         />
+      )}
+
+      {detailTemplate && detailVariant && detailSize && (
+        <SizeDetail
+          template={detailTemplate}
+          v={detailVariant}
+          size={detailSize}
+          items={items}
+          settings={settings}
+          onEdit={() => {
+            setDetailFor(null);
+            openEditor({
+              template: detailTemplate,
+              variantId: detailVariant.id,
+              focusProblem: detailSize.state.kind === "broken",
+            });
+          }}
+          onClose={() => {
+            setDetailFor(null);
+            focusOpener();
+          }}
+        />
+      )}
+
+      {pendingCopy && copyTemplate && stored && (
+        <ConfirmDialog
+          title={`Remplacer la fiche non enregistrée${NNBSP}?`}
+          confirmLabel="Copier quand même"
+          tone="primary"
+          onConfirm={() => copySheet(copyTemplate, pendingCopy.variantId)}
+          onCancel={() => {
+            setPendingCopy(null);
+            focusOpener();
+          }}
+          extraAction={{
+            label: "La reprendre",
+            onClick: () => {
+              setPendingCopy(null);
+              resumeStored();
+            },
+          }}
+        >
+          <p>
+            {quoted(stored.draft.name.trim() || "Une fiche sans nom")} n&apos;est pas enregistrée{NNBSP}: ses modifications
+            seront perdues si vous copiez {quoted(copyTemplate.name)}.
+          </p>
+        </ConfirmDialog>
       )}
 
       {historyFor && historyTemplate && (
@@ -464,6 +585,7 @@ function SizeRow({
   size,
   change,
   copied,
+  moreId,
   onCopy,
   onMore,
   onHistory,
@@ -473,6 +595,7 @@ function SizeRow({
   size: LiveSize | undefined;
   change: ChangeSummary | undefined;
   copied: boolean;
+  moreId: string; // focus comes back to « ⋯ » when what it opened is closed
   onCopy: (price: number) => void;
   onMore: () => void;
   onHistory: () => void;
@@ -481,17 +604,29 @@ function SizeRow({
   const parts = v.portions && !/\d/.test(v.label) ? ` · ${v.portions} parts` : "";
   const state = size?.state;
   const b = size?.priced.breakdown;
+  const more = (
+    <button
+      type="button"
+      id={moreId}
+      onClick={onMore}
+      aria-label={`Plus d'actions : ${v.label}`}
+      className="inline-flex items-center justify-center w-10 h-10 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition shrink-0"
+    >
+      <MoreHorizontal size={18} />
+    </button>
+  );
 
   if (!size || !state || state.kind !== "ok" || !b) {
     const brokenState = state?.kind === "broken" ? state : null;
     return (
-      <li className="flex items-center gap-2 pl-4 pr-2 py-1.5 min-h-[56px]">
-        <div className="flex-1 min-w-0">
+      <li className="flex items-center gap-1 pl-4 pr-1 py-1.5 min-h-[56px]">
+        <div className="flex-1 min-w-0 pr-1">
           <p className="text-sm font-medium text-gray-800 truncate">
             {v.label}
             {parts}
           </p>
-          <p className={cn("text-xs truncate", brokenState ? "text-amber-700" : "text-gray-400")}>
+          {/* Two lines: « ⋯ » leaves less room, and what is missing must stay readable. */}
+          <p className={cn("text-xs line-clamp-2", brokenState ? "text-amber-700" : "text-gray-400")}>
             {brokenState ? `À corriger : ${brokenState.culprits.join(", ")}` : `À compléter : ${unfinishedText(v)}`}
           </p>
         </div>
@@ -506,6 +641,7 @@ function SizeRow({
           {brokenState ? <Wrench size={14} className="shrink-0" /> : <Pencil size={14} className="shrink-0" />}
           {brokenState ? "Corriger" : "Compléter"}
         </button>
+        {more}
       </li>
     );
   }
@@ -548,14 +684,7 @@ function SizeRow({
       >
         {copied ? <Check size={17} /> : <Copy size={17} />}
       </button>
-      <button
-        type="button"
-        onClick={onMore}
-        aria-label={`Plus d'actions : ${v.label}`}
-        className="inline-flex items-center justify-center w-10 h-10 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition shrink-0"
-      >
-        <MoreHorizontal size={18} />
-      </button>
+      {more}
     </li>
   );
 }
@@ -569,8 +698,10 @@ function SizeActions({
   copied,
   onCopy,
   onQuote,
+  onView,
   onHistory,
   onEdit,
+  onCopySheet,
   onClose,
 }: {
   template: PriceTemplate;
@@ -580,11 +711,19 @@ function SizeActions({
   copied: boolean;
   onCopy: (price: number) => void;
   onQuote: () => void;
+  onView: () => void;
   onHistory: () => void;
   onEdit: () => void;
+  onCopySheet: () => void;
   onClose: () => void;
 }) {
   const b = size?.state.kind === "ok" ? size.priced.breakdown : null;
+  const sizes = template.variants.length;
+  const listRef = useRef<HTMLUListElement>(null);
+  // Keyboard: Tab goes on to the first action instead of the page behind.
+  useEffect(() => {
+    listRef.current?.focus({ preventScroll: true });
+  }, []);
   const action = "w-full flex items-center gap-3 px-5 min-h-[52px] text-left text-sm font-medium text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition";
   return (
     <Sheet title={`${template.name} — ${sizeTitle(v)}`} onClose={onClose}>
@@ -600,12 +739,19 @@ function SizeActions({
           {change && <p className="text-xs text-gray-400 mt-0.5">{changeSentence(change)}</p>}
         </div>
       )}
-      <ul className="py-2">
+      <ul ref={listRef} tabIndex={-1} className="py-2 outline-none">
         {b && (
           <li>
             <button type="button" onClick={() => onCopy(b.finalPrice)} className={action}>
               {copied ? <Check size={17} className="text-emerald-600 shrink-0" /> : <Copy size={17} className="text-rose-500 shrink-0" />}
               {copied ? "Copié ✓" : "Copier le prix"}
+            </button>
+          </li>
+        )}
+        {size && (
+          <li>
+            <button type="button" onClick={onView} className={action}>
+              <Eye size={17} className="text-gray-400 shrink-0" /> Voir le détail
             </button>
           </li>
         )}
@@ -624,6 +770,18 @@ function SizeActions({
         <li>
           <button type="button" onClick={onEdit} className={action}>
             <Pencil size={17} className="text-gray-400 shrink-0" /> Modifier cette taille
+          </button>
+        </li>
+        {/* Apart from the rest: this one is about the whole sheet, not the size. */}
+        <li className="mt-2 pt-2 border-t border-gray-100">
+          <button type="button" onClick={onCopySheet} className={cn(action, "py-2")}>
+            <CopyPlus size={17} className="text-gray-400 shrink-0" />
+            <span className="min-w-0">
+              <span className="block">Copier en nouvelle fiche</span>
+              <span className="block text-xs font-normal text-gray-400">
+                {sizes > 1 ? `Toute la fiche (${sizes} tailles), pour un autre gâteau` : "Toute la fiche, pour un autre gâteau"}
+              </span>
+            </span>
           </button>
         </li>
       </ul>
