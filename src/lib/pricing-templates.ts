@@ -14,7 +14,7 @@ import type {
   TemplateLine,
   TemplateVariant,
 } from "./pricing-types";
-import { UNITS, convertQty, formatDA, formatQty, unitLabel } from "./pricing-units";
+import { UNITS, convertQty, formatDA, formatQty, unitLabel, type UnitCode } from "./pricing-units";
 
 /** Starting sizes offered when creating a sheet — to be refined with the owner. */
 export const SIZE_PRESETS = [
@@ -293,17 +293,28 @@ const newId = () =>
     : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
 
 /**
- * Readable scaled quantity: whole number from 100 up (233,33 g → 233 g),
- * 3 significant digits below (0,125 kg × 1,5 → 0,188 kg; 0,5 pièce × 2,5 → 1,25).
- * Never rounds a small quantity up to 1.
+ * Scaled quantity she barely has to adjust, rounded according to its unit:
+ * - g, ml, cm (the small unit of a family): whole number, at least 1
+ *   (5 g × 1,88 → 9 g; 30 ml × 1,88 → 56 ml);
+ * - pièce and her own units: whole number, at least 1, when the source was
+ *   whole (3 œufs × 1,88 → 6); a fractional source keeps its precision
+ *   (0,5 pièce × 1,88 → 0,94);
+ * - kg, L, m, cl: 3 significant digits (1 kg × 1,88 stays 1,88 kg, not 2 kg),
+ *   whole number from 100 up.
  */
-function roundQty(qty: number): number {
-  return qty >= 100 ? Math.round(qty) : Number(qty.toPrecision(3));
+function roundQty(qty: number, source: number, unit: UnitCode): number {
+  const precise = qty >= 100 ? Math.round(qty) : Number(qty.toPrecision(3));
+  if (!(source > 0)) return precise;
+  const { family, toBase } = UNITS[unit];
+  const whole =
+    family === "count" || family === "custom" ? Number.isInteger(source) : family !== "flat" && toBase === 1;
+  return whole ? Math.max(1, Math.round(qty)) : precise;
 }
 
 /**
  * Copy of a variant for another size: variable quantities (and optionally the
- * hours) multiplied by `factor`. Extras and fixed costs are kept as they are.
+ * hours) multiplied by `factor`, then rounded to their unit (see roundQty).
+ * Extras and fixed costs are kept as they are.
  */
 export function scaleVariant(
   source: TemplateVariant,
@@ -319,7 +330,7 @@ export function scaleVariant(
     lines: source.lines.map((l) => ({
       ...l,
       key: newId(),
-      qty: l.kind === "variable" && f !== 1 ? roundQty(l.qty * f) : l.qty,
+      qty: l.kind === "variable" && f !== 1 ? roundQty(l.qty * f, l.qty, l.qtyUnit) : l.qty,
     })),
   };
 }
