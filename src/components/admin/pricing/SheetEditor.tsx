@@ -32,8 +32,11 @@ interface Props {
   restored?: StoredSheetDraft;
   /** Name of the sheet this new one was copied from (`restored` holds the copy). */
   copyOf?: string;
-  /** Name of the devis this new one was made from (`restored` holds it too). */
-  fromQuote?: string;
+  /**
+   * The devis this new one was made from (`restored` holds it too);
+   * `asExtras`: its fixed costs that left the library, kept as extras.
+   */
+  fromQuote?: { name: string; asExtras: string[] };
   /** Opened from « Corriger »: go straight to the line to fix. */
   focusProblemOnOpen?: boolean;
   items: CostItem[];
@@ -112,6 +115,12 @@ export default function SheetEditor({
   // the name is the first thing to retype.
   useEffect(() => {
     if (!copyOf && !fromQuote) return;
+    // A devis without parts: the parts are what keeps the sheet from being saved.
+    const first = draft.variants[0];
+    if (fromQuote && first && first.portionsRaw.trim() === "") {
+      document.getElementById(`size-parts-${first.id}`)?.focus();
+      return;
+    }
     nameRef.current?.focus();
     nameRef.current?.select();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -383,8 +392,12 @@ export default function SheetEditor({
                 )}
                 {fromQuote && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Créée depuis le devis {quoted(fromQuote)}. Prix calculé avec vos coûts et réglages d&apos;aujourd&apos;hui{NNBSP}:
-                    il peut différer de celui du devis, qui ne change pas.
+                    Créée depuis le devis {quoted(fromQuote.name)}. Prix calculé avec vos coûts et réglages
+                    d&apos;aujourd&apos;hui{NNBSP}: il peut différer de celui du devis, qui ne change pas.
+                    {fromQuote.asExtras.length > 0 &&
+                      ` ${fromQuote.asExtras.map(quoted).join(", ")} ${
+                        fromQuote.asExtras.length > 1 ? "n'existent" : "n'existe"
+                      } plus dans vos coûts${NNBSP}: repris en ${fromQuote.asExtras.length > 1 ? "extras" : "extra"}.`}
                   </p>
                 )}
               </div>

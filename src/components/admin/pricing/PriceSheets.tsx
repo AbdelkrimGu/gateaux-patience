@@ -46,7 +46,8 @@ type EditorState = {
   restored?: StoredSheetDraft;
   focusProblem?: boolean;
   copyOf?: string; // new sheet copied from the one with this name
-  fromQuote?: { id: string; name: string }; // new sheet made from this devis
+  // New sheet made from this devis; `asExtras`: its fixed costs that left the library.
+  fromQuote?: { id: string; name: string; asExtras: string[] };
 };
 
 type SizeRef = { templateId: string; variantId: string };
@@ -262,12 +263,12 @@ export default function PriceSheets({
    * a copy. The devis is only read; the server hears of the sheet at « Enregistrer ».
    */
   function sheetFromQuote(quote: PriceQuote) {
-    const draft = sheetDraftFromQuote(quote, items);
+    const { draft, asExtras } = sheetDraftFromQuote(quote, items);
     setPendingCopy(null);
     openEditor({
       template: null,
       restored: { v: 1, draft, selectedId: draft.variants[0]?.id ?? null, savedAt: new Date().toISOString() },
-      fromQuote: { id: quote.id, name: quote.name },
+      fromQuote: { id: quote.id, name: quote.name, asExtras },
     });
   }
 
@@ -494,7 +495,7 @@ export default function PriceSheets({
           initialVariantId={editor.variantId}
           restored={editor.restored}
           copyOf={editor.copyOf}
-          fromQuote={editor.fromQuote?.name}
+          fromQuote={editor.fromQuote}
           focusProblemOnOpen={editor.focusProblem}
           items={items}
           settings={settings}

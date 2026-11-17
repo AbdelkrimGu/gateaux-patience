@@ -3,8 +3,9 @@
 // lines) and converted to the API shape for pricing and saving. All pricing
 // goes through priceVariant(), the function the server uses.
 
+import { computePrice } from "@/lib/pricing-formula";
 import type {
-  CostItem, PriceQuote, PricingSettings, PriceTemplate, TemplateInput, TemplateLine, TemplateVariant,
+  CostItem, PriceQuote, PricingSettings, PriceTemplate, QuoteLine, TemplateInput, TemplateLine, TemplateVariant,
   TemplateVariantInput,
 } from "@/lib/pricing-types";
 import {
@@ -12,7 +13,7 @@ import {
 } from "@/lib/pricing-templates";
 import { compatibleUnits } from "@/lib/pricing-units";
 import {
-  draftHours, draftPortions, draftProblems, lineFromItem, newKey, parseStoredLine, problemsText, toQuoteLine,
+  defaultQtyUnit, draftHours, draftPortions, draftProblems, lineFromItem, newKey, parseStoredLine, problemsText, toQuoteLine,
   type DraftLine,
 } from "./draft";
 import { numberToRaw, quoted } from "./format";
@@ -154,32 +155,65 @@ export function copySheetDraft(t: PriceTemplate, items: CostItem[]): SheetDraft 
 
 const SHEET_NOTE_MAX = 500; // server limit for a sheet note
 
+/** Total of a devis line as the formula counts it (its own rounding, not a copy of it). */
+function quoteLineTotal(l: QuoteLine): number {
+  const none = { hourlyRate: 0, marginPercent: 0, roundTo: 0 };
+  return computePrice({ lines: [l], hours: 0, settings: none }).lines[0].cost;
+}
+
+export interface SheetFromQuote {
+  draft: SheetDraft;
+  /** Fixed costs of the devis that left the library: their amount is kept as an extra. */
+  asExtras: string[];
+}
+
 /**
  * A devis as a new, unsaved sheet with one size. The sheet keeps what the
  * devis contains (cost, quantity, unit) but none of its prices: like any
  * sheet it reads them from today's library, so its price can differ from the
- * one saved in the devis. A cost deleted or turned fixed since comes along
- * and is flagged by the editor, never dropped silently.
+ * one saved in the devis. Nothing the devis counted is dropped silently when
+ * its cost was deleted or changed type since: the line comes along flagged,
+ * asks for its quantity, or stays as an extra.
  */
-export function sheetDraftFromQuote(q: PriceQuote, items: CostItem[]): SheetDraft {
+export function sheetDraftFromQuote(q: PriceQuote, items: CostItem[]): SheetFromQuote {
+  const byId = new Map(items.map((i) => [i.id, i]));
   const lines: TemplateLine[] = [];
   const fixedQty = new Map<string, number>();
+  const turnedFixed = new Set<string>(); // variable in the devis, fixed today
+  const askQty = new Set<string>(); // keys of the lines whose quantity she has to type
+  const asExtras: string[] = [];
+  const extra = (name: string, amount: number): TemplateLine =>
+    ({ key: newKey("x"), kind: "extra", costItemId: null, name, qty: 1, qtyUnit: "forfait", amount });
   for (const l of q.lines) {
-    if (l.kind === "fixed") {
-      if (l.costItemId && !fixedQty.has(l.costItemId)) fixedQty.set(l.costItemId, l.qty);
+    const item = l.costItemId ? byId.get(l.costItemId) : undefined;
+    if (l.kind === "extra") {
+      // An extra of a sheet is one amount: the devis line's total.
+      lines.push(extra(l.name, quoteLineTotal(l)));
     } else if (l.kind === "variable") {
+      // Deleted or turned fixed: the editor flags the line and asks to remove it.
       lines.push({ key: newKey("v"), kind: "variable", costItemId: l.costItemId, name: l.name, qty: l.qty, qtyUnit: l.qtyUnit });
-    } else {
-      // An extra of a sheet is one amount: the devis line's total, to the centime.
-      const amount = Math.round(l.price * l.qty * 100) / 100;
-      lines.push({ key: newKey("x"), kind: "extra", costItemId: null, name: l.name, qty: 1, qtyUnit: "forfait", amount });
+      if (item?.kind === "fixed") turnedFixed.add(item.id);
+    } else if (item?.kind === "fixed") {
+      fixedQty.set(item.id, (fixedQty.get(item.id) ?? 0) + l.qty);
+    } else if (item) {
+      // Now priced per unit: « × 1 » means nothing any more, she types the quantity.
+      if (lines.some((x) => x.kind === "variable" && x.costItemId === item.id && askQty.has(x.key))) continue;
+      const key = newKey("v");
+      askQty.add(key);
+      lines.push({ key, kind: "variable", costItemId: item.id, name: item.name, qty: 0, qtyUnit: defaultQtyUnit(item.unit) });
+    } else if (l.qty > 0) {
+      // No longer in the library: its amount stays in the price, as an extra.
+      lines.push(extra(l.name, quoteLineTotal(l)));
+      if (!asExtras.includes(l.name)) asExtras.push(l.name);
     }
   }
   // The sheet as the devis is: a fixed cost the devis doesn't have is switched
-  // off, instead of the « × 1 » a sheet gives every fixed cost by default.
+  // off, instead of the « × 1 » a sheet gives every fixed cost by default. One
+  // that was a variable line of the devis stays on: removing that flagged line
+  // must leave the cost counted.
   const fixedOverrides = items
     .filter((i) => i.kind === "fixed")
-    .map((i) => ({ costItemId: i.id, qty: fixedQty.get(i.id) ?? 0 }))
+    .map((i) => ({ costItemId: i.id, qty: fixedQty.get(i.id) ?? (turnedFixed.has(i.id) ? 1 : 0) }))
     .filter((o) => o.qty !== 1);
   const parts = q.portions && q.portions > 0 ? q.portions : undefined;
   const variant: TemplateVariantInput = {
@@ -191,13 +225,17 @@ export function sheetDraftFromQuote(q: PriceQuote, items: CostItem[]): SheetDraf
     lines,
     fixedOverrides,
   };
+  const size = variantDraftFrom(variant, items);
   return {
-    templateId: null,
-    updatedAt: null,
-    name: q.name.slice(0, SHEET_NAME_MAX),
-    cakeId: null,
-    note: (q.note ?? "").slice(0, SHEET_NOTE_MAX),
-    variants: [variantDraftFrom(variant, items)],
+    draft: {
+      templateId: null,
+      updatedAt: null,
+      name: q.name.slice(0, SHEET_NAME_MAX),
+      cakeId: null,
+      note: (q.note ?? "").slice(0, SHEET_NOTE_MAX),
+      variants: [{ ...size, lines: size.lines.map((l) => (askQty.has(l.key) ? { ...l, qtyRaw: "" } : l)) }],
+    },
+    asExtras,
   };
 }
 
