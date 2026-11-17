@@ -4,7 +4,7 @@
 // goes through priceVariant(), the function the server uses.
 
 import type {
-  CostItem, PricingSettings, PriceTemplate, TemplateInput, TemplateLine, TemplateVariant,
+  CostItem, PriceQuote, PricingSettings, PriceTemplate, TemplateInput, TemplateLine, TemplateVariant,
   TemplateVariantInput,
 } from "@/lib/pricing-types";
 import {
@@ -149,6 +149,55 @@ export function copySheetDraft(t: PriceTemplate, items: CostItem[]): SheetDraft 
       // Fixed lines keep their key: it is derived from the cost, one per size.
       lines: v.lines.map((l) => (l.kind === "fixed" ? l : { ...l, key: newKey(l.kind === "extra" ? "x" : "v") })),
     })),
+  };
+}
+
+const SHEET_NOTE_MAX = 500; // server limit for a sheet note
+
+/**
+ * A devis as a new, unsaved sheet with one size. The sheet keeps what the
+ * devis contains (cost, quantity, unit) but none of its prices: like any
+ * sheet it reads them from today's library, so its price can differ from the
+ * one saved in the devis. A cost deleted or turned fixed since comes along
+ * and is flagged by the editor, never dropped silently.
+ */
+export function sheetDraftFromQuote(q: PriceQuote, items: CostItem[]): SheetDraft {
+  const lines: TemplateLine[] = [];
+  const fixedQty = new Map<string, number>();
+  for (const l of q.lines) {
+    if (l.kind === "fixed") {
+      if (l.costItemId && !fixedQty.has(l.costItemId)) fixedQty.set(l.costItemId, l.qty);
+    } else if (l.kind === "variable") {
+      lines.push({ key: newKey("v"), kind: "variable", costItemId: l.costItemId, name: l.name, qty: l.qty, qtyUnit: l.qtyUnit });
+    } else {
+      // An extra of a sheet is one amount: the devis line's total, to the centime.
+      const amount = Math.round(l.price * l.qty * 100) / 100;
+      lines.push({ key: newKey("x"), kind: "extra", costItemId: null, name: l.name, qty: 1, qtyUnit: "forfait", amount });
+    }
+  }
+  // The sheet as the devis is: a fixed cost the devis doesn't have is switched
+  // off, instead of the « × 1 » a sheet gives every fixed cost by default.
+  const fixedOverrides = items
+    .filter((i) => i.kind === "fixed")
+    .map((i) => ({ costItemId: i.id, qty: fixedQty.get(i.id) ?? 0 }))
+    .filter((o) => o.qty !== 1);
+  const parts = q.portions && q.portions > 0 ? q.portions : undefined;
+  const variant: TemplateVariantInput = {
+    id: emptyVariant("").id, // the id generator every new size goes through
+    // Without parts the editor asks for them before saving.
+    label: parts ? `${parts} ${parts > 1 ? "parts" : "part"}` : "Taille unique",
+    portions: parts,
+    hours: q.hours,
+    lines,
+    fixedOverrides,
+  };
+  return {
+    templateId: null,
+    updatedAt: null,
+    name: q.name.slice(0, SHEET_NAME_MAX),
+    cakeId: null,
+    note: (q.note ?? "").slice(0, SHEET_NOTE_MAX),
+    variants: [variantDraftFrom(variant, items)],
   };
 }
 

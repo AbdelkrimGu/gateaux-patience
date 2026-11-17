@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Calculator, Clock, FileText, FolderOpen, Search, Trash2, Users } from "lucide-react";
+import { Calculator, ClipboardList, Clock, FileText, FolderOpen, Search, Trash2, Users } from "lucide-react";
 import type { PriceQuote } from "@/lib/pricing-types";
 import { formatDA, formatQty } from "@/lib/pricing-units";
 import { cn } from "@/lib/utils";
@@ -13,11 +13,15 @@ interface Props {
   quotes: PriceQuote[];
   activeQuoteId: string | null;
   onOpen: (q: PriceQuote) => void;
+  onMakeSheet: (q: PriceQuote) => void;
   onDeleted: (id: string) => void;
   onGoToCalc: () => void;
 }
 
-export default function SavedQuotes({ quotes, activeQuoteId, onOpen, onDeleted, onGoToCalc }: Props) {
+/** Id of a devis' « Créer une fiche » button: focus comes back to it when that sheet is given up. */
+export const quoteSheetId = (quoteId: string) => `quote-sheet-${quoteId}`;
+
+export default function SavedQuotes({ quotes, activeQuoteId, onOpen, onMakeSheet, onDeleted, onGoToCalc }: Props) {
   const [query, setQuery] = useState("");
   const [error, setError] = useState<ErrorInfo | null>(null);
   const [deleting, setDeleting] = useState<{ quote: PriceQuote; loading: boolean } | null>(null);
@@ -81,7 +85,7 @@ export default function SavedQuotes({ quotes, activeQuoteId, onOpen, onDeleted, 
         ) : (
           <ul className="divide-y divide-gray-100">
             {list.map((quote) => (
-              <li key={quote.id} className="flex items-center gap-2 pl-4 pr-2 py-3">
+              <li key={quote.id} className="flex flex-wrap items-center gap-x-2 pl-4 pr-2 pt-3 pb-1">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 min-w-0">
                     <p className="text-sm font-medium text-gray-800 min-w-0 truncate">{quote.name}</p>
@@ -120,6 +124,18 @@ export default function SavedQuotes({ quotes, activeQuoteId, onOpen, onDeleted, 
                 >
                   <Trash2 size={15} />
                 </button>
+                {/* On its own line: a third button beside « Ouvrir » would squeeze the name on a phone. */}
+                <div className="basis-full -ml-2">
+                  <button
+                    type="button"
+                    id={quoteSheetId(quote.id)}
+                    onClick={() => onMakeSheet(quote)}
+                    aria-label={`Créer une fiche à partir du devis ${quoted(quote.name)}`}
+                    className="inline-flex items-center gap-1.5 min-h-[44px] px-2 text-sm font-medium text-gray-500 hover:text-rose-600"
+                  >
+                    <ClipboardList size={14} className="shrink-0" /> Créer une fiche
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

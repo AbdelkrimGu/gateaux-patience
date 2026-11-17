@@ -5,7 +5,9 @@ import {
   AlertTriangle, Check, ClipboardList, Copy, CopyPlus, Eye, FilePlus2, History, MoreHorizontal, Pencil, Plus,
   RotateCcw, Search, Settings2, Wrench,
 } from "lucide-react";
-import type { CostItem, PriceTemplate, PricingSettings, TemplatePriceChange, TemplateVariant } from "@/lib/pricing-types";
+import type {
+  CostItem, PriceQuote, PriceTemplate, PricingSettings, TemplatePriceChange, TemplateVariant,
+} from "@/lib/pricing-types";
 import { formatDA } from "@/lib/pricing-units";
 import { cn } from "@/lib/utils";
 import { apiJson, errorText } from "./api";
@@ -14,8 +16,8 @@ import { CakeThumb } from "./SheetDialogs";
 import SheetEditor, { clearStoredSheetDraft } from "./SheetEditor";
 import SheetHistory, { changeSentence, LatestChangeHint, type ChangeSummary, type HistoryState } from "./SheetHistory";
 import {
-  brokenSheets, copySheetDraft, liveKey, parseStoredSheetDraft, SHEET_DRAFT_KEY, sizeTitle, unfinishedText,
-  type CakeOption, type LiveSize, type StoredSheetDraft,
+  brokenSheets, copySheetDraft, liveKey, parseStoredSheetDraft, SHEET_DRAFT_KEY, sheetDraftFromQuote, sizeTitle,
+  unfinishedText, type CakeOption, type LiveSize, type StoredSheetDraft,
 } from "./sheet-draft";
 import SizeDetail from "./SizeDetail";
 import { Banner, CARD_CLASS, ConfirmDialog, ErrorBox, INPUT_CLASS, PRIMARY_BTN, SECONDARY_BTN, Sheet } from "./ui";
@@ -32,6 +34,10 @@ interface Props {
   onUseForQuote: (t: PriceTemplate, v: TemplateVariant) => void;
   onEditorDirtyChange: (dirty: boolean) => void;
   goTo: (tab: "costs" | "settings") => void;
+  /** « Créer une fiche » of a devis; `n` changes with every tap, so the same devis can be asked twice. */
+  quoteRequest: { quote: PriceQuote; n: number } | null;
+  /** The sheet started from this devis was given up: back to the list of devis. */
+  onQuoteSheetDropped: (quoteId: string) => void;
 }
 
 type EditorState = {
@@ -40,9 +46,18 @@ type EditorState = {
   restored?: StoredSheetDraft;
   focusProblem?: boolean;
   copyOf?: string; // new sheet copied from the one with this name
+  fromQuote?: { id: string; name: string }; // new sheet made from this devis
 };
 
 type SizeRef = { templateId: string; variantId: string };
+
+/** A new sheet waiting for her answer, because it would replace the unsaved one kept on the phone. */
+type PendingSheet =
+  | { from: "sheet"; templateId: string; variantId?: string }
+  | { from: "quote"; quote: PriceQuote };
+
+// From 2 sheets: with a single one there is nothing to look for.
+const SEARCH_FROM = 2;
 
 const moreId = (templateId: string, variantId: string) => `size-more-${liveKey(templateId, variantId)}`;
 const copyId = (templateId: string) => `sheet-copy-${templateId}`;
@@ -77,7 +92,7 @@ async function copyText(text: string): Promise<boolean> {
 
 export default function PriceSheets({
   templates, templatesRev, live, items, settings, cakes, onSaved, onDeleted, onUseForQuote,
-  onEditorDirtyChange, goTo,
+  onEditorDirtyChange, goTo, quoteRequest, onQuoteSheetDropped,
 }: Props) {
   const [query, setQuery] = useState("");
   const [editor, setEditor] = useState<EditorState | null>(null);
@@ -85,7 +100,7 @@ export default function PriceSheets({
   const [histories, setHistories] = useState<Record<string, HistoryState>>({});
   const [actionsFor, setActionsFor] = useState<SizeRef | null>(null);
   const [detailFor, setDetailFor] = useState<SizeRef | null>(null);
-  const [pendingCopy, setPendingCopy] = useState<{ templateId: string; variantId?: string } | null>(null);
+  const [pendingCopy, setPendingCopy] = useState<PendingSheet | null>(null);
   const opener = useRef<string | null>(null); // id of the button that opened the current sheet
   const [copied, setCopied] = useState<string | null>(null);
   const [copyFailed, setCopyFailed] = useState<string | null>(null);
@@ -238,9 +253,33 @@ export default function PriceSheets({
   function startCopy(t: PriceTemplate, variantId?: string) {
     setActionsFor(null);
     // The copy takes the place of the unsaved sheet kept on the phone: ask first.
-    if (stored) setPendingCopy({ templateId: t.id, variantId });
+    if (stored) setPendingCopy({ from: "sheet", templateId: t.id, variantId });
     else copySheet(t, variantId);
   }
+
+  /**
+   * A devis as a new, unsaved sheet: opened and kept on the phone exactly like
+   * a copy. The devis is only read; the server hears of the sheet at « Enregistrer ».
+   */
+  function sheetFromQuote(quote: PriceQuote) {
+    const draft = sheetDraftFromQuote(quote, items);
+    setPendingCopy(null);
+    openEditor({
+      template: null,
+      restored: { v: 1, draft, selectedId: draft.variants[0]?.id ?? null, savedAt: new Date().toISOString() },
+      fromQuote: { id: quote.id, name: quote.name },
+    });
+  }
+
+  // « Créer une fiche » was tapped in Devis (the page has just switched to this tab).
+  const lastQuoteRequest = useRef(quoteRequest?.n);
+  useEffect(() => {
+    if (!quoteRequest || quoteRequest.n === lastQuoteRequest.current) return;
+    lastQuoteRequest.current = quoteRequest.n;
+    if (stored) setPendingCopy({ from: "quote", quote: quoteRequest.quote });
+    else sheetFromQuote(quoteRequest.quote);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quoteRequest]);
 
   const q = searchKey(query);
   const list = templates
@@ -257,13 +296,13 @@ export default function PriceSheets({
   const detailTemplate = detailFor ? templates.find((t) => t.id === detailFor.templateId) : undefined;
   const detailVariant = detailTemplate?.variants.find((v) => v.id === detailFor?.variantId);
   const detailSize = detailTemplate && detailVariant ? live.get(liveKey(detailTemplate.id, detailVariant.id)) : undefined;
-  const copyTemplate = pendingCopy ? templates.find((t) => t.id === pendingCopy.templateId) : undefined;
+  const copyTemplate = pendingCopy?.from === "sheet" ? templates.find((t) => t.id === pendingCopy.templateId) : undefined;
   const storedTemplate = stored?.draft.templateId ? templates.find((t) => t.id === stored.draft.templateId) : undefined;
 
   return (
     <div className="space-y-4">
       {/* Search first: at the WhatsApp moment she's looking for one cake. */}
-      {templates.length > 2 && (
+      {templates.length >= SEARCH_FROM && (
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -352,7 +391,8 @@ export default function PriceSheets({
         </div>
       ) : (
         <>
-          {templates.length <= 2 && (
+          {/* Below that the search row, which carries this button, is not shown. */}
+          {templates.length < SEARCH_FROM && (
             <div className="flex justify-end">
               <button type="button" onClick={() => openEditor({ template: null })} className={PRIMARY_BTN}>
                 <Plus size={15} /> Nouvelle fiche
@@ -454,6 +494,7 @@ export default function PriceSheets({
           initialVariantId={editor.variantId}
           restored={editor.restored}
           copyOf={editor.copyOf}
+          fromQuote={editor.fromQuote?.name}
           focusProblemOnOpen={editor.focusProblem}
           items={items}
           settings={settings}
@@ -473,6 +514,8 @@ export default function PriceSheets({
           }}
           onClose={() => {
             if (editor.copyOf) focusOpener();
+            // Given up: back where she tapped « Créer une fiche ».
+            if (editor.fromQuote) onQuoteSheetDropped(editor.fromQuote.id);
             setEditor(null);
           }}
         />
@@ -526,15 +569,19 @@ export default function PriceSheets({
         />
       )}
 
-      {pendingCopy && copyTemplate && stored && (
+      {pendingCopy && stored && (pendingCopy.from === "quote" || copyTemplate) && (
         <ConfirmDialog
           title={`Remplacer la fiche non enregistrée${NNBSP}?`}
-          confirmLabel="Copier quand même"
+          confirmLabel={pendingCopy.from === "quote" ? "Créer quand même" : "Copier quand même"}
           tone="primary"
-          onConfirm={() => copySheet(copyTemplate, pendingCopy.variantId)}
+          onConfirm={() => {
+            if (pendingCopy.from === "quote") sheetFromQuote(pendingCopy.quote);
+            else if (copyTemplate) copySheet(copyTemplate, pendingCopy.variantId);
+          }}
           onCancel={() => {
             setPendingCopy(null);
-            focusOpener();
+            if (pendingCopy.from === "quote") onQuoteSheetDropped(pendingCopy.quote.id);
+            else focusOpener();
           }}
           extraAction={{
             label: "La reprendre",
@@ -546,7 +593,11 @@ export default function PriceSheets({
         >
           <p>
             {quoted(stored.draft.name.trim() || "Une fiche sans nom")} n&apos;est pas enregistrée{NNBSP}: ses modifications
-            seront perdues si vous copiez {quoted(copyTemplate.name)}.
+            seront perdues si vous{" "}
+            {pendingCopy.from === "quote"
+              ? `créez une fiche depuis le devis ${quoted(pendingCopy.quote.name)}`
+              : `copiez ${quoted(copyTemplate?.name ?? "")}`}
+            .
           </p>
         </ConfirmDialog>
       )}

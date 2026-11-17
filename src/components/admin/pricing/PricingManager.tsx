@@ -18,7 +18,7 @@ import { quoted } from "./format";
 import PriceCalculator from "./PriceCalculator";
 import PriceSheets from "./PriceSheets";
 import PricingSettingsForm from "./PricingSettingsForm";
-import SavedQuotes from "./SavedQuotes";
+import SavedQuotes, { quoteSheetId } from "./SavedQuotes";
 import { brokenSheets, liveSizes, type CakeOption } from "./sheet-draft";
 import { ConfirmDialog, useBeforeUnload } from "./ui";
 
@@ -81,6 +81,7 @@ export default function PricingManager({
   const [restored, setRestored] = useState(false);
   const [pendingOpen, setPendingOpen] = useState<PriceQuote | null>(null);
   const [pendingSheet, setPendingSheet] = useState<{ template: PriceTemplate; variant: TemplateVariant } | null>(null);
+  const [sheetFromQuote, setSheetFromQuote] = useState<{ quote: PriceQuote; n: number } | null>(null);
   const [repricedNotice, setRepricedNotice] = useState<number | null>(null);
   const [sheetEditorDirty, setSheetEditorDirty] = useState(false);
   const [saveRequest, setSaveRequest] = useState(0);
@@ -233,6 +234,18 @@ export default function PricingManager({
       )
     );
     goTo("calc");
+  }
+
+  /** A devis becomes a new, unsaved sheet: the Fiches tab opens its editor on it. */
+  function startSheetFromQuote(quote: PriceQuote) {
+    setSheetFromQuote((r) => ({ quote, n: (r?.n ?? 0) + 1 }));
+    goTo("sheets");
+  }
+
+  /** She gave that sheet up: back in Devis, on the button she tapped. */
+  function backToQuote(quoteId: string) {
+    goTo("quotes");
+    requestAnimationFrame(() => document.getElementById(quoteSheetId(quoteId))?.focus());
   }
 
   /** A new (unsaved) calculation follows the library; an opened devis keeps its snapshot. */
@@ -474,6 +487,8 @@ export default function PricingManager({
           }
           onEditorDirtyChange={onEditorDirtyChange}
           goTo={goTo}
+          quoteRequest={sheetFromQuote}
+          onQuoteSheetDropped={backToQuote}
         />
       </div>
       <div className={tab === "costs" ? "" : "hidden"}>
@@ -484,6 +499,7 @@ export default function PricingManager({
           quotes={quotes}
           activeQuoteId={draft.quoteId}
           onOpen={(q) => (draft.dirty ? setPendingOpen(q) : openQuote(q))}
+          onMakeSheet={startSheetFromQuote}
           onDeleted={handleQuoteDeleted}
           onGoToCalc={() => goTo("calc")}
         />

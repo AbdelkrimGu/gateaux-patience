@@ -32,6 +32,8 @@ interface Props {
   restored?: StoredSheetDraft;
   /** Name of the sheet this new one was copied from (`restored` holds the copy). */
   copyOf?: string;
+  /** Name of the devis this new one was made from (`restored` holds it too). */
+  fromQuote?: string;
   /** Opened from « Corriger »: go straight to the line to fix. */
   focusProblemOnOpen?: boolean;
   items: CostItem[];
@@ -74,8 +76,8 @@ type Dialog =
 const PROBLEM_SELECTOR = '[aria-invalid="true"], [data-missing="true"], [data-problem="true"]';
 
 export default function SheetEditor({
-  template, initialVariantId, restored, copyOf, focusProblemOnOpen = false, items, settings, cakes, onSaved,
-  onDeleted, onClose, onDirtyChange,
+  template, initialVariantId, restored, copyOf, fromQuote, focusProblemOnOpen = false, items, settings, cakes,
+  onSaved, onDeleted, onClose, onDirtyChange,
 }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
@@ -106,9 +108,10 @@ export default function SheetEditor({
   }, [dirty, onDirtyChange]);
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
 
-  // A copy is for another cake: its name is the first thing to retype.
+  // A copy is for another cake, and a devis is often named after a client:
+  // the name is the first thing to retype.
   useEffect(() => {
-    if (!copyOf) return;
+    if (!copyOf && !fromQuote) return;
     nameRef.current?.focus();
     nameRef.current?.select();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -376,6 +379,12 @@ export default function SheetEditor({
                   <p className="text-xs text-gray-500 mt-1">
                     Copie de {quoted(copyOf)}, avec toutes ses tailles. Donnez-lui le nom du nouveau gâteau{NNBSP}; la fiche
                     d&apos;origine ne change pas.
+                  </p>
+                )}
+                {fromQuote && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Créée depuis le devis {quoted(fromQuote)}. Prix calculé avec vos coûts et réglages d&apos;aujourd&apos;hui{NNBSP}:
+                    il peut différer de celui du devis, qui ne change pas.
                   </p>
                 )}
               </div>
