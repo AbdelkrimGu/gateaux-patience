@@ -33,12 +33,18 @@ function detectLocale(req: NextRequest): string {
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com";
 const BOT_UA =
-  /bot|crawl|spider|slurp|preview|facebookexternalhit|whatsapp|telegram|discord|skype|curl|wget|python|headless|lighthouse/i;
+  /bot|crawl|spider|slurp|preview|facebookexternalhit|whatsapp|telegram|discord|skype|curl|wget|python|powershell|headless|lighthouse/i;
 
 function isCountableVisit(req: NextRequest, referrer: URL | null): boolean {
   if (req.method !== "GET") return false;
   const h = req.headers;
-  // Next.js prefetches / RSC fetches of the link in the site's own nav.
+  // Only a real page opened in the browser counts. Browsers send
+  // Sec-Fetch-Dest: document for a page load (QR scan, typed URL, link);
+  // Next.js prefetches of the "Contact" nav link are fetch() calls ("empty").
+  // On Netlify the RSC/prefetch headers alone did not catch them.
+  const dest = h.get("sec-fetch-dest");
+  if (dest && dest !== "document") return false;
+  if (req.nextUrl.searchParams.has("_rsc")) return false;
   if (h.get("rsc") || h.get("next-router-prefetch") || h.get("x-middleware-prefetch")) return false;
   if (h.get("purpose") === "prefetch" || h.get("sec-purpose")?.includes("prefetch")) return false;
   if (BOT_UA.test(h.get("user-agent") ?? "")) return false;
