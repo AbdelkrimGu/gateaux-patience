@@ -35,6 +35,17 @@ const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posth
 const BOT_UA =
   /bot|crawl|spider|slurp|preview|facebookexternalhit|whatsapp|telegram|discord|skype|curl|wget|python|powershell|headless|lighthouse/i;
 
+// Scrapers often wear a years-old desktop browser identity (e.g. Chrome 40 on
+// Windows 7). Desktop Chrome/Edge/Firefox update themselves, and even Windows 7
+// got Chrome 109 / Firefox 115, so a desktop below version 100 is not a real
+// visitor. Phones are left alone: old Android phones can be stuck on an old
+// WebView and are real customers.
+function isAncientDesktopBrowser(ua: string): boolean {
+  if (/android|iphone|ipad|ipod|mobile/i.test(ua)) return false;
+  const m = ua.match(/(?:Chrome|Firefox)\/(\d+)\./);
+  return m !== null && Number(m[1]) < 100;
+}
+
 function isCountableVisit(req: NextRequest, referrer: URL | null): boolean {
   if (req.method !== "GET") return false;
   const h = req.headers;
@@ -47,7 +58,8 @@ function isCountableVisit(req: NextRequest, referrer: URL | null): boolean {
   if (req.nextUrl.searchParams.has("_rsc")) return false;
   if (h.get("rsc") || h.get("next-router-prefetch") || h.get("x-middleware-prefetch")) return false;
   if (h.get("purpose") === "prefetch" || h.get("sec-purpose")?.includes("prefetch")) return false;
-  if (BOT_UA.test(h.get("user-agent") ?? "")) return false;
+  const ua = h.get("user-agent") ?? "";
+  if (BOT_UA.test(ua) || isAncientDesktopBrowser(ua)) return false;
   // The owner's own devices (set by opening /admin or ?gp_internal=1).
   if (req.cookies.get("gp_internal")?.value === "1") return false;
   // A language switch on the QR page itself is the same visit, not a new one.
