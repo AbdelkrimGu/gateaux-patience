@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { track } from "@/lib/analytics";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -89,6 +90,20 @@ export default function TiramisuWizard() {
     [bucket]
   );
   const plainLines = useMemo(() => bucket.filter((l) => plainOf(l) > 0), [bucket]);
+
+  // Analytics funnel: one event per step reached (no personal data).
+  const countRef = useRef(count);
+  countRef.current = count;
+  useEffect(() => {
+    track("tiramisu_step", {
+      step,
+      step_index: STEP_ORDER.indexOf(step) + 1,
+      mode,
+      items: countRef.current,
+    });
+    // Fire on step change only; mode/items are read at that moment.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
   const lineOf = (uid: string) => bucket.find((l) => l.uid === uid) ?? null;
 
   // ---- bucket ops ----
@@ -220,6 +235,13 @@ export default function TiramisuWizard() {
       });
       if (!res.ok) throw new Error("bad status");
       const data = (await res.json()) as { id?: string };
+      track("order_submitted", {
+        source: "tiramisu",
+        mode,
+        items: count,
+        personalized_items: bucket.reduce((n, b) => n + b.personalizations.length, 0),
+        total_da: total,
+      });
       setDoneId(data.id ?? "ok");
     } catch {
       setError(
@@ -767,7 +789,7 @@ function BucketStep({
                               {b.personalizations.map((p, i) => (
                                 <div key={i} className="flex items-center gap-2 rounded-xl bg-rose/[0.05] px-2.5 py-1.5">
                                   <span className="text-sm">{STYLE_META[p.style].emoji}</span>
-                                  <span className="min-w-0 flex-1 truncate font-playfair text-sm font-semibold text-charcoal">
+                                  <span className="ph-no-capture min-w-0 flex-1 truncate font-playfair text-sm font-semibold text-charcoal">
                                     “{personalizationText(p).replace(/\n/g, " · ") || "…"}”
                                   </span>
                                   <button onClick={() => onEditPersonalization(b.uid, i)} className="shrink-0 rounded-full px-2 py-1 text-xs font-semibold text-rose hover:bg-rose/10">
@@ -989,7 +1011,7 @@ function ReviewStep({
                 <span className="text-sm font-semibold text-charcoal">{formatDA(option.price * b.qty)}</span>
               </div>
               {b.personalizations.map((p, i) => (
-                <p key={i} className="mt-1 text-xs text-charcoal-light">
+                <p key={i} className="ph-no-capture mt-1 text-xs text-charcoal-light">
                   {STYLE_META[p.style].emoji} {STYLE_META[p.style].labels[locale]}: “{personalizationText(p).replace(/\n/g, " · ") || "…"}”
                 </p>
               ))}

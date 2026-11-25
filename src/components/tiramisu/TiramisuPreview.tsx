@@ -148,9 +148,11 @@ export default function TiramisuPreview({ style, template, text }: Props) {
   );
 
   return (
+    // ph-no-capture: the customer's message is in the aria-label and drawn on
+    // the canvases; analytics must never pick it up.
     <div
       ref={wrapRef}
-      className="relative aspect-square w-full overflow-hidden rounded-[2rem] shadow-[0_24px_70px_rgba(40,20,8,0.4)] ring-1 ring-black/5"
+      className="ph-no-capture relative aspect-square w-full overflow-hidden rounded-[2rem] shadow-[0_24px_70px_rgba(40,20,8,0.4)] ring-1 ring-black/5"
       style={{
         background: "radial-gradient(120% 120% at 50% 20%, #FBF1E6 0%, #F3E2D2 55%, #E9D2BE 100%)",
       }}

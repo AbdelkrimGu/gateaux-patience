@@ -5,6 +5,7 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { CONTACT, PHONE_E164, SITE_URL } from "@/lib/constants";
+import Analytics from "@/components/analytics/Analytics";
 import "../globals.css";
 
 const playfair = Playfair_Display({
@@ -119,6 +120,7 @@ export default async function LocaleLayout({
       >
         <NextIntlClientProvider messages={messages}>
           {children}
+          <Analytics />
         </NextIntlClientProvider>
       </body>
     </html>

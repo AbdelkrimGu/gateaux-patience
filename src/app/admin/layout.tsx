@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../globals.css";
+import MarkInternalDevice from "@/components/analytics/MarkInternalDevice";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -14,6 +15,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <html lang="fr">
       <body className={`${inter.className} bg-gray-50 text-gray-900 antialiased`}>
         {children}
+        <MarkInternalDevice />
       </body>
     </html>
   );

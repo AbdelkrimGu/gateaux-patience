@@ -1,5 +1,5 @@
 import createMiddleware from "next-intl/middleware";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
 
 const intlMiddleware = createMiddleware(routing);
@@ -25,12 +25,87 @@ function detectLocale(req: NextRequest): string {
   return routing.defaultLocale;
 }
 
-export default function middleware(req: NextRequest) {
+// ---------------------------------------------------------------------------
+// Analytics for the /contact QR page. That page ships zero JavaScript, so its
+// visits are recorded here, server-side, with one fire-and-forget request to
+// PostHog (EU). Count only: no cookie, no person profile, no personal data.
+// ---------------------------------------------------------------------------
+const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com";
+const BOT_UA =
+  /bot|crawl|spider|slurp|preview|facebookexternalhit|whatsapp|telegram|discord|skype|curl|wget|python|headless|lighthouse/i;
+
+function isCountableVisit(req: NextRequest, referrer: URL | null): boolean {
+  if (req.method !== "GET") return false;
+  const h = req.headers;
+  // Next.js prefetches / RSC fetches of the link in the site's own nav.
+  if (h.get("rsc") || h.get("next-router-prefetch") || h.get("x-middleware-prefetch")) return false;
+  if (h.get("purpose") === "prefetch" || h.get("sec-purpose")?.includes("prefetch")) return false;
+  if (BOT_UA.test(h.get("user-agent") ?? "")) return false;
+  // The owner's own devices (set by opening /admin or ?gp_internal=1).
+  if (req.cookies.get("gp_internal")?.value === "1") return false;
+  // A language switch on the QR page itself is the same visit, not a new one.
+  if (referrer && referrer.host === req.nextUrl.host && CONTACT_PATH.test(referrer.pathname)) return false;
+  return true;
+}
+
+function captureContactView(req: NextRequest, event: NextFetchEvent | undefined, lang: string) {
+  if (!POSTHOG_KEY) return;
+  const h = req.headers;
+  let referrer: URL | null = null;
+  try {
+    const ref = h.get("referer");
+    referrer = ref ? new URL(ref) : null;
+  } catch {
+    referrer = null;
+  }
+  if (!isCountableVisit(req, referrer)) return;
+  const ip =
+    h.get("x-nf-client-connection-ip") ?? h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? undefined;
+  const referrerHost = referrer?.hostname ?? null;
+  const body = JSON.stringify({
+    api_key: POSTHOG_KEY,
+    event: "contact_page_view",
+    distinct_id: crypto.randomUUID(),
+    properties: {
+      $process_person_profile: false,
+      $current_url: req.nextUrl.href,
+      $pathname: req.nextUrl.pathname,
+      $ip: ip,
+      $raw_user_agent: h.get("user-agent") ?? undefined,
+      $lib: "edge-middleware",
+      lang,
+      referrer_host: referrerHost,
+      // No referrer: QR scan, typed URL, or a link opened from an app
+      // (WhatsApp / Instagram often send none). `src=qr` on the printed QR
+      // URL makes scans exact.
+      no_referrer: referrerHost === null,
+      src: req.nextUrl.searchParams.get("src") ?? undefined,
+      utm_source: req.nextUrl.searchParams.get("utm_source") ?? undefined,
+    },
+  });
+  const sending = fetch(`${POSTHOG_HOST}/i/v0/e/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body,
+  }).catch(() => undefined);
+  // Never awaited: the page is answered immediately. waitUntil keeps the
+  // request alive after the response on runtimes that support it.
+  event?.waitUntil?.(sending);
+}
+
+export default function middleware(req: NextRequest, event?: NextFetchEvent) {
   const match = req.nextUrl.pathname.match(CONTACT_PATH);
   if (match) {
     const explicit = match[1];
     const url = req.nextUrl.clone();
-    url.pathname = `/qr/${explicit ?? detectLocale(req)}.html`;
+    const lang = explicit ?? detectLocale(req);
+    url.pathname = `/qr/${lang}.html`;
+    try {
+      captureContactView(req, event, lang);
+    } catch {
+      // Analytics must never break the QR page.
+    }
     const res = NextResponse.rewrite(url);
     // Remember an explicitly chosen language so the "website" button (and a
     // later bare /contact visit) stays in it instead of being re-detected.
